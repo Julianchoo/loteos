@@ -3,9 +3,9 @@
   "version": "1.1.2",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "build:migrate": "pnpm run db:migrate && next build",
+    "build": "pnpm run db:migrate && next build",
     "build:ci": "next build",
+    "seed": "npx tsx scripts/seed.ts",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
