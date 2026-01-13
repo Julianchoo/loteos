@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { FinancingCalculator } from "@/components/financing-calculator";
 import { LotMapPlaceholder } from "@/components/lot-map-placeholder";
 import { getLots } from "@/lib/actions/lot-actions";
+import { lot } from "@/lib/schema";
+
+type Lot = typeof lot.$inferSelect;
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  let lots = [];
+  let lots: Lot[] = [];
 
   try {
     const result = await getLots();
