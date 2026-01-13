@@ -7,7 +7,15 @@ import { getLots } from "@/lib/actions/lot-actions";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { data: lots } = await getLots();
+  let lots = [];
+
+  try {
+    const result = await getLots();
+    lots = result.data || [];
+  } catch (error) {
+    console.error("Failed to load lots:", error);
+    // Page will still render with empty lots array
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -253,7 +261,7 @@ export default async function Home() {
           </div>
 
           <div className="max-w-5xl mx-auto">
-            <LotMapPlaceholder lots={lots || []} />
+            <LotMapPlaceholder lots={lots} />
           </div>
         </div>
       </section>
