@@ -4,6 +4,8 @@ import { FinancingCalculator } from "@/components/financing-calculator";
 import { LotMapPlaceholder } from "@/components/lot-map-placeholder";
 import { getLots } from "@/lib/actions/lot-actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const { data: lots } = await getLots();
 
