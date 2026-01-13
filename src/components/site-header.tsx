@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bot } from "lucide-react";
+import { TreePine } from "lucide-react";
 import { UserProfile } from "@/components/auth/user-profile";
 import { ModeToggle } from "./ui/mode-toggle";
 
@@ -13,28 +13,37 @@ export function SiteHeader() {
       >
         Skip to main content
       </a>
-      <header className="border-b" role="banner">
+      <header className="border-b sticky top-0 bg-background/80 backdrop-blur-md z-40" role="banner">
         <nav
           className="container mx-auto px-4 py-4 flex justify-between items-center"
           aria-label="Main navigation"
         >
-          <h1 className="text-2xl font-bold">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
-              aria-label="Starter Kit - Go to homepage"
-            >
-              <div
-                className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10"
-                aria-hidden="true"
+          <div className="flex items-center gap-8">
+            <h1 className="text-2xl font-bold">
+              <Link
+                href="/"
+                className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+                aria-label="Loteos Unnamed - Go to homepage"
               >
-                <Bot className="h-5 w-5" />
-              </div>
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Starter Kit
-              </span>
-            </Link>
-          </h1>
+                <div
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10"
+                  aria-hidden="true"
+                >
+                  <TreePine className="h-5 w-5" />
+                </div>
+                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Loteos Unnamed
+                </span>
+              </Link>
+            </h1>
+
+            <div className="hidden md:flex items-center gap-6">
+              <Link href="/#nosotros" className="text-sm font-medium hover:text-primary transition-colors">Nosotros</Link>
+              <Link href="/#proyectos" className="text-sm font-medium hover:text-primary transition-colors">Proyectos</Link>
+              <Link href="/#contacto" className="text-sm font-medium hover:text-primary transition-colors">Contacto</Link>
+            </div>
+          </div>
+
           <div className="flex items-center gap-4" role="group" aria-label="User actions">
             <UserProfile />
             <ModeToggle />

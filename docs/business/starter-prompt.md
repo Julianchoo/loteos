@@ -63,7 +63,10 @@ The project already includes several shadcn/ui components (button, dialog, avata
 
 ## What I Want to Build
 
-Basic todo list app with the ability for users to add, remove, update, complete and view todos.
+Estamos armando una pagina web para que los usuarios puedan gestionar sus lotes de adquisiciones. Nuestra empresa se llama "Loteos Unnamed", y vamos a tener una home presentando brevemente nuestra empresa y luego tabs para cada proyecto. Por lo pronto tenemos un solo proyecto llamado "San Matías Arroyo de La Cruz", que es un barrio chico, de 9 hectáreas, en el centro de Arroyo de la Cruz, municipio de Exaltación de la Cruz, sobre la Ruta 192.
+Este desarrollo tiene 171 lotes, todos de 300m2. Quiero que armes una buena página presentando el proyecto, con un mapa, con un formulario de contacto, y una sección de lotes, donde se pueda ver cada lote con su precio, su ubicación, y una imagen.
+Los lotes tienen un precio base de USD 17.500, y podemos tomar un anticipo de USD 5.000 y financiar el resto en hasta 48 cuotas, con un interés implícito del 15% anual. 
+El "mapa de lotes" va a ser un archivo de AutoCAD, donde deberían estar todos los lotes, de forma clickeable para ver el precio, tamaños y otra información cuando la gente clickee (nosotros tenemos que ser capaces de marcar cuáles están disponibles y cuáles no). Además, quiero que haya una calculadora de cuotas, que calcule el precio de las cuotas basado en el precio base y el interés implícito.
 
 ## Request
 

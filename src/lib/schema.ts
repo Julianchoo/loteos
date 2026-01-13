@@ -80,3 +80,46 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const project = pgTable("project", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  location: text("location"),
+  totalArea: text("total_area"),
+  totalLots: text("total_lots"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const lot = pgTable("lot", {
+  id: text("id").primaryKey(),
+  projectId: text("project_id")
+    .notNull()
+    .references(() => project.id, { onDelete: "cascade" }),
+  number: text("number").notNull(),
+  size: text("size").notNull(), // e.g., "300m2"
+  price: text("price").notNull(), // e.g., "17500"
+  status: text("status").notNull().default("available"), // available, reserved, sold
+  image: text("image"),
+  coordinates: text("coordinates"), // for clickable map areas
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+});
+
+export const contactRequest = pgTable("contact_request", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  message: text("message"),
+  lotId: text("lot_id").references(() => lot.id, { onDelete: "set null" }),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

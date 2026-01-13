@@ -18,36 +18,33 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Agentic Coding Boilerplate",
-    template: "%s | Agentic Coding Boilerplate",
+    default: "Loteos Unnamed | Desarrollos Inmobiliarios",
+    template: "%s | Loteos Unnamed",
   },
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling - perfect for building AI-powered applications and autonomous agents by Leon van Zyl",
+    "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz - Tu lugar en el mundo.",
   keywords: [
-    "Next.js",
-    "React",
-    "TypeScript",
-    "AI",
-    "OpenRouter",
-    "Boilerplate",
-    "Authentication",
-    "PostgreSQL",
+    "Loteos",
+    "Inmobiliaria",
+    "San Matías",
+    "Arroyo de La Cruz",
+    "Exaltación de la Cruz",
+    "Terrenos",
+    "Inversión",
   ],
-  authors: [{ name: "Leon van Zyl" }],
-  creator: "Leon van Zyl",
+  authors: [{ name: "Loteos Unnamed" }],
+  creator: "Loteos Unnamed",
   openGraph: {
     type: "website",
-    locale: "en_US",
-    siteName: "Agentic Coding Boilerplate",
-    title: "Agentic Coding Boilerplate",
-    description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+    locale: "es_AR",
+    siteName: "Loteos Unnamed",
+    title: "Loteos Unnamed | Desarrollos Inmobiliarios",
+    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Agentic Coding Boilerplate",
-    description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+    title: "Loteos Unnamed | Desarrollos Inmobiliarios",
+    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
   },
   robots: {
     index: true,
@@ -59,19 +56,19 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Agentic Coding Boilerplate",
+  name: "Loteos Unnamed",
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
-  applicationCategory: "DeveloperApplication",
+    "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
+  applicationCategory: "RealEstateApplication",
   operatingSystem: "Any",
   offers: {
     "@type": "Offer",
-    price: "0",
+    price: "17500",
     priceCurrency: "USD",
   },
   author: {
-    "@type": "Person",
-    name: "Leon van Zyl",
+    "@type": "Organization",
+    name: "Loteos Unnamed",
   },
 };
 
@@ -81,7 +78,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
