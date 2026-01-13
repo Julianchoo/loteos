@@ -2,6 +2,7 @@ import { TreePine, MapPin, Calculator, Mail, Phone, ArrowRight, CheckCircle2 } f
 import { Button } from "@/components/ui/button";
 import { FinancingCalculator } from "@/components/financing-calculator";
 import { LotMapPlaceholder } from "@/components/lot-map-placeholder";
+import { ContactForm } from "@/components/contact-form";
 import { getLots } from "@/lib/actions/lot-actions";
 import { lot } from "@/lib/schema";
 
@@ -227,27 +228,7 @@ export default async function Home() {
                 </div>
               </div>
 
-              <div className="p-12 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Nombre</label>
-                    <input type="text" className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Apellido</label>
-                    <input type="text" className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email</label>
-                  <input type="email" className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Mensaje</label>
-                  <textarea rows={4} className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                </div>
-                <Button size="lg" className="w-full rounded-xl h-12 text-lg">Enviar Mensaje</Button>
-              </div>
+              <ContactForm />
             </div>
           </div>
         </div>
