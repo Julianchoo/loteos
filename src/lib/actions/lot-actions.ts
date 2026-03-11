@@ -1,8 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { lot, contactRequest } from "@/lib/schema";
-import { revalidatePath } from "next/cache";
 
 export async function getLots() {
     try {

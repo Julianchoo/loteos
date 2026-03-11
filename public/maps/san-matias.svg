@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- San Matías Development - Lot Map -->
+  <!-- This SVG will be replaced with the actual AutoCAD export -->
+  <!-- For now, creating a grid layout representing the lots -->
+
+  <defs>
+    <style>
+      .lot-available { fill: #22c55e; cursor: pointer; transition: all 0.2s; }
+      .lot-available:hover { fill: #16a34a; opacity: 0.9; }
+      .lot-reserved { fill: #f59e0b; cursor: pointer; }
+      .lot-sold { fill: #6b7280; cursor: not-allowed; }
+      .lot-border { stroke: #fff; stroke-width: 2; }
+      .lot-label { fill: #fff; font-size: 10px; font-weight: bold; pointer-events: none; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Placeholder grid - will be replaced with actual CAD data -->
+  <g id="lot-grid">
+    <!-- Row 1 -->
+    <rect class="lot-available lot-border" data-lot="1" x="100" y="100" width="80" height="60" />
+    <text class="lot-label" x="140" y="135">1</text>
+
+    <rect class="lot-available lot-border" data-lot="2" x="185" y="100" width="80" height="60" />
+    <text class="lot-label" x="225" y="135">2</text>
+
+    <rect class="lot-available lot-border" data-lot="3" x="270" y="100" width="80" height="60" />
+    <text class="lot-label" x="310" y="135">3</text>
+
+    <rect class="lot-sold lot-border" data-lot="4" x="355" y="100" width="80" height="60" />
+    <text class="lot-label" x="395" y="135">4</text>
+
+    <rect class="lot-available lot-border" data-lot="5" x="440" y="100" width="80" height="60" />
+    <text class="lot-label" x="480" y="135">5</text>
+
+    <!-- Add more lots as needed... this is just a placeholder structure -->
+  </g>
+</svg>

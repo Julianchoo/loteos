@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { submitContactRequest } from "@/lib/actions/lot-actions";
-import { toast } from "sonner";
 
 export function ContactForm() {
     const [isLoading, setIsLoading] = useState(false);

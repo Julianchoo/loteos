@@ -18,13 +18,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Loteos Unnamed | Desarrollos Inmobiliarios",
-    template: "%s | Loteos Unnamed",
+    default: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
+    template: "%s | Fitzroya Desarrollos",
   },
   description:
     "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz - Tu lugar en el mundo.",
   keywords: [
-    "Loteos",
+    "Fitzroya",
+    "Desarrollos",
     "Inmobiliaria",
     "San Matías",
     "Arroyo de La Cruz",
@@ -32,18 +33,18 @@ export const metadata: Metadata = {
     "Terrenos",
     "Inversión",
   ],
-  authors: [{ name: "Loteos Unnamed" }],
-  creator: "Loteos Unnamed",
+  authors: [{ name: "Fitzroya Desarrollos" }],
+  creator: "Fitzroya Desarrollos",
   openGraph: {
     type: "website",
     locale: "es_AR",
-    siteName: "Loteos Unnamed",
-    title: "Loteos Unnamed | Desarrollos Inmobiliarios",
+    siteName: "Fitzroya Desarrollos",
+    title: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
     description: "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Loteos Unnamed | Desarrollos Inmobiliarios",
+    title: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
     description: "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
   },
   robots: {
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Loteos Unnamed",
+  name: "Fitzroya Desarrollos",
   description:
     "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
   applicationCategory: "RealEstateApplication",
@@ -68,7 +69,7 @@ const jsonLd = {
   },
   author: {
     "@type": "Organization",
-    name: "Loteos Unnamed",
+    name: "Fitzroya Desarrollos",
   },
 };
 

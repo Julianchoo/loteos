@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { TreePine, MapPin, Calculator, Mail, Phone, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FinancingCalculator } from "@/components/financing-calculator";
-import { LotMapPlaceholder } from "@/components/lot-map-placeholder";
 import { ContactForm } from "@/components/contact-form";
+import { FinancingCalculator } from "@/components/financing-calculator";
+import { InteractiveLotMap } from "@/components/interactive-lot-map";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLots } from "@/lib/actions/lot-actions";
 import { lot } from "@/lib/schema";
 
@@ -21,15 +23,22 @@ export default async function Home() {
     // Page will still render with empty lots array
   }
 
+  const cashPrice = Number(process.env.NEXT_PUBLIC_CASH_DISCOUNT_PRICE || 15000);
+  const basePrice = Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
+  const savings = basePrice - cashPrice;
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
       <section id="inicio" className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img
-            src="/images/hero-panorama.png"
-            alt="Loteos Unnamed Panorama"
-            className="w-full h-full object-cover"
+          <Image
+            src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.jpg"
+            alt="Fitzroya Desarrollos - Espacios Verdes"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
         </div>
@@ -40,7 +49,7 @@ export default async function Home() {
             <span>Desarrollos Inmobiliarios Exclusivos</span>
           </div>
           <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-white text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            Loteos <span className="text-primary italic">Unnamed</span>
+            Fitzroya <span className="text-primary italic">Desarrollos</span>
           </h1>
           <p className="max-w-2xl mx-auto text-xl md:text-2xl text-white/90 font-medium animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
             Creamos espacios para tu futuro. Proyectos sustentables en ubicaciones estratégicas.
@@ -66,7 +75,7 @@ export default async function Home() {
           <div className="space-y-4">
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Nuestra Empresa</h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              En Loteos Unnamed nos dedicamos a la adquisición y desarrollo de tierras con un enfoque transparente y centrado en el cliente.
+              En Fitzroya Desarrollos nos dedicamos a la adquisición y desarrollo de tierras con un enfoque transparente y centrado en el cliente.
             </p>
           </div>
 
@@ -102,10 +111,12 @@ export default async function Home() {
             {/* San Matías Arroyo de La Cruz */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl group border bg-muted">
-                <img
+                <Image
                   src="/images/hero-panorama.png"
                   alt="San Matías Arroyo de La Cruz"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
                 />
                 <div className="absolute inset-0 bg-primary/20 mix-blend-multiply opacity-20 group-hover:opacity-10 transition-opacity" />
                 <div className="absolute top-4 left-4">
@@ -139,8 +150,8 @@ export default async function Home() {
                     <p className="text-xl font-bold">300 m² c/u</p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
-                    <p className="text-sm text-muted-foreground">Precio Base</p>
-                    <p className="text-xl font-bold">USD 17.500</p>
+                    <p className="text-sm text-muted-foreground">Desde</p>
+                    <p className="text-xl font-bold">USD 15.000*</p>
                   </div>
                 </div>
 
@@ -166,16 +177,28 @@ export default async function Home() {
                 </div>
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Tu lote, a tu medida.</h2>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  Ofrecemos planes de pago diseñados para que puedas cumplir tu sueño. Ingresá con un anticipo mínimo y finanziá el resto en cuotas fijas en dólares.
+                  Ofrecemos planes de pago diseñados para que puedas cumplir tu sueño. Ingresá con un anticipo mínimo y finanziá el resto en cuotas fijas en dólares, o aprovechá el descuento por pago de contado.
                 </p>
+              </div>
+
+              <div className="p-6 bg-green-50 dark:bg-green-950/20 rounded-2xl border-2 border-green-200 dark:border-green-900 space-y-3">
+                <h3 className="text-lg font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Precio Especial de Contado
+                </h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-green-600 dark:text-green-400" suppressHydrationWarning>USD {cashPrice.toLocaleString()}</span>
+                  <span className="text-lg line-through text-muted-foreground" suppressHydrationWarning>USD {basePrice.toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-green-700 dark:text-green-400" suppressHydrationWarning>Ahorrás USD {savings.toLocaleString()} pagando de contado</p>
               </div>
 
               <ul className="space-y-4">
                 {[
-                  "Anticipo mínimo de USD 5.000",
-                  "Financiación hasta en 48 cuotas",
-                  "Sin gastos ocultos",
-                  "Interés implícito del 15% anual"
+                  `Anticipo mínimo de USD ${Math.round(basePrice * 0.15).toLocaleString()}`,
+                  "Financiación hasta en 48 cuotas fijas",
+                  "Descuento por pago de contado",
+                  "Sin gastos ocultos ni sorpresas"
                 ].map((text, i) => (
                   <li key={i} className="flex items-center gap-3 text-lg font-medium">
                     <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -217,7 +240,7 @@ export default async function Home() {
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                       <Mail className="w-5 h-5" />
                     </div>
-                    <span className="text-lg">ventas@loteosunnamed.com.ar</span>
+                    <span className="text-lg">ventas@fitzroyadesarrollos.com.ar</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
@@ -244,8 +267,54 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto">
-            <LotMapPlaceholder lots={lots} />
+          <div className="max-w-7xl mx-auto">
+            <Tabs defaultValue="masterplan" className="w-full">
+              <div className="flex justify-center mb-8">
+                <TabsList className="grid w-full max-w-md grid-cols-2 h-14 rounded-2xl p-1 bg-muted/50 border shadow-inner">
+                  <TabsTrigger value="masterplan" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                    <MapPin className="w-4 h-4" /> Plano de Lotes
+                  </TabsTrigger>
+                  <TabsTrigger value="ubicacion" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                    <MapPin className="w-4 h-4" /> Ubicación
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="masterplan" className="mt-0 focus-visible:outline-none">
+                <InteractiveLotMap lots={lots} />
+              </TabsContent>
+
+              <TabsContent value="ubicacion" className="mt-0 focus-visible:outline-none">
+                <div className="w-full relative bg-card rounded-3xl overflow-hidden border-4 border-dashed border-primary/20 aspect-[16/9] shadow-2xl group">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3435.105267104926!2d-59.115629124449!3d-34.33180257367018!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDE5JzU0LjUiUyA1OcKwMDYnNDguNCJX!5e1!3m2!1ses-419!2sar!4v1715600000000"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen={true}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="grayscale hover:grayscale-0 transition-all duration-700"
+                  />
+                  <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                        <MapPin className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-xl uppercase tracking-tighter">Arroyo de la Cruz</h4>
+                        <p className="text-sm text-muted-foreground font-medium">Exaltación de la Cruz, Provincia de Buenos Aires</p>
+                      </div>
+                    </div>
+                    <Button className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
+                      <a href="https://maps.app.goo.gl/JRBwNJgCzNKRmy1d9" target="_blank" rel="noopener noreferrer">
+                        Abrir en Google Maps
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </section>

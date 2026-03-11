@@ -10,7 +10,7 @@ export function SiteFooter() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-primary font-bold text-xl">
               <TreePine className="h-6 w-6" />
-              <span>Loteos Unnamed</span>
+              <span>Fitzroya Desarrollos</span>
             </div>
             <p className="max-w-xs">
               Especialistas en la creación de barrios sustentables y oportunidades de inversión en zonas exclusivas.
@@ -28,7 +28,7 @@ export function SiteFooter() {
           <div>
             <h4 className="font-bold text-foreground mb-4">Contacto</h4>
             <ul className="space-y-2">
-              <li>Email: ventas@loteosunnamed.com.ar</li>
+              <li>Email: ventas@fitzroyadesarrollos.com.ar</li>
               <li>Tel: +54 9 11 1234 5678</li>
               <li>Ubicación: Exaltación de la Cruz, PBA</li>
             </ul>
@@ -36,7 +36,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 pt-8 border-t text-center">
-          <p>© {currentYear} Loteos Unnamed. Todos los derechos reservados.</p>
+          <p>© {currentYear} Fitzroya Desarrollos. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

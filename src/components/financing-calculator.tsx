@@ -1,35 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { Calculator, DollarSign, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Calculator, DollarSign, Calendar } from "lucide-react";
 
 interface FinancingCalculatorProps {
     basePrice?: number;
 }
 
-export function FinancingCalculator({ basePrice = 17500 }: FinancingCalculatorProps) {
-    const [price, setPrice] = useState(basePrice);
-    const [downPayment, setDownPayment] = useState(5000);
-    const [months, setMonths] = useState(48);
-    const [monthlyPayment, setMonthlyPayment] = useState(0);
+export function FinancingCalculator({ basePrice }: FinancingCalculatorProps) {
+    const price = basePrice ?? Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
+    const defaultDownPayment = Number(process.env.NEXT_PUBLIC_DEFAULT_DOWN_PAYMENT || 3000);
+    const defaultMonths = Number(process.env.NEXT_PUBLIC_DEFAULT_MONTHS || 48);
+    const minDownPayment = Number(process.env.NEXT_PUBLIC_MIN_DOWN_PAYMENT || 1000);
+    const minMonths = Number(process.env.NEXT_PUBLIC_MIN_MONTHS || 12);
+    const maxMonths = Number(process.env.NEXT_PUBLIC_MAX_MONTHS || 72);
 
-    const annualInterestRate = 0.15;
-    const monthlyInterestRate = annualInterestRate / 12;
+    const [downPayment, setDownPayment] = useState(defaultDownPayment);
+    const [months, setMonths] = useState(defaultMonths);
 
-    useEffect(() => {
+    const monthlyPayment = useMemo(() => {
         const principal = price - downPayment;
         if (principal <= 0) {
-            setMonthlyPayment(0);
-            return;
+            return 0;
         }
 
-        // Formula: PMT = P * (r * (1 + r)^n) / ((1 + r)^n - 1)
-        const pmt = principal * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, months)) / (Math.pow(1 + monthlyInterestRate, months) - 1);
-        setMonthlyPayment(pmt);
+        // Simple division for financing plan
+        const pmt = principal / months;
+        return pmt;
     }, [price, downPayment, months]);
 
     return (
@@ -45,22 +46,6 @@ export function FinancingCalculator({ basePrice = 17500 }: FinancingCalculatorPr
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="price" className="flex justify-between">
-                            Precio del Lote (USD)
-                            <span className="font-bold text-primary" suppressHydrationWarning>USD {price.toLocaleString('es-AR')}</span>
-                        </Label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                id="price"
-                                type="number"
-                                value={price}
-                                onChange={(e) => setPrice(Number(e.target.value))}
-                                className="pl-9"
-                            />
-                        </div>
-                    </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="downPayment" className="flex justify-between">
@@ -79,10 +64,10 @@ export function FinancingCalculator({ basePrice = 17500 }: FinancingCalculatorPr
                         </div>
                         <Slider
                             value={[downPayment]}
-                            min={5000}
+                            min={minDownPayment}
                             max={price}
                             step={500}
-                            onValueChange={(val: number[]) => setDownPayment(val[0] ?? 5000)}
+                            onValueChange={(val: number[]) => setDownPayment(val[0] ?? minDownPayment)}
                             className="mt-2"
                         />
                     </div>
@@ -104,10 +89,10 @@ export function FinancingCalculator({ basePrice = 17500 }: FinancingCalculatorPr
                         </div>
                         <Slider
                             value={[months]}
-                            min={12}
-                            max={48}
+                            min={minMonths}
+                            max={maxMonths}
                             step={6}
-                            onValueChange={(val: number[]) => setMonths(val[0] ?? 48)}
+                            onValueChange={(val: number[]) => setMonths(val[0] ?? defaultMonths)}
                             className="mt-2"
                         />
                     </div>
@@ -121,7 +106,7 @@ export function FinancingCalculator({ basePrice = 17500 }: FinancingCalculatorPr
                         USD {monthlyPayment.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 italic">
-                        * Sujeto a aprobación y términos comerciales. Interés implícito 15% anual.
+                        * Sujeto a aprobación y términos comerciales.
                     </p>
                 </div>
             </CardContent>

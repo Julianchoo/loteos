@@ -1,5 +1,6 @@
 import { db } from "../src/lib/db";
 import { project, lot } from "../src/lib/schema";
+import crypto from "node:crypto";
 
 async function seed() {
     console.log("Seeding database...");
