@@ -56,6 +56,11 @@ export function SiteHeader() {
                       San Matías - Arroyo de La Cruz
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/proyectos/guernica" className="cursor-pointer">
+                      Guernica
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
