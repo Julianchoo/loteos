@@ -123,3 +123,88 @@ export const contactRequest = pgTable("contact_request", {
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// Lead Management System Tables
+export const lead = pgTable(
+  "lead",
+  {
+    id: text("id").primaryKey(),
+
+    // Contact Information
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+
+    // Lead Source & Attribution
+    contactChannel: text("contact_channel").notNull(), // web_form_general, web_form_project, whatsapp, phone, in_person
+    marketingSource: text("marketing_source"), // facebook, google, instagram, referral, organic
+    marketingCampaign: text("marketing_campaign"),
+
+    // Lead Status
+    status: text("status").notNull().default("new"), // new, contacted, interested, visit_scheduled, proposal_sent, sold, lost
+
+    // Content
+    initialMessage: text("initial_message"),
+
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+
+    // Airtable Sync
+    airtableRecordId: text("airtable_record_id"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    syncStatus: text("sync_status").default("pending"), // pending, synced, error
+    syncError: text("sync_error"),
+  },
+  (table) => [
+    index("lead_email_idx").on(table.email),
+    index("lead_status_idx").on(table.status),
+    index("lead_channel_idx").on(table.contactChannel),
+    index("lead_created_at_idx").on(table.createdAt),
+    index("lead_sync_status_idx").on(table.syncStatus),
+  ]
+);
+
+export const leadFinancingPreference = pgTable(
+  "lead_financing_preference",
+  {
+    id: text("id").primaryKey(),
+    leadId: text("lead_id")
+      .notNull()
+      .references(() => lead.id, { onDelete: "cascade" }),
+
+    anticipoAmount: text("anticipo_amount").notNull(), // Down payment (USD)
+    plazoMonths: text("plazo_months").notNull(), // Financing term (months)
+    calculatedCuota: text("calculated_cuota").notNull(), // Monthly payment (USD)
+    interestedPrice: text("interested_price"), // Total lot price
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("lead_financing_lead_id_idx").on(table.leadId)]
+);
+
+export const leadProject = pgTable(
+  "lead_project",
+  {
+    id: text("id").primaryKey(),
+    leadId: text("lead_id")
+      .notNull()
+      .references(() => lead.id, { onDelete: "cascade" }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+
+    interestLevel: text("interest_level"), // high, medium, low
+    notes: text("notes"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("lead_project_lead_idx").on(table.leadId),
+    index("lead_project_project_idx").on(table.projectId),
+  ]
+);

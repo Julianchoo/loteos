@@ -1,32 +1,11 @@
 import Image from "next/image";
-import { TreePine, MapPin, Calculator, Mail, Phone, ArrowRight, CheckCircle2 } from "lucide-react";
+import { TreePine, MapPin, Mail, Phone, ArrowRight, CheckCircle2 } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
-import { FinancingCalculator } from "@/components/financing-calculator";
-import { InteractiveLotMap } from "@/components/interactive-lot-map";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getLots } from "@/lib/actions/lot-actions";
-import { lot } from "@/lib/schema";
-
-type Lot = typeof lot.$inferSelect;
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  let lots: Lot[] = [];
-
-  try {
-    const result = await getLots();
-    lots = result.data || [];
-  } catch (error) {
-    console.error("Failed to load lots:", error);
-    // Page will still render with empty lots array
-  }
-
-  const cashPrice = Number(process.env.NEXT_PUBLIC_CASH_DISCOUNT_PRICE || 15000);
-  const basePrice = Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
-  const savings = basePrice - cashPrice;
-
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -56,13 +35,13 @@ export default async function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-700">
             <Button size="lg" className="rounded-full px-8 gap-2 group h-14 text-xl shadow-xl shadow-primary/20" asChild>
-              <a href="#proyectos">
+              <a href="/proyectos/san-matias">
                 Ver Proyectos <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
             </Button>
             <Button size="lg" variant="secondary" className="rounded-full px-8 h-14 text-xl backdrop-blur-md bg-white/10 hover:bg-white/20 border-white/20 text-white" asChild>
-              <a href="#financiacion">
-                <Calculator className="w-5 h-5 mr-2" /> Calculá tu cuota
+              <a href="#contacto">
+                <Mail className="w-5 h-5 mr-2" /> Contáctanos
               </a>
             </Button>
           </div>
@@ -127,13 +106,17 @@ export default async function Home() {
               </div>
 
               <div className="space-y-6">
-                <h3 className="text-4xl font-bold tracking-tight">San Matías Arroyo de La Cruz</h3>
+                <h3 className="text-4xl font-bold tracking-tight">
+                  <a href="/proyectos/san-matias" className="hover:text-primary transition-colors">
+                    San Matías Arroyo de La Cruz
+                  </a>
+                </h3>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4 text-primary" />
                   <span>Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz</span>
                 </div>
                 <p className="text-lg leading-relaxed">
-                  Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. Contamos con 171 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
+                  Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. Contamos con 185 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
                 </p>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -143,7 +126,7 @@ export default async function Home() {
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Total de Lotes</p>
-                    <p className="text-xl font-bold">171 Lotes</p>
+                    <p className="text-xl font-bold">185 Lotes</p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Superficie</p>
@@ -151,66 +134,19 @@ export default async function Home() {
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Desde</p>
-                    <p className="text-xl font-bold">USD 15.000*</p>
+                    <p className="text-xl font-bold">USD 12.500*</p>
                   </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
-                  <Button size="lg" className="rounded-full px-8">Ver Mapa de Lotes</Button>
-                  <Button size="lg" variant="outline" className="rounded-full px-8">Brochure Digital</Button>
+                  <Button size="lg" className="rounded-full px-8" asChild>
+                    <a href="/proyectos/san-matias#mapa-lotes">Ver Mapa de Lotes</a>
+                  </Button>
+                  <Button size="lg" variant="outline" className="rounded-full px-8" asChild>
+                    <a href="/proyectos/san-matias">Ver Proyecto</a>
+                  </Button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Financiación Section */}
-      <section id="financiacion" className="py-24 bg-primary/5">
-        <div className="container px-4 mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-primary font-bold tracking-wider uppercase text-sm">
-                  <Calculator className="w-4 h-4" />
-                  <span>Financiación Flexible</span>
-                </div>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Tu lote, a tu medida.</h2>
-                <p className="text-xl text-muted-foreground leading-relaxed">
-                  Ofrecemos planes de pago diseñados para que puedas cumplir tu sueño. Ingresá con un anticipo mínimo y finanziá el resto en cuotas fijas en dólares, o aprovechá el descuento por pago de contado.
-                </p>
-              </div>
-
-              <div className="p-6 bg-green-50 dark:bg-green-950/20 rounded-2xl border-2 border-green-200 dark:border-green-900 space-y-3">
-                <h3 className="text-lg font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Precio Especial de Contado
-                </h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-green-600 dark:text-green-400" suppressHydrationWarning>USD {cashPrice.toLocaleString()}</span>
-                  <span className="text-lg line-through text-muted-foreground" suppressHydrationWarning>USD {basePrice.toLocaleString()}</span>
-                </div>
-                <p className="text-sm text-green-700 dark:text-green-400" suppressHydrationWarning>Ahorrás USD {savings.toLocaleString()} pagando de contado</p>
-              </div>
-
-              <ul className="space-y-4">
-                {[
-                  `Anticipo mínimo de USD ${Math.round(basePrice * 0.15).toLocaleString()}`,
-                  "Financiación hasta en 48 cuotas fijas",
-                  "Descuento por pago de contado",
-                  "Sin gastos ocultos ni sorpresas"
-                ].map((text, i) => (
-                  <li key={i} className="flex items-center gap-3 text-lg font-medium">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span>{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl z-0" />
-              <FinancingCalculator />
             </div>
           </div>
         </div>
@@ -257,67 +193,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Map Section */}
-      <section id="mapa" className="py-24 bg-muted/20 scroll-mt-20">
-        <div className="container px-4 mx-auto text-center space-y-12">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Mapa Interactivo</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Explorá la disponibilidad en tiempo real. Hacé click en los lotes para ver precios y dimensiones.
-            </p>
-          </div>
-
-          <div className="max-w-7xl mx-auto">
-            <Tabs defaultValue="masterplan" className="w-full">
-              <div className="flex justify-center mb-8">
-                <TabsList className="grid w-full max-w-md grid-cols-2 h-14 rounded-2xl p-1 bg-muted/50 border shadow-inner">
-                  <TabsTrigger value="masterplan" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                    <MapPin className="w-4 h-4" /> Plano de Lotes
-                  </TabsTrigger>
-                  <TabsTrigger value="ubicacion" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                    <MapPin className="w-4 h-4" /> Ubicación
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value="masterplan" className="mt-0 focus-visible:outline-none">
-                <InteractiveLotMap lots={lots} />
-              </TabsContent>
-
-              <TabsContent value="ubicacion" className="mt-0 focus-visible:outline-none">
-                <div className="w-full relative bg-card rounded-3xl overflow-hidden border-4 border-dashed border-primary/20 aspect-[16/9] shadow-2xl group">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3435.105267104926!2d-59.115629124449!3d-34.33180257367018!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDE5JzU0LjUiUyA1OcKwMDYnNDguNCJX!5e1!3m2!1ses-419!2sar!4v1715600000000"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen={true}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    className="grayscale hover:grayscale-0 transition-all duration-700"
-                  />
-                  <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                        <MapPin className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-xl uppercase tracking-tighter">Arroyo de la Cruz</h4>
-                        <p className="text-sm text-muted-foreground font-medium">Exaltación de la Cruz, Provincia de Buenos Aires</p>
-                      </div>
-                    </div>
-                    <Button className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
-                      <a href="https://maps.app.goo.gl/JRBwNJgCzNKRmy1d9" target="_blank" rel="noopener noreferrer">
-                        Abrir en Google Maps
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

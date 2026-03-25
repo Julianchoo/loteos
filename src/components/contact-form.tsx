@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { submitContactRequest } from "@/lib/actions/lot-actions";
+import { createLead } from "@/lib/actions/lead-actions";
 
 export function ContactForm() {
     const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +23,7 @@ export function ContactForm() {
             const apellido = formData.get("apellido") as string;
             const email = formData.get("email") as string;
             const phone = formData.get("phone") as string;
+            const message = formData.get("message") as string;
 
             if (!nombre || !apellido || !email) {
                 toast.error("Por favor completá todos los campos obligatorios");
@@ -30,21 +31,29 @@ export function ContactForm() {
                 return;
             }
 
-            // Combine nombre and apellido into name field expected by server action
-            const serverFormData = new FormData();
-            serverFormData.append("name", `${nombre} ${apellido}`);
-            serverFormData.append("email", email);
-            serverFormData.append("phone", phone || "");
-            serverFormData.append("message", formData.get("message") as string || "");
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                toast.error("Por favor ingresá un email válido");
+                setIsLoading(false);
+                return;
+            }
 
-            const result = await submitContactRequest(serverFormData);
+            const result = await createLead({
+                firstName: nombre,
+                lastName: apellido,
+                email,
+                phone: phone || undefined,
+                contactChannel: "web_form_general",
+                initialMessage: message || undefined,
+            });
 
             if (result.success) {
                 toast.success("¡Mensaje enviado con éxito! Nos contactaremos pronto.");
                 // Reset form using stored reference
                 form.reset();
             } else {
-                toast.error("Hubo un error al enviar el mensaje. Por favor intentá nuevamente.");
+                toast.error(result.error || "Hubo un error al enviar el mensaje. Por favor intentá nuevamente.");
             }
         } catch (error) {
             console.error("Error submitting form:", error);

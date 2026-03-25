@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Calculator, DollarSign, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,9 +10,15 @@ import { Slider } from "@/components/ui/slider";
 
 interface FinancingCalculatorProps {
     basePrice?: number;
+    onInterestedClick?: (values: {
+        anticipo: number;
+        plazo: number;
+        cuota: number;
+        price: number;
+    }) => void;
 }
 
-export function FinancingCalculator({ basePrice }: FinancingCalculatorProps) {
+export function FinancingCalculator({ basePrice, onInterestedClick }: FinancingCalculatorProps) {
     const price = basePrice ?? Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
     const defaultDownPayment = Number(process.env.NEXT_PUBLIC_DEFAULT_DOWN_PAYMENT || 3000);
     const defaultMonths = Number(process.env.NEXT_PUBLIC_DEFAULT_MONTHS || 48);
@@ -109,6 +116,23 @@ export function FinancingCalculator({ basePrice }: FinancingCalculatorProps) {
                         * Sujeto a aprobación y términos comerciales.
                     </p>
                 </div>
+
+                {onInterestedClick && (
+                    <Button
+                        onClick={() =>
+                            onInterestedClick({
+                                anticipo: downPayment,
+                                plazo: months,
+                                cuota: monthlyPayment,
+                                price,
+                            })
+                        }
+                        size="lg"
+                        className="w-full"
+                    >
+                        ¿Te interesa este plan? Consultanos
+                    </Button>
+                )}
             </CardContent>
         </Card>
     );

@@ -15,7 +15,12 @@
       "Bash(git checkout:*)",
       "Bash(cat:*)",
       "Bash(pnpm typecheck:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: add configurable pricing and financing system\n\n- Add environment variables for all pricing parameters (base price, down payment, months, cash discount)\n- Add configurable slider ranges (min/max for down payment and months)\n- Update financing calculator to use env vars and support up to 72 months\n- Update lot map components to use dynamic pricing from env vars\n- Add interactive lot map with 171 lots and AutoCAD SVG integration\n- Update home page with dynamic pricing display\n- Remove interest rate mention from UI (kept in calculation)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(git commit:*)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm tsx:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

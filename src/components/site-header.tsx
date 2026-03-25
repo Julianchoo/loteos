@@ -1,6 +1,12 @@
 import Link from "next/link";
-import { TreePine } from "lucide-react";
+import { TreePine, ChevronDown } from "lucide-react";
 import { UserProfile } from "@/components/auth/user-profile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "./ui/mode-toggle";
 
 export function SiteHeader() {
@@ -39,7 +45,20 @@ export function SiteHeader() {
 
             <div className="hidden md:flex items-center gap-6">
               <Link href="/#nosotros" className="text-sm font-medium hover:text-primary transition-colors">Nosotros</Link>
-              <Link href="/#proyectos" className="text-sm font-medium hover:text-primary transition-colors">Proyectos</Link>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                  Proyectos <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href="/proyectos/san-matias" className="cursor-pointer">
+                      San Matías - Arroyo de La Cruz
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Link href="/#contacto" className="text-sm font-medium hover:text-primary transition-colors">Contacto</Link>
             </div>
           </div>
