@@ -1,18 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { TreePine, ChevronDown } from "lucide-react";
+import { TreePine, Menu, ChevronDown } from "lucide-react";
 import { UserProfile } from "@/components/auth/user-profile";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { ModeToggle } from "./ui/mode-toggle";
 
 export function SiteHeader() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <>
       {/* Skip to main content link for accessibility */}
@@ -46,37 +57,98 @@ export function SiteHeader() {
               </Link>
             </h1>
 
-            <div className="hidden md:flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/#nosotros">Nosotros</Link>
-              </Button>
+            <Menubar className="hidden md:flex border-none shadow-none bg-transparent">
+              <MenubarMenu>
+                <MenubarTrigger asChild>
+                  <Link href="/#nosotros" className="cursor-pointer">
+                    Nosotros
+                  </Link>
+                </MenubarTrigger>
+              </MenubarMenu>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    Proyectos <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-[280px]">
-                  <DropdownMenuItem asChild>
-                    <Link href="/proyectos/san-matias" className="cursor-pointer flex flex-col items-start py-3">
+              <MenubarMenu>
+                <MenubarTrigger className="flex items-center gap-1">
+                  Proyectos <ChevronDown className="h-3 w-3" />
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem asChild>
+                    <Link href="/proyectos/san-matias" className="cursor-pointer flex flex-col items-start">
                       <div className="font-medium">San Matías</div>
                       <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/proyectos/san-nicolas" className="cursor-pointer flex flex-col items-start py-3">
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link href="/proyectos/san-nicolas" className="cursor-pointer flex flex-col items-start">
                       <div className="font-medium">San Nicolás</div>
                       <div className="text-xs text-muted-foreground">Guernica</div>
                     </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
 
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/#contacto">Contacto</Link>
-              </Button>
-            </div>
+              <MenubarMenu>
+                <MenubarTrigger asChild>
+                  <Link href="/#contacto" className="cursor-pointer">
+                    Contacto
+                  </Link>
+                </MenubarTrigger>
+              </MenubarMenu>
+            </Menubar>
+
+            {/* Mobile Menu */}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <TreePine className="h-5 w-5 text-primary" />
+                    Menú
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-4 mt-8">
+                  <Link
+                    href="/#nosotros"
+                    className="text-lg font-medium hover:text-primary transition-colors py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Nosotros
+                  </Link>
+
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm font-semibold text-muted-foreground">Proyectos</p>
+                    <Link
+                      href="/proyectos/san-matias"
+                      className="pl-4 py-2 hover:bg-accent rounded-md transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="font-medium">San Matías</div>
+                      <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
+                    </Link>
+                    <Link
+                      href="/proyectos/san-nicolas"
+                      className="pl-4 py-2 hover:bg-accent rounded-md transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="font-medium">San Nicolás</div>
+                      <div className="text-xs text-muted-foreground">Guernica</div>
+                    </Link>
+                  </div>
+
+                  <Link
+                    href="/#contacto"
+                    className="text-lg font-medium hover:text-primary transition-colors py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Contacto
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
 
           <div className="flex items-center gap-4" role="group" aria-label="User actions">
