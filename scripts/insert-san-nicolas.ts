@@ -1,18 +1,18 @@
 import { db } from "../src/lib/db";
 import { project } from "../src/lib/schema";
 
-async function insertGuernica() {
+async function insertSanNicolas() {
   try {
     await db.insert(project).values({
-      id: "guernica",
-      name: "Guernica",
+      id: "san-nicolas",
+      name: "San Nicolás",
       description: "Proyecto de 20 lotes en zona estratégica del sur del Gran Buenos Aires",
       location: "Guernica, Buenos Aires",
       totalArea: "1 hectárea",
       totalLots: "20 lotes",
     });
 
-    console.log("✅ Guernica insertado exitosamente en PostgreSQL");
+    console.log("✅ San Nicolás insertado exitosamente en PostgreSQL");
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
@@ -20,4 +20,4 @@ async function insertGuernica() {
   process.exit(0);
 }
 
-insertGuernica();
+insertSanNicolas();

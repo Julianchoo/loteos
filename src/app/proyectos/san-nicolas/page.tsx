@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-export default async function GuernicaPage() {
+export default async function SanNicolasPage() {
   const basePrice = 14500;
 
   return (
@@ -21,7 +21,7 @@ export default async function GuernicaPage() {
             </div>
 
             <h1 className="text-5xl md:text-7xl font-black tracking-tight">
-              Guernica
+              San Nicolás
             </h1>
 
             <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
@@ -121,7 +121,7 @@ export default async function GuernicaPage() {
 
             <SanMatiasFinancingSection
               basePrice={basePrice}
-              projectId="guernica"
+              projectId="san-nicolas"
             />
           </div>
         </div>

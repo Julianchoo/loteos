@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { TreePine, ChevronDown } from "lucide-react";
 import { UserProfile } from "@/components/auth/user-profile";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,28 +46,36 @@ export function SiteHeader() {
               </Link>
             </h1>
 
-            <div className="hidden md:flex items-center gap-6">
-              <Link href="/#nosotros" className="text-sm font-medium hover:text-primary transition-colors">Nosotros</Link>
+            <div className="hidden md:flex items-center gap-1">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/#nosotros">Nosotros</Link>
+              </Button>
 
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
-                  Proyectos <ChevronDown className="h-4 w-4" />
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    Proyectos <ChevronDown className="h-4 w-4" />
+                  </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-[280px]">
                   <DropdownMenuItem asChild>
-                    <Link href="/proyectos/san-matias" className="cursor-pointer">
-                      San Matías - Arroyo de La Cruz
+                    <Link href="/proyectos/san-matias" className="cursor-pointer flex flex-col items-start py-3">
+                      <div className="font-medium">San Matías</div>
+                      <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/proyectos/guernica" className="cursor-pointer">
-                      Guernica
+                    <Link href="/proyectos/san-nicolas" className="cursor-pointer flex flex-col items-start py-3">
+                      <div className="font-medium">San Nicolás</div>
+                      <div className="text-xs text-muted-foreground">Guernica</div>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Link href="/#contacto" className="text-sm font-medium hover:text-primary transition-colors">Contacto</Link>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/#contacto">Contacto</Link>
+              </Button>
             </div>
           </div>
 
