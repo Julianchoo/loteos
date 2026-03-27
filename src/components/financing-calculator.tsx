@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Calculator, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ClientNumber } from "@/components/ui/client-number";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -57,7 +58,9 @@ export function FinancingCalculator({ basePrice, onInterestedClick }: FinancingC
                     <div className="space-y-2">
                         <Label htmlFor="downPayment" className="flex justify-between">
                             Anticipo (USD)
-                            <span className="font-bold text-primary" suppressHydrationWarning>USD {downPayment.toLocaleString('es-AR')}</span>
+                            <span className="font-bold text-primary">
+                                USD <ClientNumber value={downPayment} />
+                            </span>
                         </Label>
                         <div className="relative">
                             <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -109,8 +112,8 @@ export function FinancingCalculator({ basePrice, onInterestedClick }: FinancingC
                     <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold mb-1">
                         Cuota Mensual Estimada
                     </p>
-                    <p className="text-4xl font-extrabold text-primary" suppressHydrationWarning>
-                        USD {monthlyPayment.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                    <p className="text-4xl font-extrabold text-primary">
+                        USD <ClientNumber value={monthlyPayment} options={{ maximumFractionDigits: 0 }} />
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 italic">
                         * Sujeto a aprobación y términos comerciales.

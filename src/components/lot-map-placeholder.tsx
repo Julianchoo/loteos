@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPin, Info, Calculator, Phone, Map as MapIcon, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClientNumber } from "@/components/ui/client-number";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -180,7 +181,9 @@ export function LotMapPlaceholder({ lots }: PlaceholderLotMapProps) {
                                     <Badge variant={selectedLot.status === 'available' ? 'default' : 'secondary'} className="mb-2">
                                         {selectedLot.status === 'available' ? 'Disponible' : 'Vendido'}
                                     </Badge>
-                                    <span className="text-2xl font-black text-primary">USD {Number(selectedLot.price).toLocaleString()}</span>
+                                    <span className="text-2xl font-black text-primary">
+                                        USD <ClientNumber value={Number(selectedLot.price)} />
+                                    </span>
                                     <span className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Precio de Contado</span>
                                 </div>
                                 <div className="p-4 bg-muted rounded-2xl border flex flex-col items-center justify-center text-center">

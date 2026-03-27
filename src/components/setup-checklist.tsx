@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClientDate } from "@/components/ui/client-date";
 
 type DiagnosticsResponse = {
   timestamp: string;
@@ -154,7 +155,7 @@ export function SetupChecklist() {
 
       {data ? (
         <div className="mt-4 text-xs text-muted-foreground">
-          Last checked: {new Date(data.timestamp).toLocaleString()}
+          Last checked: <ClientDate date={data.timestamp} />
         </div>
       ) : null}
     </div>

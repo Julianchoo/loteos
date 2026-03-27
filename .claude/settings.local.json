@@ -24,7 +24,9 @@
       "Bash(git rm:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(node scripts/fetch-ticket.js:*)",
-      "Bash(node scripts/update-ticket.js:*)"
+      "Bash(node scripts/update-ticket.js:*)",
+      "Bash(grep:*)",
+      "Bash(cd /c/Users/julia/Python_Juli/Loteos ADLC)"
     ]
   },
   "enableAllProjectMcpServers": true,

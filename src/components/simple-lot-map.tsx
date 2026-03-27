@@ -5,6 +5,7 @@ import Image from "next/image";
 import { MapPin, Info, Calculator, Phone, ZoomIn, ZoomOut, Maximize2, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClientNumber } from "@/components/ui/client-number";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Lot {
@@ -172,7 +173,9 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                                     <Badge variant={selectedLot.status === 'available' ? 'default' : 'secondary'} className="mb-2">
                                         {selectedLot.status === 'available' ? 'Disponible' : selectedLot.status === 'reserved' ? 'Reservado' : 'Vendido'}
                                     </Badge>
-                                    <span className="text-2xl font-black text-primary">USD {Number(selectedLot.price).toLocaleString()}</span>
+                                    <span className="text-2xl font-black text-primary">
+                                        USD <ClientNumber value={Number(selectedLot.price)} />
+                                    </span>
                                     <span className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Precio Financiado</span>
                                 </div>
                                 <div className="p-4 bg-muted rounded-2xl border flex flex-col items-center justify-center text-center">
@@ -190,9 +193,13 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                                 </h4>
                                 <div className="flex justify-between items-center">
                                     <span className="text-sm text-muted-foreground">Precio especial</span>
-                                    <span className="text-2xl font-black text-green-600 dark:text-green-400">USD {Math.round(Number(selectedLot.price) * (cashPrice / basePrice)).toLocaleString()}</span>
+                                    <span className="text-2xl font-black text-green-600 dark:text-green-400">
+                                        USD <ClientNumber value={Math.round(Number(selectedLot.price) * (cashPrice / basePrice))} />
+                                    </span>
                                 </div>
-                                <p className="text-xs text-green-700 dark:text-green-400">Ahorrás USD {(Number(selectedLot.price) - Math.round(Number(selectedLot.price) * (cashPrice / basePrice))).toLocaleString()}</p>
+                                <p className="text-xs text-green-700 dark:text-green-400">
+                                    Ahorrás USD <ClientNumber value={Number(selectedLot.price) - Math.round(Number(selectedLot.price) * (cashPrice / basePrice))} />
+                                </p>
                             </div>
 
                             <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
@@ -201,11 +208,15 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                                 </h4>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Anticipo</span>
-                                    <span className="font-bold">USD {defaultDownPayment.toLocaleString()}</span>
+                                    <span className="font-bold">
+                                        USD <ClientNumber value={defaultDownPayment} />
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Cuotas (48)</span>
-                                    <span className="font-bold text-primary">USD {Math.round((Number(selectedLot.price) - defaultDownPayment) / 48).toLocaleString()} / mes</span>
+                                    <span className="font-bold text-primary">
+                                        USD <ClientNumber value={Math.round((Number(selectedLot.price) - defaultDownPayment) / 48)} /> / mes
+                                    </span>
                                 </div>
                             </div>
 

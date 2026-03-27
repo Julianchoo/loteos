@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { TreePine, MapPin, Mail, Phone, ArrowRight, CheckCircle2 } from "lucide-react";
+import { MapPin, Mail, Phone, CheckCircle2, TreePine } from "lucide-react";
+import { AnimatedHero } from "@/components/animated-hero";
 import { ContactForm } from "@/components/contact-form";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
@@ -47,30 +48,7 @@ export default async function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
         </div>
 
-        <div className="container relative z-10 px-4 text-center space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-white text-sm font-medium mb-4 backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <TreePine className="w-4 h-4 text-primary" />
-            <span>Desarrollos Inmobiliarios Exclusivos</span>
-          </div>
-          <h1 className="text-6xl md:text-9xl font-black tracking-tighter text-white text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            Fitzroya <span className="text-primary italic">Desarrollos</span>
-          </h1>
-          <p className="max-w-2xl mx-auto text-xl md:text-2xl text-white/90 font-medium animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
-            Creamos espacios para tu futuro. Proyectos sustentables en ubicaciones estratégicas.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-700">
-            <Button size="lg" className="rounded-full px-8 gap-2 group h-14 text-xl shadow-xl shadow-primary/20" asChild>
-              <a href="/proyectos/san-matias">
-                Ver Proyectos <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Button>
-            <Button size="lg" variant="secondary" className="rounded-full px-8 h-14 text-xl backdrop-blur-md bg-white/10 hover:bg-white/20 border-white/20 text-white" asChild>
-              <a href="#contacto">
-                <Mail className="w-5 h-5 mr-2" /> Contáctanos
-              </a>
-            </Button>
-          </div>
-        </div>
+        <AnimatedHero />
       </section>
 
       {/* Nosotros Section */}
