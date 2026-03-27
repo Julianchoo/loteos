@@ -1,8 +1,33 @@
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
 import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "San Nicolás Guernica - Lotes desde USD 14.500 | Fitzroya",
+  description: "20 lotes en venta en Guernica, sur del Gran Buenos Aires, desde USD 14.500. Proyecto de 1 hectárea con financiación directa. Escritura inmediata, servicios completos y ubicación estratégica sobre Ruta 210.",
+  keywords: [
+    "San Nicolás",
+    "Guernica",
+    "lotes Guernica",
+    "terrenos Guernica",
+    "USD 14500",
+    "financiación directa",
+    "sur Gran Buenos Aires",
+    "escritura inmediata",
+    "Ruta 210"
+  ],
+  openGraph: {
+    title: "San Nicolás Guernica - Lotes desde USD 14.500",
+    description: "20 lotes en venta en Guernica desde USD 14.500. Proyecto de 1 hectárea con financiación directa y escritura inmediata.",
+  },
+  twitter: {
+    title: "San Nicolás Guernica - Lotes desde USD 14.500",
+    description: "20 lotes en venta en Guernica desde USD 14.500. Financiación directa y escritura inmediata.",
+  },
+};
 
 export default async function SanNicolasPage() {
   const basePrice = 14500;

@@ -2,8 +2,33 @@ import Image from "next/image";
 import { TreePine, MapPin, Mail, Phone, ArrowRight, CheckCircle2 } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
+  description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables en ubicaciones estratégicas. San Matías desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+  keywords: [
+    "lotes en venta",
+    "lotes Buenos Aires",
+    "terrenos en venta",
+    "inversión inmobiliaria",
+    "San Matías",
+    "Arroyo de La Cruz",
+    "Guernica",
+    "financiación directa",
+    "desarrollos inmobiliarios"
+  ],
+  openGraph: {
+    title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
+    description: "Lotes en venta en Buenos Aires. San Matías desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+  },
+  twitter: {
+    title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
+    description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables con financiación directa.",
+  },
+};
 
 export default async function Home() {
   return (

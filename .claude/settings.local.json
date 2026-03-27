@@ -22,7 +22,9 @@
       "Bash(pnpm dev)",
       "Bash(pnpm tsx:*)",
       "Bash(git rm:*)",
-      "Bash(npx shadcn@latest add:*)"
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(node scripts/fetch-ticket.js:*)",
+      "Bash(node scripts/update-ticket.js:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
