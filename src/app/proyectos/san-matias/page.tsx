@@ -4,6 +4,7 @@ import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield,
 import { InteractiveLotMap } from "@/components/interactive-lot-map";
 import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLots } from "@/lib/actions/lot-actions";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
@@ -275,6 +276,59 @@ export default async function SanMatiasPage() {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Proximity Cards */}
+          <div className="grid md:grid-cols-2 gap-6 mt-12">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Accesos Principales
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>A solo 200 metros de Ruta Provincial 192</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Ruta 192 conecta Panamericana/Ruta 8 con Capilla del Señor</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Parada Robles (Ruta 8) a 5 minutos en auto</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Cercanías
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Pinares Country Club a 2 km</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Parada Robles a 4 km</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Capilla del Señor a 6 km</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
