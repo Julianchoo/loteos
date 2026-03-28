@@ -1,6 +1,7 @@
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
 import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
 import { Button } from "@/components/ui/button";
+import { getProjectBySlug } from "@/lib/actions/project-actions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +31,22 @@ export const metadata: Metadata = {
 };
 
 export default async function SanNicolasPage() {
-  const basePrice = 14500;
+  let projectData = null;
+
+  try {
+    const projectResult = await getProjectBySlug("san-nicolas");
+    if (projectResult.success && projectResult.data) {
+      projectData = projectResult.data;
+    }
+  } catch (error) {
+    console.error("Failed to load project data:", error);
+  }
+
+  // Use values from Airtable/Postgres, with fallbacks
+  const basePrice = projectData?.basePrice ? Number(projectData.basePrice) : 14500;
+  const minCashDown = projectData?.minCashDown ? Number(projectData.minCashDown) : 2500;
+  const maxFinancingMonths = projectData?.maxFinancingMonths || 72;
+  const tna = projectData?.tna ? Number(projectData.tna) : 0.15;
 
   return (
     <div className="min-h-screen">
@@ -146,6 +162,9 @@ export default async function SanNicolasPage() {
 
             <SanMatiasFinancingSection
               basePrice={basePrice}
+              minCashDown={minCashDown}
+              maxFinancingMonths={maxFinancingMonths}
+              tna={tna}
               projectId="san-nicolas"
             />
           </div>

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, index, numeric, integer } from "drizzle-orm/pg-core";
 
 // IMPORTANT! ID fields should ALWAYS use UUID types, EXCEPT the BetterAuth tables.
 
@@ -88,6 +88,17 @@ export const project = pgTable("project", {
   location: text("location"),
   totalArea: text("total_area"),
   totalLots: text("total_lots"),
+
+  // Pricing and Financing Configuration (synced from Airtable)
+  basePrice: numeric("base_price", { precision: 10, scale: 2 }), // Base price in USD
+  minCashDown: numeric("min_cash_down", { precision: 10, scale: 2 }), // Minimum down payment in USD
+  maxFinancingMonths: integer("max_financing_months"), // Maximum financing term in months
+  tna: numeric("tna", { precision: 5, scale: 4 }), // Annual interest rate (e.g., 0.1500 for 15%)
+
+  // Airtable sync tracking
+  airtableRecordId: text("airtable_record_id"),
+  lastSyncedAt: timestamp("last_synced_at"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

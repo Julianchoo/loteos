@@ -26,7 +26,8 @@
       "Bash(node scripts/fetch-ticket.js:*)",
       "Bash(node scripts/update-ticket.js:*)",
       "Bash(grep:*)",
-      "Bash(cd /c/Users/julia/Python_Juli/Loteos ADLC)"
+      "Bash(cd /c/Users/julia/Python_Juli/Loteos ADLC)",
+      "Bash(pnpm db:migrate:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -11,6 +11,9 @@ import { Slider } from "@/components/ui/slider";
 
 interface FinancingCalculatorProps {
     basePrice?: number;
+    minDownPayment?: number;
+    maxMonths?: number;
+    tna?: number;
     onInterestedClick?: (values: {
         anticipo: number;
         plazo: number;
@@ -19,13 +22,22 @@ interface FinancingCalculatorProps {
     }) => void;
 }
 
-export function FinancingCalculator({ basePrice, onInterestedClick }: FinancingCalculatorProps) {
+export function FinancingCalculator({
+    basePrice,
+    minDownPayment: minDownPaymentProp,
+    maxMonths: maxMonthsProp,
+    tna: tnaProp,
+    onInterestedClick
+}: FinancingCalculatorProps) {
+    // Use props if provided, otherwise fall back to env vars, then hardcoded defaults
     const price = basePrice ?? Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
-    const defaultDownPayment = Number(process.env.NEXT_PUBLIC_DEFAULT_DOWN_PAYMENT || 3000);
-    const defaultMonths = Number(process.env.NEXT_PUBLIC_DEFAULT_MONTHS || 48);
-    const minDownPayment = Number(process.env.NEXT_PUBLIC_MIN_DOWN_PAYMENT || 1000);
-    const minMonths = Number(process.env.NEXT_PUBLIC_MIN_MONTHS || 12);
-    const maxMonths = Number(process.env.NEXT_PUBLIC_MAX_MONTHS || 72);
+    const minDownPayment = minDownPaymentProp ?? Number(process.env.NEXT_PUBLIC_MIN_DOWN_PAYMENT || 2500);
+    const maxMonths = maxMonthsProp ?? Number(process.env.NEXT_PUBLIC_MAX_MONTHS || 72);
+    const annualInterestRate = tnaProp ?? Number(process.env.NEXT_PUBLIC_ANNUAL_INTEREST_RATE || 0.15);
+
+    const defaultDownPayment = Math.max(minDownPayment, price * 0.2); // 20% or minimum
+    const defaultMonths = Math.min(60, maxMonths); // Default to 60 months or max
+    const minMonths = 12;
 
     const [downPayment, setDownPayment] = useState(defaultDownPayment);
     const [months, setMonths] = useState(defaultMonths);
@@ -36,10 +48,20 @@ export function FinancingCalculator({ basePrice, onInterestedClick }: FinancingC
             return 0;
         }
 
-        // Simple division for financing plan
+        // Calculate with interest using TNA (Tasa Nominal Anual)
+        if (annualInterestRate && annualInterestRate > 0) {
+            const monthlyRate = annualInterestRate / 12;
+            // PMT formula: P * [r(1+r)^n] / [(1+r)^n - 1]
+            const numerator = monthlyRate * Math.pow(1 + monthlyRate, months);
+            const denominator = Math.pow(1 + monthlyRate, months) - 1;
+            const pmt = principal * (numerator / denominator);
+            return pmt;
+        }
+
+        // Fallback to simple division (no interest)
         const pmt = principal / months;
         return pmt;
-    }, [price, downPayment, months]);
+    }, [price, downPayment, months, annualInterestRate]);
 
     return (
         <Card className="w-full max-w-md mx-auto overflow-hidden border-2 border-primary/20 shadow-xl bg-card">

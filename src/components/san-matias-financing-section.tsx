@@ -7,11 +7,17 @@ import { ProjectLeadForm } from "@/components/project-lead-form";
 
 interface SanMatiasFinancingSectionProps {
   basePrice: number;
+  minCashDown: number;
+  maxFinancingMonths: number;
+  tna: number;
   projectId: string;
 }
 
 export function SanMatiasFinancingSection({
   basePrice,
+  minCashDown,
+  maxFinancingMonths,
+  tna,
   projectId,
 }: SanMatiasFinancingSectionProps) {
   const [showLeadForm, setShowLeadForm] = useState(false);
@@ -44,6 +50,9 @@ export function SanMatiasFinancingSection({
         <div className="relative z-10">
           <FinancingCalculator
             basePrice={basePrice}
+            minDownPayment={minCashDown}
+            maxMonths={maxFinancingMonths}
+            tna={tna}
             onInterestedClick={handleInterestedClick}
           />
         </div>

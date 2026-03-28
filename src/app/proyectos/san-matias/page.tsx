@@ -6,6 +6,7 @@ import { SanMatiasFinancingSection } from "@/components/san-matias-financing-sec
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getLots } from "@/lib/actions/lot-actions";
+import { getProjectBySlug } from "@/lib/actions/project-actions";
 import { lot } from "@/lib/schema";
 import type { Metadata } from "next";
 
@@ -39,6 +40,7 @@ export const metadata: Metadata = {
 
 export default async function SanMatiasPage() {
   let lots: Lot[] = [];
+  let projectData = null;
 
   try {
     const result = await getLots();
@@ -47,8 +49,21 @@ export default async function SanMatiasPage() {
     console.error("Failed to load lots:", error);
   }
 
-  const cashPrice = 12500;
-  const basePrice = 20000;
+  try {
+    const projectResult = await getProjectBySlug("san-matias");
+    if (projectResult.success && projectResult.data) {
+      projectData = projectResult.data;
+    }
+  } catch (error) {
+    console.error("Failed to load project data:", error);
+  }
+
+  // Use values from Airtable/Postgres, with fallbacks
+  const basePrice = projectData?.basePrice ? Number(projectData.basePrice) : 20000;
+  const minCashDown = projectData?.minCashDown ? Number(projectData.minCashDown) : 2500;
+  const maxFinancingMonths = projectData?.maxFinancingMonths || 72;
+  const tna = projectData?.tna ? Number(projectData.tna) : 0.15;
+  const cashPrice = 12500; // This could also come from Airtable if needed
   const savings = basePrice - cashPrice;
 
   return (
@@ -250,10 +265,10 @@ export default async function SanMatiasPage() {
 
               <ul className="space-y-4">
                 {[
-                  "Anticipo desde USD 3,500",
-                  "Financiación hasta en 60 cuotas fijas en dólares (5 años)",
-                  "Cuotas desde USD 267 mensuales",
-                  "Descuento especial por pago de contado: USD 12,500",
+                  `Anticipo desde USD ${minCashDown.toLocaleString()}`,
+                  `Financiación hasta en ${maxFinancingMonths} cuotas fijas en dólares (${Math.floor(maxFinancingMonths / 12)} años)`,
+                  "Cuotas accesibles ajustadas a tu necesidad",
+                  `Descuento especial por pago de contado: USD ${cashPrice.toLocaleString()}`,
                   "Sin gastos ocultos ni sorpresas"
                 ].map((text, i) => (
                   <li key={i} className="flex items-center gap-3 text-lg font-medium">
@@ -266,6 +281,9 @@ export default async function SanMatiasPage() {
 
             <SanMatiasFinancingSection
               basePrice={basePrice}
+              minCashDown={minCashDown}
+              maxFinancingMonths={maxFinancingMonths}
+              tna={tna}
               projectId="san-matias"
             />
           </div>
