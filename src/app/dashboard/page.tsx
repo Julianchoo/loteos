@@ -1,37 +1,27 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { Lock } from "lucide-react";
-import { UserProfile } from "@/components/auth/user-profile";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useDiagnostics } from "@/hooks/use-diagnostics";
 import { useSession } from "@/lib/auth-client";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: session, isPending } = useSession();
   const { isAiReady, loading: diagnosticsLoading } = useDiagnostics();
 
-  if (isPending) {
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/");
+    }
+  }, [isPending, session, router]);
+
+  if (isPending || !session) {
     return (
       <div className="flex justify-center items-center h-screen">
         Loading...
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="mb-8">
-            <Lock className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mb-2">Protected Page</h1>
-            <p className="text-muted-foreground mb-6">
-              You need to sign in to access the dashboard
-            </p>
-          </div>
-          <UserProfile />
-        </div>
       </div>
     );
   }

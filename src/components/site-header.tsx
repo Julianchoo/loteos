@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { TreePine, Menu, ChevronDown } from "lucide-react";
-import { UserProfile } from "@/components/auth/user-profile";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -152,7 +151,6 @@ export function SiteHeader() {
           </div>
 
           <div className="flex items-center gap-4" role="group" aria-label="User actions">
-            <UserProfile />
             <ModeToggle />
           </div>
         </nav>

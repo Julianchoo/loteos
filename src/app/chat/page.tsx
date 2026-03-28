@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { Copy, Check, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { UserProfile } from "@/components/auth/user-profile";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import type { Components } from "react-markdown";
@@ -189,6 +189,7 @@ function ThinkingIndicator() {
 const STORAGE_KEY = "chat-messages";
 
 export default function ChatPage() {
+  const router = useRouter();
   const { data: session, isPending } = useSession();
   const { messages, sendMessage, status, error, setMessages } = useChat({
     onError: (err) => {
@@ -196,6 +197,13 @@ export default function ChatPage() {
     },
   });
   const [input, setInput] = useState("");
+
+  // Redirect unauthenticated users to home
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/");
+    }
+  }, [isPending, session, router]);
 
   // Load messages from localStorage on mount
   useEffect(() => {
@@ -227,18 +235,8 @@ export default function ChatPage() {
     toast.success("Chat cleared");
   };
 
-  if (isPending) {
+  if (isPending || !session) {
     return <div className="container mx-auto px-4 py-12">Loading...</div>;
-  }
-
-  if (!session) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-3xl mx-auto">
-          <UserProfile />
-        </div>
-      </div>
-    );
   }
 
   const isStreaming = status === "streaming";
