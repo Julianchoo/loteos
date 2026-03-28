@@ -28,7 +28,11 @@
       "Bash(grep:*)",
       "Bash(cd /c/Users/julia/Python_Juli/Loteos ADLC)",
       "Bash(pnpm db:migrate:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx --version)",
+      "Bash(npm config:*)",
+      "mcp__dataforseo__kw_data_google_ads_search_volume",
+      "mcp__dataforseo__dataforseo_labs_google_keyword_overview"
     ]
   },
   "enableAllProjectMcpServers": true,

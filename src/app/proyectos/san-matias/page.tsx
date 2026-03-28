@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles } from "lucide-react";
 import { InteractiveLotMap } from "@/components/interactive-lot-map";
 import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,6 +72,96 @@ export default async function SanMatiasPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "¿Qué infraestructura incluye el barrio?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "San Matías cuenta con red eléctrica completa, red de agua corriente, calles consolidadas y mejoradas, cordón cuneta para drenaje, y alumbrado público LED. La infraestructura está instalada y operativa desde el inicio, no es una promesa a futuro."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Cuándo puedo empezar a construir?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Podés iniciar la obra en cualquier momento después de firmar el boleto de compraventa y abonar el anticipo. No hay plazos mínimos ni máximos. Solo necesitás tramitar el permiso de obra ante la Municipalidad de Exaltación de la Cruz."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Cómo funciona la financiación directa?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Financiamos nosotros directamente, sin banco. El proceso: elegís tu lote, firmás el boleto, abonás el anticipo desde USD 2.500 y empezás a pagar cuotas fijas en dólares. No hay evaluación crediticia ni garante requerido."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿El lote viene con escritura?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Sí. Una vez completado el pago del lote, iniciamos el proceso de escrituración ante escribano público. La escritura queda a nombre del comprador en el Registro de la Propiedad Inmueble de la Provincia de Buenos Aires."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿A qué distancia queda de Buenos Aires?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Aproximadamente 90 km del centro de Buenos Aires por Ruta 8 / Panamericana. En auto, 60 a 75 minutos según el tráfico. La salida más cercana desde la autopista es Parada Robles (Km 97 de Ruta 8), a 4 km del barrio."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "¿Hay restricciones para el tipo de construcción?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "El reglamento establece FOS 0.6, FOT 1.0 y frente mínimo de 12 metros. Dentro de esos parámetros podés construir casa, duplex o vivienda con local. No hay comisión de estética ni aprobación de fachadas."
+                }
+              }
+            ]
+          })
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Inicio",
+                "item": "https://www.fitzroya.com.ar"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Proyectos",
+                "item": "https://www.fitzroya.com.ar/proyectos"
+              },
+              {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "San Matías",
+                "item": "https://www.fitzroya.com.ar/proyectos/san-matias"
+              }
+            ]
+          })
+        }}
+      />
+
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -334,6 +425,44 @@ export default async function SanMatiasPage() {
         </div>
       </section>
 
+      {/* SEO Section 1: Zone Information */}
+      <section className="py-24 bg-background">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Arroyo de la Cruz: una zona en pleno crecimiento
+            </h2>
+            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
+              <p>
+                Arroyo de la Cruz es una localidad del Partido de Exaltación de la Cruz,
+                en el norte del Gran Buenos Aires. Conocida por su tranquilidad y paisajes
+                rurales, la zona experimentó un crecimiento sostenido en los últimos años,
+                impulsado por el corredor de barrios privados que se desarrolla a lo largo
+                de la Ruta 192. Hoy convive con emprendimientos consolidados como Pinares
+                Country Club (a 2 km de San Matías), y ofrece la calidad de vida del GBA
+                norte a precios todavía accesibles.
+              </p>
+              <p>
+                La conectividad es uno de los principales atractivos. Ruta 192 conecta
+                directamente con Parada Robles (Ruta 8) a solo 4 km, desde donde se accede
+                a la Autopista Panamericana hacia Buenos Aires. Capilla del Señor, la
+                cabecera del partido con todos los servicios (supermercados, hospitales,
+                colegios, bancos), queda a apenas 6 km. El trayecto hasta el centro de
+                Buenos Aires en auto es de aproximadamente 1 hora, comparable al de otros
+                barrios consolidados del GBA norte como Pilar o Zárate.
+              </p>
+              <p>
+                Desde el punto de vista de la inversión, Arroyo de la Cruz está en el
+                momento justo: la infraestructura vial ya existe, los barrios vecinos están
+                consolidados, y los precios de los terrenos aún reflejan una zona en
+                desarrollo. Los lotes que hoy se venden a USD 12.500 en zonas similares del
+                corredor norte mostraron plusvalías del 30% al 50% en los últimos 5 años.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Amenities & Features */}
       <section className="py-24">
         <div className="container px-4 mx-auto">
@@ -394,6 +523,35 @@ export default async function SanMatiasPage() {
                   <p className="text-lg font-bold">1.0</p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Section 2: Open Neighborhood Benefits */}
+      <section className="py-24 bg-muted/30">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Barrio abierto: sin expensas, con total libertad
+            </h2>
+            <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
+              <p>
+                San Matías es un barrio abierto, lo que significa que no existen expensas
+                mensuales. A diferencia de un barrio cerrado, donde las cuotas de
+                administración, seguridad y mantenimiento pueden rondar los USD 150 a USD 400
+                por mes, en San Matías el propietario solo paga los impuestos municipales
+                habituales. A lo largo de 10 años, eso representa un ahorro real de entre
+                USD 18.000 y USD 48.000, dinero que puede destinarse directamente a la
+                construcción.
+              </p>
+              <p>
+                Podés construir cuando quieras, a tu ritmo, siguiendo el reglamento de
+                edificación del Municipio de Exaltación de la Cruz. No hay plazos de obra
+                obligatorios ni restricciones de estilo arquitectónico impuestas por una
+                administración. Sos el único dueño de tus decisiones, y de tu lote, con
+                escritura propia a tu nombre.
+              </p>
             </div>
           </div>
         </div>
@@ -476,6 +634,87 @@ export default async function SanMatiasPage() {
                 Ver Lotes Disponibles
               </a>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Section 3: FAQ */}
+      <section className="py-24 bg-background">
+        <div className="container px-4 mx-auto">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center">
+              Preguntas frecuentes sobre San Matías
+            </h2>
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿Qué infraestructura incluye el barrio?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  San Matías cuenta con red eléctrica completa, red de agua corriente,
+                  calles consolidadas y mejoradas, cordón cuneta para drenaje, y alumbrado
+                  público LED. La infraestructura está instalada y operativa desde el inicio,
+                  no es una promesa a futuro.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-2">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿Cuándo puedo empezar a construir?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  Podés iniciar la obra en cualquier momento después de firmar el boleto de
+                  compraventa y abonar el anticipo. No hay plazos mínimos ni máximos. Solo
+                  necesitás tramitar el permiso de obra ante la Municipalidad de Exaltación
+                  de la Cruz.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-3">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿Cómo funciona la financiación directa?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  Financiamos nosotros directamente, sin banco. El proceso: elegís tu lote,
+                  firmás el boleto, abonás el anticipo desde USD 2.500 y empezás a pagar
+                  cuotas fijas en dólares. No hay evaluación crediticia ni garante requerido.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-4">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿El lote viene con escritura?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  Sí. Una vez completado el pago del lote, iniciamos el proceso de
+                  escrituración ante escribano público. La escritura queda a nombre del
+                  comprador en el Registro de la Propiedad Inmueble de la Provincia de
+                  Buenos Aires.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-5">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿A qué distancia queda de Buenos Aires?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  Aproximadamente 90 km del centro de Buenos Aires por Ruta 8 / Panamericana.
+                  En auto, 60 a 75 minutos según el tráfico. La salida más cercana desde la
+                  autopista es Parada Robles (Km 97 de Ruta 8), a 4 km del barrio.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="item-6">
+                <AccordionTrigger className="text-left text-lg font-semibold">
+                  ¿Hay restricciones para el tipo de construcción?
+                </AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  El reglamento establece FOS 0.6, FOT 1.0 y frente mínimo de 12 metros.
+                  Dentro de esos parámetros podés construir casa, duplex o vivienda con
+                  local. No hay comisión de estética ni aprobación de fachadas.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       </section>
