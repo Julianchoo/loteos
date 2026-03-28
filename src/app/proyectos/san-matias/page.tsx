@@ -17,25 +17,27 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500 | Fitzroya",
-  description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, Exaltación de la Cruz. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
+  description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
   keywords: [
     "San Matías",
     "Arroyo de la Cruz",
     "Exaltación de la Cruz",
+    "Capilla del Señor",
     "lotes en venta",
     "terrenos 300m2",
     "financiación directa",
     "USD 12500",
     "barrio abierto",
-    "lotes Buenos Aires"
+    "lotes Buenos Aires",
+    "Parada Robles"
   ],
   openGraph: {
     title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
-    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
+    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
   },
   twitter: {
     title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
-    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz. Financiación directa hasta 60 cuotas.",
+    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas.",
   },
 };
 
