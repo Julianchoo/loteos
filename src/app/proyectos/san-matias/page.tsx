@@ -94,6 +94,14 @@ export default async function SanMatiasPage() {
             <MapPin className="w-5 h-5 text-primary" />
             <span>Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz</span>
           </div>
+          <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
+            <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
+              <a href="#financiacion">
+                <Calculator className="w-4 h-4 mr-2" />
+                Calculá tu cuota
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -101,10 +109,11 @@ export default async function SanMatiasPage() {
       <section className="py-20 bg-background border-y">
         <div className="container px-4 mx-auto">
           <div className="max-w-6xl mx-auto">
-            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background rounded-3xl border-2 border-primary/20 p-8 md:p-12 shadow-xl">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-                {/* Left side - Promo badge and text */}
-                <div className="flex-1 text-center lg:text-left space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-3xl border-2 border-primary/20 shadow-xl overflow-hidden">
+
+              {/* Left — promo content */}
+              <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 md:p-12 flex flex-col justify-center gap-8">
+                <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-sm font-bold">
                     <Sparkles className="w-4 h-4 text-primary" />
                     <span>PROMOCIÓN EXCLUSIVA</span>
@@ -117,35 +126,50 @@ export default async function SanMatiasPage() {
                   </p>
                 </div>
 
-                {/* Right side - Price comparison */}
-                <div className="flex-1">
-                  <div className="bg-background rounded-2xl border-2 border-primary/30 p-8 space-y-6">
-                    <div className="flex items-center justify-between pb-4 border-b">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Precio Financiado</p>
-                        <p className="text-2xl font-bold line-through text-muted-foreground">
-                          USD {basePrice.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground mb-1">Ahorro</p>
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-500">
-                          -USD {savings.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Precio de Contado</p>
-                      <p className="text-5xl md:text-6xl font-black text-primary">
-                        USD {cashPrice.toLocaleString()}
+                <div className="bg-background rounded-2xl border-2 border-primary/30 p-8 space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Precio Financiado</p>
+                      <p className="text-2xl font-bold line-through text-muted-foreground">
+                        USD {basePrice.toLocaleString()}
                       </p>
                     </div>
-                    <Button size="lg" className="w-full rounded-xl h-14 text-lg font-bold" asChild>
-                      <a href="#contacto">Consultar Promoción</a>
-                    </Button>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground mb-1">Ahorro</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-500">
+                        -USD {savings.toLocaleString()}
+                      </p>
+                    </div>
                   </div>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">Precio de Contado</p>
+                    <p className="text-5xl md:text-6xl font-black text-primary">
+                      USD {cashPrice.toLocaleString()}
+                    </p>
+                  </div>
+                  <Button size="lg" className="w-full rounded-xl h-14 text-lg font-bold" asChild>
+                    <a href="#contacto">Consultar Promoción</a>
+                  </Button>
                 </div>
               </div>
+
+              {/* Right — lot map */}
+              <div className="relative min-h-[400px] lg:min-h-0 bg-muted/30">
+                <Image
+                  src="/images/Mapeo ADLC.png"
+                  alt="Plano de loteo San Matías Arroyo de La Cruz"
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                <a
+                  href="#mapa-lotes"
+                  className="absolute bottom-4 right-4 px-4 py-2 bg-background/90 backdrop-blur rounded-xl border text-sm font-medium hover:bg-background transition-colors shadow"
+                >
+                  Ver mapa interactivo →
+                </a>
+              </div>
+
             </div>
           </div>
         </div>
@@ -179,6 +203,78 @@ export default async function SanMatiasPage() {
               <p className="text-3xl font-black text-primary">USD 12.5K</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Location Section */}
+      <section id="ubicacion" className="py-24 bg-muted/30">
+        <div className="container px-4 mx-auto space-y-16">
+          <div className="text-center space-y-4">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Ubicación Estratégica</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              En el corazón de Arroyo de la Cruz, con fácil acceso por Ruta 192 y cercano a todos los servicios.
+            </p>
+          </div>
+
+          <Tabs defaultValue="google" className="w-full">
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid w-full max-w-md grid-cols-2 h-14 rounded-2xl p-1 bg-muted/50 border shadow-inner">
+                <TabsTrigger value="google" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  <MapPin className="w-4 h-4" /> Google Maps
+                </TabsTrigger>
+                <TabsTrigger value="barrio" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
+                  <Home className="w-4 h-4" /> Plano del Barrio
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value="google" className="mt-0 focus-visible:outline-none">
+              <div className="w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+                <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                      <MapPin className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xl">San Matías - Arroyo de la Cruz</h4>
+                      <p className="text-sm text-muted-foreground">Ruta 192, Exaltación de la Cruz, Buenos Aires</p>
+                    </div>
+                  </div>
+                  <Button className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
+                    <a href="https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7" target="_blank" rel="noopener noreferrer">
+                      Abrir en Google Maps
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="barrio" className="mt-0 focus-visible:outline-none">
+              <div className="w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl p-8">
+                <div className="relative w-full aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden">
+                  <Image
+                    src="/images/Mapeo ADLC.png"
+                    alt="Plano del Barrio San Matías"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 1200px) 100vw, 1200px"
+                  />
+                </div>
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground">Plano general del barrio San Matías</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
 
@@ -287,78 +383,6 @@ export default async function SanMatiasPage() {
               projectId="san-matias"
             />
           </div>
-        </div>
-      </section>
-
-      {/* Location Section */}
-      <section id="ubicacion" className="py-24 bg-muted/30">
-        <div className="container px-4 mx-auto space-y-16">
-          <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Ubicación Estratégica</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              En el corazón de Arroyo de la Cruz, con fácil acceso por Ruta 192 y cercano a todos los servicios.
-            </p>
-          </div>
-
-          <Tabs defaultValue="google" className="w-full">
-            <div className="flex justify-center mb-8">
-              <TabsList className="grid w-full max-w-md grid-cols-2 h-14 rounded-2xl p-1 bg-muted/50 border shadow-inner">
-                <TabsTrigger value="google" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                  <MapPin className="w-4 h-4" /> Google Maps
-                </TabsTrigger>
-                <TabsTrigger value="barrio" className="rounded-xl font-bold gap-2 data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                  <Home className="w-4 h-4" /> Plano del Barrio
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="google" className="mt-0 focus-visible:outline-none">
-              <div className="w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen={true}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-                <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                      <MapPin className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xl">San Matías - Arroyo de la Cruz</h4>
-                      <p className="text-sm text-muted-foreground">Ruta 192, Exaltación de la Cruz, Buenos Aires</p>
-                    </div>
-                  </div>
-                  <Button className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
-                    <a href="https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7" target="_blank" rel="noopener noreferrer">
-                      Abrir en Google Maps
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="barrio" className="mt-0 focus-visible:outline-none">
-              <div className="w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl p-8">
-                <div className="relative w-full aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden">
-                  <Image
-                    src="/images/Mapeo ADLC.png"
-                    alt="Plano del Barrio San Matías"
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 1200px) 100vw, 1200px"
-                  />
-                </div>
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Plano general del barrio San Matías</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
         </div>
       </section>
 
