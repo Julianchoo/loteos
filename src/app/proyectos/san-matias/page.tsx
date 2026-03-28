@@ -323,7 +323,28 @@ export default async function SanMatiasPage() {
             </div>
 
             <TabsContent value="google" className="mt-0 focus-visible:outline-none">
-              <div className="w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
+              {/* Mobile: Mapa limpio + botón debajo */}
+              <div className="md:hidden flex flex-col gap-4">
+                <div className="w-full bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
+                  <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen={true}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <Button className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
+                  <a href="https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7" target="_blank" rel="noopener noreferrer">
+                    Abrir en Google Maps
+                  </a>
+                </Button>
+              </div>
+
+              {/* Desktop: Mapa con overlay */}
+              <div className="hidden md:block w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
                 <iframe
                   src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
                   width="100%"
@@ -333,7 +354,7 @@ export default async function SanMatiasPage() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
-                <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="absolute bottom-6 left-6 right-6 bg-background/95 backdrop-blur p-6 rounded-2xl border shadow-2xl flex flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/10 rounded-xl text-primary">
                       <MapPin className="w-6 h-6" />
@@ -343,7 +364,7 @@ export default async function SanMatiasPage() {
                       <p className="text-sm text-muted-foreground">Ruta 192, Exaltación de la Cruz, Buenos Aires</p>
                     </div>
                   </div>
-                  <Button className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
+                  <Button className="w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20" asChild>
                     <a href="https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7" target="_blank" rel="noopener noreferrer">
                       Abrir en Google Maps
                     </a>

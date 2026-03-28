@@ -11,11 +11,10 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from "@/components/ui/menubar";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ModeToggle } from "./ui/mode-toggle";
@@ -102,45 +101,45 @@ export function SiteHeader() {
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <TreePine className="h-5 w-5 text-primary" />
-                    Menú
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-4 mt-8">
+              <SheetContent side="right" className="w-[320px] sm:w-[400px]">
+                <div className="flex flex-col gap-6 mt-12 px-2">
                   <Link
                     href="/#nosotros"
-                    className="text-lg font-medium hover:text-primary transition-colors py-2"
+                    className="text-lg font-semibold hover:bg-accent/50 transition-all py-4 px-4 rounded-lg border-l-4 border-primary/70 hover:border-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Nosotros
                   </Link>
 
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm font-semibold text-muted-foreground">Proyectos</p>
+                  <Separator className="my-2" />
+
+                  <div className="flex flex-col gap-3">
+                    <div className="text-base font-bold text-foreground px-4 py-2 bg-accent/30 rounded-md border-b-2 border-primary/20">
+                      Proyectos
+                    </div>
                     <Link
                       href="/proyectos/san-matias"
-                      className="pl-4 py-2 hover:bg-accent rounded-md transition-colors"
+                      className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <div className="font-medium">San Matías</div>
-                      <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
+                      <div className="font-semibold">San Matías</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">Arroyo de La Cruz</div>
                     </Link>
                     <Link
                       href="/proyectos/san-nicolas"
-                      className="pl-4 py-2 hover:bg-accent rounded-md transition-colors"
+                      className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <div className="font-medium">San Nicolás</div>
-                      <div className="text-xs text-muted-foreground">Guernica</div>
+                      <div className="font-semibold">San Nicolás</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">Guernica</div>
                     </Link>
                   </div>
 
+                  <Separator className="my-2" />
+
                   <Link
                     href="/#contacto"
-                    className="text-lg font-medium hover:text-primary transition-colors py-2"
+                    className="text-lg font-semibold hover:bg-accent/50 transition-all py-4 px-4 rounded-lg border-l-4 border-primary/70 hover:border-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Contacto
