@@ -58,7 +58,7 @@ export function SiteHeader() {
             <Menubar className="hidden md:flex border-none shadow-none bg-transparent">
               <MenubarMenu>
                 <MenubarTrigger asChild>
-                  <Link href="/#nosotros" className="cursor-pointer">
+                  <Link href="/nosotros" className="cursor-pointer">
                     Nosotros
                   </Link>
                 </MenubarTrigger>
@@ -86,6 +86,14 @@ export function SiteHeader() {
 
               <MenubarMenu>
                 <MenubarTrigger asChild>
+                  <Link href="/blog" className="cursor-pointer">
+                    Blog
+                  </Link>
+                </MenubarTrigger>
+              </MenubarMenu>
+
+              <MenubarMenu>
+                <MenubarTrigger asChild>
                   <Link href="/#contacto" className="cursor-pointer">
                     Contacto
                   </Link>
@@ -104,7 +112,7 @@ export function SiteHeader() {
               <SheetContent side="right" className="w-[320px] sm:w-[400px]">
                 <div className="flex flex-col gap-6 mt-12 px-2">
                   <Link
-                    href="/#nosotros"
+                    href="/nosotros"
                     className="text-lg font-semibold hover:bg-accent/50 transition-all py-4 px-4 rounded-lg border-l-4 border-primary/70 hover:border-primary"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -134,6 +142,16 @@ export function SiteHeader() {
                       <div className="text-sm text-muted-foreground mt-0.5">Guernica</div>
                     </Link>
                   </div>
+
+                  <Separator className="my-2" />
+
+                  <Link
+                    href="/blog"
+                    className="text-lg font-semibold hover:bg-accent/50 transition-all py-4 px-4 rounded-lg border-l-4 border-primary/70 hover:border-primary"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Blog
+                  </Link>
 
                   <Separator className="my-2" />
 
