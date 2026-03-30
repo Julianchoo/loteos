@@ -53,7 +53,7 @@ export function AnimatedHero() {
         style={{ transitionDelay: mounted ? "700ms" : "0ms" }}
       >
         <Button size="lg" className="rounded-full px-8 gap-2 group h-14 text-xl shadow-xl shadow-primary/20" asChild>
-          <a href="/proyectos/san-matias">
+          <a href="/proyectos">
             Ver Proyectos <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </a>
         </Button>

@@ -70,6 +70,11 @@ export function SiteHeader() {
                 </MenubarTrigger>
                 <MenubarContent>
                   <MenubarItem asChild>
+                    <Link href="/proyectos" className="cursor-pointer font-semibold text-primary">
+                      Ver todos los proyectos
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
                     <Link href="/proyectos/san-matias" className="cursor-pointer flex flex-col items-start">
                       <div className="font-medium">San Matías</div>
                       <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
@@ -122,9 +127,13 @@ export function SiteHeader() {
                   <Separator className="my-2" />
 
                   <div className="flex flex-col gap-3">
-                    <div className="text-base font-bold text-foreground px-4 py-2 bg-accent/30 rounded-md border-b-2 border-primary/20">
-                      Proyectos
-                    </div>
+                    <Link
+                      href="/proyectos"
+                      className="text-base font-bold text-primary px-4 py-2 bg-accent/30 rounded-md border-b-2 border-primary/20 hover:bg-accent/50 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Proyectos →
+                    </Link>
                     <Link
                       href="/proyectos/san-matias"
                       className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"

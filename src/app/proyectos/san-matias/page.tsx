@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles } from "lucide-react";
+import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
 import { InteractiveLotMap } from "@/components/interactive-lot-map";
 import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -161,6 +161,31 @@ export default async function SanMatiasPage() {
           })
         }}
       />
+
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-3">
+        <ol className="flex items-center gap-1 text-sm text-muted-foreground">
+          <li>
+            <Link href="/" className="hover:text-foreground transition-colors">
+              Inicio
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="h-3.5 w-3.5" />
+          </li>
+          <li>
+            <Link href="/proyectos" className="hover:text-foreground transition-colors">
+              Proyectos
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="h-3.5 w-3.5" />
+          </li>
+          <li className="text-foreground font-medium" aria-current="page">
+            San Matías
+          </li>
+        </ol>
+      </nav>
 
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
