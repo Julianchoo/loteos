@@ -49,11 +49,14 @@ When user requests to create a ticket, gather the following information:
    - Low: Nice-to-have improvements, refactoring
 
 5. **Type** (optional, default: "Infrastructure")
-   - Options: `Infrastructure`, `Feature`, `Bug`, `Marketing`
+   - Options: `Infrastructure`, `Marketing`, `Design & UX`, `Auth`, `Product Page`
    - Infrastructure: Technical improvements, setup, configuration
-   - Feature: New functionality
-   - Bug: Fixing broken behavior
-   - Marketing: Content, SEO, branding
+   - Marketing: Content, SEO, branding, link building
+   - Design & UX: UI components, layout, visual design
+   - Auth: Authentication, permissions, session management
+   - Product Page: Project pages, landing pages, content pages
+
+> ⚠️ **Note:** The `ID` field in Airtable is auto-computed. Never include it in create/update API calls — it will throw `INVALID_VALUE_FOR_COLUMN`.
 
 ## Implementation Steps
 
@@ -76,19 +79,19 @@ After gathering the information:
 
 ## Examples
 
-### Example 1: Simple Task
+### Example 1: Infrastructure task
 ```bash
-pnpm tsx scripts/create-ticket.ts "Fix navbar spacing" "Adjust padding on mobile navbar to prevent overlap with logo" "Todo" "Medium" "Bug"
+pnpm tsx scripts/create-ticket.ts "Add security headers to Next.js config" "Add X-Content-Type-Options, X-Frame-Options, Referrer-Policy to next.config.js" "Todo" "Medium" "Infrastructure"
 ```
 
-### Example 2: Feature with Immediate Start
+### Example 2: SEO/Marketing with Immediate Start
 ```bash
-pnpm tsx scripts/create-ticket.ts "Add contact form" "Create a contact form component with name, email, message fields. Include validation and email delivery." "In progress" "High" "Feature"
+pnpm tsx scripts/create-ticket.ts "Configurar Google Search Console" "Verificar dominio, enviar sitemap, revisar Core Web Vitals baseline" "In progress" "High" "Marketing"
 ```
 
-### Example 3: Critical Bug
+### Example 3: Product page
 ```bash
-pnpm tsx scripts/create-ticket.ts "Fix authentication redirect" "Users are redirected to 404 after successful login instead of dashboard" "In progress" "Critical" "Bug"
+pnpm tsx scripts/create-ticket.ts "Crear página /proyectos hub" "Página índice de proyectos para rankear búsquedas genéricas de lotes" "Todo" "High" "Product Page"
 ```
 
 ## Technical Details

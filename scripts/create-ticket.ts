@@ -39,7 +39,7 @@ if (!args.name) {
   console.error('  description - Detailed description (required, use "quotes" if contains spaces)');
   console.error("  status      - Todo | In progress | Testing | Done (default: Todo)");
   console.error("  priority    - Critical | High | Medium | Low (default: Medium)");
-  console.error("  type        - Infrastructure | Feature | Bug | Marketing (default: Infrastructure)");
+  console.error("  type        - Infrastructure | Marketing | Design & UX | Auth | Product Page (default: Infrastructure)");
   console.error("\nExample:");
   console.error(
     '  pnpm tsx scripts/create-ticket.ts "Fix homepage layout" "Adjust spacing and alignment on mobile" "Todo" "High" "Bug"'
