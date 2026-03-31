@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500 | Fitzroya",
-  description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
+  description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
   keywords: [
     "San Matías",
     "Arroyo de la Cruz",
@@ -34,11 +34,11 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
-    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
+    description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
   },
   twitter: {
     title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
-    description: "185 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas.",
+    description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas.",
   },
 };
 
@@ -300,7 +300,7 @@ export default async function SanMatiasPage() {
           <div className="max-w-4xl mx-auto text-center space-y-6 mb-16">
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Un lugar para vivir, crecer y soñar</h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. 185 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
+              Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. 182 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
             </p>
           </div>
 
@@ -311,7 +311,7 @@ export default async function SanMatiasPage() {
             </div>
             <div className="p-6 bg-background rounded-2xl border text-center space-y-2">
               <p className="text-sm text-muted-foreground font-medium">Total Lotes</p>
-              <p className="text-3xl font-black text-primary">185</p>
+              <p className="text-3xl font-black text-primary">{projectData?.totalLots || 182}</p>
             </div>
             <div className="p-6 bg-background rounded-2xl border text-center space-y-2">
               <p className="text-sm text-muted-foreground font-medium">Superficie</p>
@@ -646,8 +646,8 @@ export default async function SanMatiasPage() {
         </div>
       </section>
 
-      {/* Interactive Lot Map */}
-      <section id="mapa-lotes" className="py-24">
+      {/* Interactive Lot Map — hidden */}
+      {/* <section id="mapa-lotes" className="py-24">
         <div className="container px-4 mx-auto text-center space-y-12">
           <div className="space-y-4">
             <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Mapa Interactivo de Lotes</h2>
@@ -660,7 +660,8 @@ export default async function SanMatiasPage() {
             <InteractiveLotMap lots={lots} />
           </div>
         </div>
-      </section>
+      </section> */}
+      <div id="mapa-lotes" />
 
       {/* CTA Section */}
       <section id="contacto" className="py-24 bg-gradient-to-br from-primary/10 via-primary/5 to-background">

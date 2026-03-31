@@ -35,7 +35,8 @@
       "mcp__dataforseo__dataforseo_labs_google_keyword_overview",
       "mcp__dataforseo__dataforseo_labs_google_domain_rank_overview",
       "mcp__dataforseo__dataforseo_labs_google_ranked_keywords",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(python3 -m json.tool)"
     ]
   },
   "enableAllProjectMcpServers": true,

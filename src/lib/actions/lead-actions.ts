@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { randomUUID } from "crypto";
 import { syncLeadToAirtable } from "@/lib/airtable-sync";
 import { db } from "@/lib/db";
@@ -48,9 +49,11 @@ export async function createLead(data: CreateLeadData) {
       syncStatus: "pending",
     });
 
-    // Trigger immediate sync to Airtable (async, don't await)
-    syncLeadToAirtable(leadId).catch((error) => {
-      console.error("Failed to sync lead immediately:", error);
+    // Trigger sync to Airtable after response is sent
+    after(async () => {
+      await syncLeadToAirtable(leadId).catch((error) => {
+        console.error("Failed to sync lead to Airtable:", error);
+      });
     });
 
     revalidatePath("/");
@@ -110,9 +113,11 @@ export async function createLeadWithFinancing(
       createdAt: new Date(),
     });
 
-    // Trigger immediate sync to Airtable (async, don't await)
-    syncLeadToAirtable(leadId).catch((error) => {
-      console.error("Failed to sync lead immediately:", error);
+    // Trigger sync to Airtable after response is sent
+    after(async () => {
+      await syncLeadToAirtable(leadId).catch((error) => {
+        console.error("Failed to sync lead to Airtable:", error);
+      });
     });
 
     revalidatePath("/");

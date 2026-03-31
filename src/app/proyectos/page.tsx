@@ -47,7 +47,7 @@ export default function ProyectosPage() {
                   "@type": "Offer",
                   name: "San Matías",
                   description:
-                    "185 lotes de 300m² en Arroyo de la Cruz desde USD 12.500",
+                    "182 lotes de 300m² en Arroyo de la Cruz desde USD 12.500",
                   url: "https://fitzroya.com/proyectos/san-matias",
                 },
               ],
@@ -111,7 +111,7 @@ export default function ProyectosPage() {
                   </div>
 
                   <div className="text-sm text-muted-foreground border-t pt-3">
-                    185 lotes · 300 m² · Desde USD 12.500
+                    182 lotes · 300 m² · Desde USD 12.500
                   </div>
 
                   <div className="flex flex-wrap gap-2">

@@ -119,7 +119,7 @@ export default async function Home() {
                   <span>Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz</span>
                 </div>
                 <p className="text-lg leading-relaxed">
-                  Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. Contamos con 185 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
+                  Un barrio exclusivo de 9 hectáreas en el corazón de Arroyo de la Cruz. Contamos con 182 lotes de 300m² cada uno, diseñados para quienes buscan tranquilidad y naturaleza sin alejarse de la ciudad.
                 </p>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -129,7 +129,7 @@ export default async function Home() {
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Total de Lotes</p>
-                    <p className="text-xl font-bold">185 Lotes</p>
+                    <p className="text-xl font-bold">182 Lotes</p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Superficie</p>
@@ -179,7 +179,7 @@ export default async function Home() {
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
                       <Mail className="w-5 h-5" />
                     </div>
-                    <span className="text-lg">ventas@fitzroyadesarrollos.com.ar</span>
+                    <span className="text-lg">matias@fitzroyadesarrollos.com.ar</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
