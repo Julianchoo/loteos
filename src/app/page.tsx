@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     "financiación directa",
     "desarrollos inmobiliarios"
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
     description: "Lotes en venta en Buenos Aires. San Matías desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",

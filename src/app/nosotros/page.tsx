@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     "lotes sustentables",
     "empresa inmobiliaria",
   ],
+  alternates: {
+    canonical: "/nosotros",
+  },
   openGraph: {
     title: "Quiénes Somos | Fitzroya Desarrollos",
     description:

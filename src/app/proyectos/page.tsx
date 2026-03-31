@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     "desarrollos inmobiliarios Buenos Aires",
     "comprar lote Buenos Aires",
   ],
+  alternates: {
+    canonical: "/proyectos",
+  },
   openGraph: {
     title: "Loteos en Buenos Aires — Barrios Abiertos sin Expensas | Fitzroya",
     description:

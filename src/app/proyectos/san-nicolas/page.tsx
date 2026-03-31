@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     "escritura inmediata",
     "Ruta 210"
   ],
+  alternates: {
+    canonical: "/proyectos/san-nicolas",
+  },
   openGraph: {
     title: "San Nicolás Guernica - Lotes desde USD 14.500",
     description: "20 lotes en venta en Guernica desde USD 14.500. Proyecto de 1 hectárea con financiación directa y escritura inmediata.",

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Blog | Consejos sobre lotes y desarrollos inmobiliarios",
   description:
     "Artículos sobre inversión en lotes, desarrollos inmobiliarios sustentables y consejos para comprar tu terreno en Buenos Aires.",
+  alternates: {
+    canonical: "/blog",
+  },
   openGraph: {
     title: "Blog | Fitzroya Desarrollos",
     description:
