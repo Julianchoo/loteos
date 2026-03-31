@@ -339,7 +339,7 @@ export default async function SanMatiasPage() {
               <div className="md:hidden flex flex-col gap-4">
                 <div className="w-full bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.114331!3d-34.332788!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -358,7 +358,7 @@ export default async function SanMatiasPage() {
               {/* Desktop: Mapa con overlay */}
               <div className="hidden md:block w-full relative bg-card rounded-3xl overflow-hidden border shadow-2xl aspect-[16/9]">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.11358222434968!3d-34.33512147317584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3287.0688907661604!2d-59.114331!3d-34.332788!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bb63f1da8c4c8d%3A0x5efc04b4b3b46e89!2sSan%20Matias%20-%20Arroyo%20de%20la%20Cruz!5e0!3m2!1ses-419!2sar!4v1234567890123"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
