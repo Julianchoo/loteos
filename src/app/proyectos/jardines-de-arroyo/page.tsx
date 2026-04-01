@@ -133,19 +133,19 @@ export default async function JardinesDeArroyoPage() {
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Inicio",
-                "item": "https://www.fitzroya.com.ar"
+                "item": "https://www.fitzroyadesarrollos.com"
               },
               {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Proyectos",
-                "item": "https://www.fitzroya.com.ar/proyectos"
+                "item": "https://www.fitzroyadesarrollos.com/proyectos"
               },
               {
                 "@type": "ListItem",
                 "position": 3,
                 "name": "Jardines de Arroyo",
-                "item": "https://www.fitzroya.com.ar/proyectos/jardines-de-arroyo"
+                "item": "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo"
               }
             ]
           })

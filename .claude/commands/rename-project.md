@@ -4,122 +4,158 @@ You are helping the user rename an existing real estate project. This involves u
 
 ## Important Distinction
 
-- **Project Name**: The display name shown to users (e.g., "San Nicolás")
-- **Project ID**: The URL slug used in routes and databases (e.g., "san-nicolas")
-- **Location**: The geographic location where the project is located (e.g., "Guernica, Buenos Aires")
+- **Project Name**: The display name shown to users (e.g., "Jardines de Arroyo")
+- **Project ID**: The URL slug used in routes and databases (e.g., "jardines-de-arroyo")
+- **Location**: The geographic location where the project is located (e.g., "Arroyo de la Cruz, Buenos Aires")
 
 A project can have:
-- Name: "San Nicolás" (what it's called)
-- Location: "Guernica" (where it is)
+- Name: "Jardines de Arroyo" (what it's called)
+- Location: "Arroyo de la Cruz" (where it is)
 
 ## When to Use This Guide
 
 Use this guide when you need to:
-1. Change the project display name (e.g., "Guernica" → "San Nicolás")
-2. Change the project ID/slug (e.g., "guernica" → "san-nicolas")
+1. Change the project display name
+2. Change the project ID/slug
 3. Both of the above
 
-**Do NOT use this guide** for changing the project location - that's just a simple field update.
+**Do NOT use this guide** for changing the project location — that's just a simple field update.
+
+---
 
 ## Step 1: Confirm Changes with User
 
 Ask the user to confirm:
-1. **Current Project ID**: What is the current project ID?
-2. **New Project ID**: What should the new project ID be?
+1. **Current Project ID**: What is the current slug? (e.g., `san-matias`)
+2. **New Project ID**: What should the new slug be? (e.g., `jardines-de-arroyo`)
 3. **Current Project Name**: What is the current display name?
 4. **New Project Name**: What should the new display name be?
-5. **Location**: What is the project location? (this usually stays the same)
+5. **Location**: What is the project location? (usually stays the same)
 
-## Step 2: Update Database Records
+Also ask: **Does the user want to handle Airtable manually?** (they usually do — Airtable changes are done directly in the UI)
 
-### PostgreSQL Update
+---
 
-Create a script at `scripts/update-[old-id]-to-[new-id].ts`:
+## Step 2: Rename Files with git mv
+
+Always use `git mv` to preserve git history. Run ALL of these before touching any content:
+
+```bash
+# 1. Rename the route folder
+git mv src/app/proyectos/[old-id] src/app/proyectos/[new-id]
+
+# 2. Rename SVG map assets
+git mv public/maps/[old-id]-plan.svg public/maps/[new-id]-plan.svg
+git mv public/maps/[old-id].svg public/maps/[new-id].svg
+
+# 3. Rename the financing component (it's shared across projects — use a generic name)
+git mv src/components/[old-id]-financing-section.tsx src/components/financing-section.tsx
+```
+
+---
+
+## Step 3: Update the Financing Component
+
+The `FinancingSection` component (`src/components/financing-section.tsx`) was originally named after the first project but is **shared across all projects**. It must:
+- Be named `FinancingSection` (generic, not project-specific)
+- Accept `projectName` as a prop (NOT hardcoded)
+
+```typescript
+// src/components/financing-section.tsx
+interface FinancingSectionProps {
+  basePrice: number;
+  minCashDown: number;
+  maxFinancingMonths: number;
+  tna: number;
+  projectId: string;
+  projectName: string;   // ← must be a prop, not hardcoded
+}
+
+export function FinancingSection({ ..., projectName }: FinancingSectionProps) {
+  // ...
+  <ProjectLeadForm
+    projectId={projectId}
+    projectName={projectName}   // ← use the prop
+    // ...
+  />
+}
+```
+
+---
+
+## Step 4: Update Content in All Files
+
+### Complete checklist — every file that references the project name or slug:
+
+| File | What to change |
+|------|----------------|
+| `src/app/proyectos/[new-id]/page.tsx` | Function name, `getProjectBySlug()` arg, metadata title/description/keywords, canonical URL, OG title/description, Twitter title/description, JSON-LD BreadcrumbList item name + URL, JSON-LD FAQ answers that mention the project name, breadcrumb `<li>` text, hero `<h1>`, image `alt`, all body text mentioning the project name, `FinancingSection` import path + component name + `projectId` + `projectName` props |
+| `src/components/financing-section.tsx` | Interface name, function name, `projectName` prop (see Step 3) |
+| `src/components/svg-lot-map.tsx` | SVG `src` path |
+| `src/components/simple-lot-map.tsx` | SVG `src` path |
+| `src/components/site-header.tsx` | Desktop menu: `href` + display name. Mobile menu: `href` + display name |
+| `src/app/page.tsx` | `description` in metadata, `keywords` array, all `href` links |
+| `src/app/nosotros/page.tsx` | CTA `href` link |
+| `src/app/proyectos/page.tsx` | JSON-LD `name` + `url`, card comment, image `alt`, card `<h3>` title, "Ver proyecto" link, financing CTA link |
+| `src/app/sitemap.ts` | Static route URL |
+| `src/lib/actions/lead-actions.ts` | `revalidatePath()` call |
+| `public/llms.txt` | Section heading, `**Page**` URL, contact info URL |
+| `scripts/seed.ts` | `projectId` constant and `name` field |
+| `src/app/proyectos/san-nicolas/page.tsx` | Import path for `FinancingSection` + add `projectName` prop |
+
+### Quick grep to catch anything missed:
+
+```bash
+grep -ri "[old-id]\|[Old Name]" src/ public/ scripts/ --include="*.ts" --include="*.tsx" --include="*.txt"
+```
+
+---
+
+## Step 5: Create and Run DB Update Script
+
+Create `scripts/update-[old-id]-to-[new-id].ts`:
 
 ```typescript
 import { db } from "../src/lib/db";
 import { project } from "../src/lib/schema";
 import { eq } from "drizzle-orm";
 
-async function update[OldName]To[NewName]() {
+async function updateProject() {
   try {
-    // Update the existing project
-    const result = await db
-      .update(project)
-      .set({
-        id: "[new-id]",
-        name: "[New Name]",
-        location: "[Location]",
-      })
-      .where(eq(project.id, "[old-id]"));
+    // List current state first
+    const existing = await db.select().from(project);
+    console.log("Proyectos en DB:", existing.map((p) => `${p.id} (${p.name})`));
 
-    console.log("✅ Proyecto actualizado exitosamente en PostgreSQL");
-    console.log("   ID: [old-id] → [new-id]");
-    console.log("   Nombre: [Old Name] → [New Name]");
-    console.log("   Ubicación: [Location] (mantenida)");
-  } catch (error) {
-    console.error("❌ Error:", error);
-    console.log("\n💡 Si el proyecto '[old-id]' no existe, ejecuta:");
-    console.log("   pnpm tsx scripts/insert-[new-id].ts");
-    process.exit(1);
-  }
-  process.exit(0);
-}
+    const oldExists = existing.some((p) => p.id === "[old-id]");
+    const newExists = existing.some((p) => p.id === "[new-id]");
 
-update[OldName]To[NewName]();
-```
-
-### Airtable Update
-
-Create a script at `scripts/update-[old-id]-to-[new-id]-airtable.ts`:
-
-```typescript
-import Airtable from "airtable";
-import { config } from "dotenv";
-
-config();
-
-if (!process.env.AIRTABLE_API_TOKEN) {
-  throw new Error("AIRTABLE_API_TOKEN is not defined");
-}
-
-const airtable = new Airtable({
-  apiKey: process.env.AIRTABLE_API_TOKEN,
-});
-
-const base = airtable.base(process.env.AIRTABLE_BASE_ID!);
-const projects = base(process.env.AIRTABLE_PROJECTS_TABLE_ID || "tblMkCAojUXvPedrw");
-
-async function update[OldName]To[NewName]InAirtable() {
-  try {
-    // First, find the record
-    const records = await projects
-      .select({
-        filterByFormula: "{Project ID} = '[old-id]'",
-        maxRecords: 1,
-      })
-      .firstPage();
-
-    if (records.length === 0) {
-      console.log("⚠️  No se encontró el proyecto '[old-id]' en Airtable");
-      console.log("💡 Ejecuta: pnpm tsx scripts/create-[new-id]-in-airtable.ts");
-      process.exit(1);
+    if (newExists) {
+      // New ID already exists — just delete the old record
+      if (oldExists) {
+        await db.delete(project).where(eq(project.id, "[old-id]"));
+        console.log("🗑️  Registro '[old-id]' eliminado.");
+      } else {
+        console.log("ℹ️  No existe '[old-id]', nada que eliminar.");
+      }
+      // Ensure name is correct on the existing new record
+      await db
+        .update(project)
+        .set({ name: "[New Name]" })
+        .where(eq(project.id, "[new-id]"));
+      console.log("✅ Registro '[new-id]' confirmado con nombre correcto.");
+    } else if (oldExists) {
+      // Normal case — rename old to new
+      await db
+        .update(project)
+        .set({ id: "[new-id]", name: "[New Name]" })
+        .where(eq(project.id, "[old-id]"));
+      console.log("✅ ID: [old-id] → [new-id]");
+      console.log("✅ Nombre: [Old Name] → [New Name]");
+    } else {
+      console.log("⚠️  No se encontró '[old-id]' ni '[new-id]' en la DB.");
     }
 
-    const recordId = records[0].id;
-
-    // Update the record
-    await projects.update(recordId, {
-      "Project ID": "[new-id]",
-      "Project Name": "[New Name]",
-      "Location": "[Location]",
-    });
-
-    console.log("✅ Proyecto actualizado exitosamente en Airtable!");
-    console.log(`   Record ID: ${recordId}`);
-    console.log("   Project ID: [old-id] → [new-id]");
-    console.log("   Project Name: [Old Name] → [New Name]");
-    console.log("   Location: [Location] (mantenida)");
+    console.log("\n✅ Listo.");
   } catch (error) {
     console.error("❌ Error:", error);
     process.exit(1);
@@ -127,150 +163,65 @@ async function update[OldName]To[NewName]InAirtable() {
   process.exit(0);
 }
 
-update[OldName]To[NewName]InAirtable();
+updateProject();
 ```
 
-## Step 3: Update File Structure
-
-If the project ID is changing, rename the project folder:
+**IMPORTANT**: `tsx` does NOT load `.env` automatically. Always run with:
 
 ```bash
-mv src/app/proyectos/[old-id] src/app/proyectos/[new-id]
+pnpm tsx --env-file=.env scripts/update-[old-id]-to-[new-id].ts
 ```
 
-## Step 4: Update Project Page
+---
 
-In `src/app/proyectos/[new-id]/page.tsx`, update:
+## Step 6: Airtable (user does this manually)
 
-1. **Function name**: `[OldName]Page` → `[NewName]Page`
-2. **Page title (h1)**: Update to new project name
-3. **projectId prop**: Update in `SanMatiasFinancingSection` component
-4. **Location badge**: Keep location as-is (unless also changing)
-5. **All references**: Update any hardcoded project name references
+Tell the user to update in Airtable:
+- **Project ID**: `[old-id]` → `[new-id]`
+- **Project Name**: `[Old Name]` → `[New Name]`
 
-Example changes:
-```typescript
-// Before
-export default async function GuernicaPage() {
-  // ...
-  <h1>Guernica</h1>
-  // ...
-  <SanMatiasFinancingSection projectId="guernica" />
-}
+---
 
-// After
-export default async function SanNicolasPage() {
-  // ...
-  <h1>San Nicolás</h1>
-  // ...
-  <SanMatiasFinancingSection projectId="san-nicolas" />
-}
-```
-
-## Step 5: Update Navigation
-
-In `src/components/site-header.tsx`, update the project link:
-
-```typescript
-// Before
-<DropdownMenuItem asChild>
-  <Link href="/proyectos/[old-id]" className="...">
-    <div className="font-medium">[Old Name]</div>
-    <div className="text-xs text-muted-foreground">[Old Location]</div>
-  </Link>
-</DropdownMenuItem>
-
-// After
-<DropdownMenuItem asChild>
-  <Link href="/proyectos/[new-id]" className="...">
-    <div className="font-medium">[New Name]</div>
-    <div className="text-xs text-muted-foreground">[Location]</div>
-  </Link>
-</DropdownMenuItem>
-```
-
-## Step 6: Rename Database Scripts
-
-Rename the creation scripts to match new naming:
+## Step 7: Verify
 
 ```bash
-mv scripts/insert-[old-id].ts scripts/insert-[new-id].ts
-mv scripts/create-[old-id]-in-airtable.ts scripts/create-[new-id]-in-airtable.ts
-```
-
-Update the content of these renamed scripts:
-- Function names
-- Project ID
-- Project Name
-- Console log messages
-
-## Step 7: Run Update Scripts
-
-Execute the database update scripts in order:
-
-```bash
-# 1. Update PostgreSQL
-pnpm tsx scripts/update-[old-id]-to-[new-id].ts
-
-# 2. Update Airtable
-pnpm tsx scripts/update-[old-id]-to-[new-id]-airtable.ts
-
-# 3. Verify code quality
 pnpm lint && pnpm typecheck
 ```
 
-## Step 8: Verify Updates
+Both must pass with 0 errors before considering the rename complete.
 
-Check that updates were successful:
+---
 
-1. **PostgreSQL**: Query the database to confirm the project record shows new ID and name
-2. **Airtable**: Open Airtable and verify the Projects table shows the updated record
-3. **Website**: Navigate to `/proyectos/[new-id]` and verify the page loads correctly
-4. **Navigation**: Check that the dropdown menu shows the new project name
-
-## Step 9: Clean Up (Optional)
-
-After successful update, you can delete the update scripts:
+## Step 8: Commit and Push
 
 ```bash
-rm scripts/update-[old-id]-to-[new-id].ts
-rm scripts/update-[old-id]-to-[new-id]-airtable.ts
+git add -A
+git commit -m "feat: rename [Old Name] project to [New Name]"
+git push
 ```
 
-Keep the create/insert scripts with the new naming for future reference.
+**Watch out**: GitHub push protection will reject the push if `settings.local.json` contains a token in a `Bash(TOKEN=...)` allowed-tools entry. Check and remove it before pushing.
 
-## Files That Need Updates
+---
 
-**Checklist of all files to update:**
+## Common Pitfalls
 
-- [ ] `src/app/proyectos/[old-id]/` → `src/app/proyectos/[new-id]/`
-- [ ] `src/app/proyectos/[new-id]/page.tsx` (function name, title, projectId)
-- [ ] `src/components/site-header.tsx` (navigation link and display name)
-- [ ] `scripts/insert-[old-id].ts` → `scripts/insert-[new-id].ts` (renamed and updated)
-- [ ] `scripts/create-[old-id]-in-airtable.ts` → `scripts/create-[new-id]-in-airtable.ts` (renamed and updated)
-- [ ] `scripts/update-[old-id]-to-[new-id].ts` (create and run)
-- [ ] `scripts/update-[old-id]-to-[new-id]-airtable.ts` (create and run)
-- [ ] PostgreSQL database (via update script)
-- [ ] Airtable database (via update script)
+1. **`duplicate key value` error in DB script**: The new ID already exists. Use the "newExists" branch of the script above — delete old, confirm new.
+2. **`tsx` ignores `.env`**: Always use `--env-file=.env` flag.
+3. **`FinancingSection` has hardcoded project name**: Must accept `projectName` as a prop — all projects share this component.
+4. **GitHub push protection blocks the push**: Check `settings.local.json` for any tokens in the `allow` array.
+5. **Body text in page.tsx**: Beyond metadata and the h1, the page body often mentions the project name in FAQ answers, section descriptions, and alt text. Run the grep above to catch them all.
+6. **Both desktop AND mobile nav in site-header.tsx**: The header has two separate project link entries — both need updating.
+7. **Don't confuse project name with location**: "Jardines de Arroyo" is the name; "Arroyo de la Cruz" is the location.
 
-## Common Pitfalls to Avoid
-
-1. **Don't confuse project name with location**: The project can be called "San Nicolás" and be located in "Guernica"
-2. **Update projectId in financing section**: Make sure the `SanMatiasFinancingSection` component gets the new projectId
-3. **Rename folder before updating page**: Move the folder first, then update the page content
-4. **Run database updates before testing**: The website won't work correctly until both databases are updated
-5. **Don't forget the navigation**: Users won't find the renamed project if the header isn't updated
-
-## Example: Guernica → San Nicolás
+## Example: San Matías → Jardines de Arroyo
 
 **Before:**
-- Project ID: `guernica`
-- Project Name: `Guernica`
-- Location: `Guernica, Buenos Aires`
+- Project ID: `san-matias`
+- Project Name: `San Matías`
+- Location: `Arroyo de la Cruz, Buenos Aires`
 
 **After:**
-- Project ID: `san-nicolas`
-- Project Name: `San Nicolás`
-- Location: `Guernica, Buenos Aires` (unchanged - this is where it's located!)
-
-This is a perfect example of why project name and location are different fields.
+- Project ID: `jardines-de-arroyo`
+- Project Name: `Jardines de Arroyo`
+- Location: `Arroyo de la Cruz, Buenos Aires` (unchanged)

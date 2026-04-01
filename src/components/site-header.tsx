@@ -26,11 +26,17 @@ export function SiteHeader() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!session) { setIsAdmin(false); return; }
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d: { isAdmin: boolean }) => setIsAdmin(d.isAdmin))
-      .catch(() => setIsAdmin(false));
+    async function checkAdmin() {
+      if (!session) { setIsAdmin(false); return; }
+      try {
+        const r = await fetch("/api/auth/me");
+        const d: { isAdmin: boolean } = await r.json();
+        setIsAdmin(d.isAdmin);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    void checkAdmin();
   }, [session]);
 
   return (

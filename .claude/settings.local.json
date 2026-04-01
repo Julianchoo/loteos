@@ -43,7 +43,8 @@
       "Bash(pnpm dlx:*)",
       "Bash(pnpm run:*)",
       "Bash(pnpm exec:*)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(npm run:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
