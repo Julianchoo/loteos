@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { FileText, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminPage() {
@@ -19,6 +19,23 @@ export default function AdminPage() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Gestioná los posts del blog desde acá.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/users">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Usuarios
+              </CardTitle>
+              <CardDescription>Crear y gestionar usuarios del sistema</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Agregá admins u otros usuarios desde acá.
               </p>
             </CardContent>
           </Card>

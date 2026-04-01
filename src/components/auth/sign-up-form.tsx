@@ -45,17 +45,18 @@ export function SignUpForm() {
       if (result.error) {
         setError(result.error.message ?? "Error al crear la cuenta")
       } else {
-        // If this is an admin email, update the role and redirect to admin
+        // If admin email, upgrade role first
         if (ADMIN_EMAILS.includes(email.toLowerCase())) {
           await fetch("/api/auth/set-admin-role", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
           })
-          router.push("/admin")
-        } else {
-          router.push("/dashboard")
         }
+        // Redirect based on actual role
+        const meRes = await fetch("/api/auth/me")
+        const meData = await meRes.json() as { isAdmin: boolean }
+        router.push(meData.isAdmin ? "/admin" : "/dashboard")
         router.refresh()
       }
     } catch {

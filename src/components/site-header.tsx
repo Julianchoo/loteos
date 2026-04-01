@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TreePine, Menu, ChevronDown, LayoutDashboard, LogIn, LogOut } from "lucide-react";
+import { TreePine, Menu, ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -214,25 +214,16 @@ export function SiteHeader() {
 
           <div className="flex items-center gap-2" role="group" aria-label="User actions">
             <ModeToggle />
-            {!sessionPending && (
-              session ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 text-muted-foreground"
-                  onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Salir</span>
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" asChild className="gap-1.5">
-                  <Link href="/login">
-                    <LogIn className="h-4 w-4" />
-                    <span className="hidden sm:inline">Ingresar</span>
-                  </Link>
-                </Button>
-              )
+            {!sessionPending && session && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground"
+                onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Salir</span>
+              </Button>
             )}
           </div>
         </nav>
