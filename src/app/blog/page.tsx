@@ -1,9 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays, User } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { getPosts, formatWPDate, type WPPost } from "@/lib/wordpress";
+import { getPublishedPosts, formatBlogDate } from "@/lib/blog";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,13 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BlogPage() {
-  let posts: WPPost[] = [];
-  try {
-    const result = await getPosts(12);
-    posts = result.nodes;
-  } catch {
-    posts = [];
-  }
+  const posts = await getPublishedPosts(12);
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-6xl">
@@ -49,11 +42,11 @@ export default async function BlogPage() {
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/${post.slug}`} className="group">
               <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
-                {post.featuredImage && (
+                {post.featuredImageUrl && (
                   <div className="relative w-full h-48 overflow-hidden">
                     <Image
-                      src={post.featuredImage.node.sourceUrl}
-                      alt={post.featuredImage.node.altText || post.title}
+                      src={post.featuredImageUrl}
+                      alt={post.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -61,30 +54,24 @@ export default async function BlogPage() {
                   </div>
                 )}
                 <CardHeader className="pb-2">
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {post.categories.nodes.slice(0, 2).map((cat) => (
-                      <Badge key={cat.slug} variant="secondary" className="text-xs">
-                        {cat.name}
-                      </Badge>
-                    ))}
-                  </div>
                   <h2 className="text-lg font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
                     {post.title}
                   </h2>
                 </CardHeader>
                 <CardContent>
-                  <div
-                    className="text-sm text-muted-foreground line-clamp-3 mb-4"
-                    dangerouslySetInnerHTML={{ __html: post.excerpt }}
-                  />
+                  {post.excerpt && (
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {post.excerpt}
+                    </p>
+                  )}
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
-                      {formatWPDate(post.date)}
+                      {formatBlogDate(post.publishedAt ?? post.createdAt)}
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {post.author.node.name}
+                      {post.authorName}
                     </span>
                   </div>
                 </CardContent>

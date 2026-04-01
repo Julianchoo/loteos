@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
  * Protected routes that require authentication.
  * These are also configured in src/proxy.ts for optimistic redirects.
  */
-export const protectedRoutes = ["/chat", "/dashboard", "/profile"];
+export const protectedRoutes = ["/chat", "/dashboard", "/profile", "/admin"];
 
 /**
  * Checks if the current request is authenticated.
@@ -19,6 +19,23 @@ export async function requireAuth() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) {
+    redirect("/");
+  }
+
+  return session;
+}
+
+/**
+ * Checks if the current user is an admin.
+ * Redirects to home if not authenticated or not an admin.
+ *
+ * @returns The session object if the user is an admin
+ * @throws Redirects to home page if not authenticated or not admin
+ */
+export async function requireAdmin() {
+  const session = await requireAuth();
+
+  if ((session.user as { role?: string }).role !== "admin") {
     redirect("/");
   }
 

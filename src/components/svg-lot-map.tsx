@@ -201,8 +201,8 @@ export function SVGLotMap({ lots }: SVGLotMapProps) {
                         }}
                     >
                         <Image
-                            src="/maps/san-matias-plan.svg"
-                            alt="Plano de lotes San Matías"
+                            src="/maps/jardines-de-arroyo-plan.svg"
+                            alt="Plano de lotes Jardines de Arroyo"
                             fill
                             className="object-contain"
                             style={{

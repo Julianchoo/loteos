@@ -1,4 +1,4 @@
-import { getAllPostSlugs } from "@/lib/wordpress";
+import { getAllPublishedSlugs } from "@/lib/blog";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/proyectos/san-matias`,
+      url: `${baseUrl}/proyectos/jardines-de-arroyo`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.9,
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
-    const slugs = await getAllPostSlugs();
+    const slugs = await getAllPublishedSlugs();
     blogRoutes = slugs.map((slug) => ({
       url: `${baseUrl}/blog/${slug}`,
       lastModified: new Date(),
@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
   } catch {
-    // WordPress unavailable — sitemap still works without blog posts
+    // DB unavailable — sitemap still works without blog posts
   }
 
   return [...staticRoutes, ...blogRoutes];

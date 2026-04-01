@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
-  description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables en ubicaciones estratégicas. San Matías desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+  description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables en ubicaciones estratégicas. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
   keywords: [
     "lotes en venta",
     "lotes Buenos Aires",
     "terrenos en venta",
     "inversión inmobiliaria",
-    "San Matías",
+    "Jardines de Arroyo",
     "Arroyo de La Cruz",
     "Guernica",
     "financiación directa",
@@ -113,8 +113,8 @@ export default async function Home() {
 
               <div className="space-y-6">
                 <h3 className="text-4xl font-bold tracking-tight">
-                  <a href="/proyectos/san-matias" className="hover:text-primary transition-colors">
-                    San Matías Arroyo de La Cruz
+                  <a href="/proyectos/jardines-de-arroyo" className="hover:text-primary transition-colors">
+                    Jardines de Arroyo - Arroyo de La Cruz
                   </a>
                 </h3>
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -146,10 +146,10 @@ export default async function Home() {
 
                 <div className="flex gap-4 pt-4">
                   <Button size="lg" className="rounded-full px-8" asChild>
-                    <a href="/proyectos/san-matias#mapa-lotes">Ver Mapa de Lotes</a>
+                    <a href="/proyectos/jardines-de-arroyo#mapa-lotes">Ver Mapa de Lotes</a>
                   </Button>
                   <Button size="lg" variant="outline" className="rounded-full px-8" asChild>
-                    <a href="/proyectos/san-matias">Ver Proyecto</a>
+                    <a href="/proyectos/jardines-de-arroyo">Ver Proyecto</a>
                   </Button>
                 </div>
               </div>

@@ -48,10 +48,10 @@ export default function ProyectosPage() {
               itemListElement: [
                 {
                   "@type": "Offer",
-                  name: "San Matías",
+                  name: "Jardines de Arroyo",
                   description:
                     "182 lotes de 300m² en Arroyo de la Cruz desde USD 12.500",
-                  url: "https://fitzroya.com/proyectos/san-matias",
+                  url: "https://fitzroya.com/proyectos/jardines-de-arroyo",
                 },
               ],
             },
@@ -88,12 +88,12 @@ export default function ProyectosPage() {
               Nuestros proyectos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {/* Card San Matías */}
+              {/* Card Jardines de Arroyo */}
               <Card className="overflow-hidden flex flex-col">
                 <div className="relative h-52">
                   <Image
                     src="/images/hero-panorama.png"
-                    alt="San Matías — Arroyo de la Cruz"
+                    alt="Jardines de Arroyo — Arroyo de la Cruz"
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -106,7 +106,7 @@ export default function ProyectosPage() {
                 </div>
                 <CardContent className="flex flex-col flex-1 pt-5 gap-4">
                   <div>
-                    <h3 className="text-xl font-bold mb-1">San Matías</h3>
+                    <h3 className="text-xl font-bold mb-1">Jardines de Arroyo</h3>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4 shrink-0" />
                       <span>Arroyo de la Cruz, Exaltación de la Cruz</span>
@@ -129,7 +129,7 @@ export default function ProyectosPage() {
 
                   <div className="mt-auto pt-2">
                     <Button asChild className="w-full">
-                      <Link href="/proyectos/san-matias">
+                      <Link href="/proyectos/jardines-de-arroyo">
                         Ver proyecto <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -231,7 +231,7 @@ export default function ProyectosPage() {
               ))}
             </div>
             <Button asChild variant="outline">
-              <Link href="/proyectos/san-matias#financiacion">
+              <Link href="/proyectos/jardines-de-arroyo#financiacion">
                 Calculá tu cuota <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

@@ -1,5 +1,5 @@
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
-import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
+import { FinancingSection } from "@/components/financing-section";
 import { Button } from "@/components/ui/button";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
 import type { Metadata } from "next";
@@ -163,12 +163,13 @@ export default async function SanNicolasPage() {
               </p>
             </div>
 
-            <SanMatiasFinancingSection
+            <FinancingSection
               basePrice={basePrice}
               minCashDown={minCashDown}
               maxFinancingMonths={maxFinancingMonths}
               tna={tna}
               projectId="san-nicolas"
+              projectName="San Nicolás"
             />
           </div>
         </div>

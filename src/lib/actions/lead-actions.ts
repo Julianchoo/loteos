@@ -121,7 +121,7 @@ export async function createLeadWithFinancing(
     });
 
     revalidatePath("/");
-    revalidatePath("/proyectos/san-matias");
+    revalidatePath("/proyectos/jardines-de-arroyo");
 
     return { success: true, leadId };
   } catch (error) {

@@ -103,8 +103,8 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                         {/* Background SVG */}
                         <div className="absolute inset-0 flex items-center justify-center">
                             <Image
-                                src="/maps/san-matias-plan.svg"
-                                alt="Plano San Matías"
+                                src="/maps/jardines-de-arroyo-plan.svg"
+                                alt="Plano Jardines de Arroyo"
                                 fill
                                 className="object-contain"
                                 style={{

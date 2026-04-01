@@ -6,10 +6,10 @@ async function seed() {
     console.log("Seeding database...");
 
     // Create Project
-    const projectId = "san-matias-adlc";
+    const projectId = "jardines-de-arroyo";
     await db.insert(project).values({
         id: projectId,
-        name: "San Matías Arroyo de La Cruz",
+        name: "Jardines de Arroyo",
         description: "Barrio exclusivo de 9 hectáreas en Arroyo de la Cruz.",
         location: "Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz",
         totalArea: "9 Hectáreas",

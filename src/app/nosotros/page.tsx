@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, TreePine, Shield, Leaf, Heart, Eye, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { Metadata } from "next";
 
@@ -328,7 +328,7 @@ export default function NosotrosPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="rounded-full px-8 gap-2 group h-14 text-lg" asChild>
-              <Link href="/proyectos/san-matias">
+              <Link href="/proyectos/jardines-de-arroyo">
                 Ver Proyectos <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>

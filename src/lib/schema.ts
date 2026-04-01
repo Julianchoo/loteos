@@ -11,6 +11,7 @@ export const user = pgTable(
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
+    role: text("role").default("user").notNull(), // "user" | "admin"
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -217,5 +218,32 @@ export const leadProject = pgTable(
   (table) => [
     index("lead_project_lead_idx").on(table.leadId),
     index("lead_project_project_idx").on(table.projectId),
+  ]
+);
+
+export const blogPost = pgTable(
+  "blog_post",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    title: text("title").notNull(),
+    excerpt: text("excerpt"),
+    content: text("content").notNull().default(""), // HTML from Tiptap
+    featuredImageUrl: text("featured_image_url"),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("draft"), // "draft" | "published"
+    publishedAt: timestamp("published_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("blog_post_slug_idx").on(table.slug),
+    index("blog_post_status_idx").on(table.status),
+    index("blog_post_author_idx").on(table.authorId),
   ]
 );

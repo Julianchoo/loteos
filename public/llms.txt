@@ -9,7 +9,7 @@ Fitzroya Desarrollos is a real estate development company specializing in reside
 
 ## Our Projects
 
-### San Matías - Arroyo de la Cruz
+### Jardines de Arroyo - Arroyo de la Cruz
 
 **Location**: Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz, Buenos Aires, Argentina
 **Google Maps**: https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7
@@ -47,7 +47,7 @@ Fitzroya Desarrollos is a real estate development company specializing in reside
 - Immediate deed availability
 - Documentation in order and legalized
 
-**Page**: https://loteos.vercel.app/proyectos/san-matias
+**Page**: https://loteos.vercel.app/proyectos/jardines-de-arroyo
 
 ---
 
@@ -119,7 +119,7 @@ Land lots in Buenos Aires province represent a solid investment opportunity:
 
 - **Website**: https://loteos.vercel.app
 - **Contact Form**: https://loteos.vercel.app/#contacto
-- **San Matías Project**: https://loteos.vercel.app/proyectos/san-matias
+- **Jardines de Arroyo Project**: https://loteos.vercel.app/proyectos/jardines-de-arroyo
 - **San Nicolás Project**: https://loteos.vercel.app/proyectos/san-nicolas
 
 ---

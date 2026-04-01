@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
-import { SanMatiasFinancingSection } from "@/components/san-matias-financing-section";
+import { FinancingSection } from "@/components/financing-section";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,10 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500 | Fitzroya",
+  title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz | Fitzroya",
   description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
   keywords: [
-    "San Matías",
+    "Jardines de Arroyo",
     "Arroyo de la Cruz",
     "Exaltación de la Cruz",
     "Capilla del Señor",
@@ -28,23 +28,23 @@ export const metadata: Metadata = {
     "Parada Robles"
   ],
   alternates: {
-    canonical: "/proyectos/san-matias",
+    canonical: "/proyectos/jardines-de-arroyo",
   },
   openGraph: {
-    title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
+    title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz",
     description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
   },
   twitter: {
-    title: "San Matías Arroyo de La Cruz - Lotes desde USD 12.500",
+    title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz",
     description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas.",
   },
 };
 
-export default async function SanMatiasPage() {
+export default async function JardinesDeArroyoPage() {
   let projectData = null;
 
   try {
-    const projectResult = await getProjectBySlug("san-matias");
+    const projectResult = await getProjectBySlug("jardines-de-arroyo");
     if (projectResult.success && projectResult.data) {
       projectData = projectResult.data;
     }
@@ -75,7 +75,7 @@ export default async function SanMatiasPage() {
                 "name": "¿Qué infraestructura incluye el barrio?",
                 "acceptedAnswer": {
                   "@type": "Answer",
-                  "text": "San Matías cuenta con red eléctrica completa, red de agua corriente, calles consolidadas y mejoradas, cordón cuneta para drenaje, y alumbrado público LED. La infraestructura está instalada y operativa desde el inicio, no es una promesa a futuro."
+                  "text": "Jardines de Arroyo cuenta con red eléctrica completa, red de agua corriente, calles consolidadas y mejoradas, cordón cuneta para drenaje, y alumbrado público LED. La infraestructura está instalada y operativa desde el inicio, no es una promesa a futuro."
                 }
               },
               {
@@ -144,8 +144,8 @@ export default async function SanMatiasPage() {
               {
                 "@type": "ListItem",
                 "position": 3,
-                "name": "San Matías",
-                "item": "https://www.fitzroya.com.ar/proyectos/san-matias"
+                "name": "Jardines de Arroyo",
+                "item": "https://www.fitzroya.com.ar/proyectos/jardines-de-arroyo"
               }
             ]
           })
@@ -172,7 +172,7 @@ export default async function SanMatiasPage() {
             <ChevronRight className="h-3.5 w-3.5" />
           </li>
           <li className="text-foreground font-medium" aria-current="page">
-            San Matías
+            Jardines de Arroyo
           </li>
         </ol>
       </nav>
@@ -182,7 +182,7 @@ export default async function SanMatiasPage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/hero-panorama.png"
-            alt="San Matías Arroyo de La Cruz"
+            alt="Jardines de Arroyo - Arroyo de La Cruz"
             fill
             priority
             className="object-cover"
@@ -197,7 +197,7 @@ export default async function SanMatiasPage() {
             <span>LANZAMIENTO EXCLUSIVO</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            San Matías <span className="text-primary">Arroyo de La Cruz</span>
+            Jardines de Arroyo <span className="text-primary">Arroyo de La Cruz</span>
           </h1>
           <div className="flex items-center justify-center gap-2 text-white/90 text-lg md:text-xl animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
             <MapPin className="w-5 h-5 text-primary" />
@@ -266,7 +266,7 @@ export default async function SanMatiasPage() {
               <div className="relative min-h-[400px] lg:min-h-0 bg-muted/30">
                 <Image
                   src="/images/Mapeo ADLC.png"
-                  alt="Plano de loteo San Matías Arroyo de La Cruz"
+                  alt="Plano de loteo Jardines de Arroyo - Arroyo de La Cruz"
                   fill
                   className="object-contain"
                   sizes="(max-width: 1024px) 100vw, 50vw"
@@ -375,7 +375,7 @@ export default async function SanMatiasPage() {
                       <MapPin className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-xl">San Matías - Arroyo de la Cruz</h4>
+                      <h4 className="font-bold text-xl">Jardines de Arroyo - Arroyo de la Cruz</h4>
                       <p className="text-sm text-muted-foreground">Ruta 192, Exaltación de la Cruz, Buenos Aires</p>
                     </div>
                   </div>
@@ -393,14 +393,14 @@ export default async function SanMatiasPage() {
                 <div className="relative w-full aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden">
                   <Image
                     src="/images/Mapeo ADLC.png"
-                    alt="Plano del Barrio San Matías"
+                    alt="Plano del Barrio Jardines de Arroyo"
                     fill
                     className="object-contain"
                     sizes="(max-width: 1200px) 100vw, 1200px"
                   />
                 </div>
                 <div className="mt-6 text-center">
-                  <p className="text-sm text-muted-foreground">Plano general del barrio San Matías</p>
+                  <p className="text-sm text-muted-foreground">Plano general del barrio Jardines de Arroyo</p>
                 </div>
               </div>
             </TabsContent>
@@ -475,7 +475,7 @@ export default async function SanMatiasPage() {
                 rurales, la zona experimentó un crecimiento sostenido en los últimos años,
                 impulsado por el corredor de barrios privados que se desarrolla a lo largo
                 de la Ruta 192. Hoy convive con emprendimientos consolidados como Pinares
-                Country Club (a 2 km de San Matías), y ofrece la calidad de vida del GBA
+                Country Club (a 2 km de Jardines de Arroyo), y ofrece la calidad de vida del GBA
                 norte a precios todavía accesibles.
               </p>
               <p>
@@ -573,10 +573,10 @@ export default async function SanMatiasPage() {
             </h2>
             <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
               <p>
-                San Matías es un barrio abierto, lo que significa que no existen expensas
+                Jardines de Arroyo es un barrio abierto, lo que significa que no existen expensas
                 mensuales. A diferencia de un barrio cerrado, donde las cuotas de
                 administración, seguridad y mantenimiento pueden rondar los USD 150 a USD 400
-                por mes, en San Matías el propietario solo paga los impuestos municipales
+                por mes, en Jardines de Arroyo el propietario solo paga los impuestos municipales
                 habituales. A lo largo de 10 años, eso representa un ahorro real de entre
                 USD 18.000 y USD 48.000, dinero que puede destinarse directamente a la
                 construcción.
@@ -625,12 +625,13 @@ export default async function SanMatiasPage() {
               </ul>
             </div>
 
-            <SanMatiasFinancingSection
+            <FinancingSection
               basePrice={basePrice}
               minCashDown={minCashDown}
               maxFinancingMonths={maxFinancingMonths}
               tna={tna}
-              projectId="san-matias"
+              projectId="jardines-de-arroyo"
+              projectName="Jardines de Arroyo"
             />
           </div>
         </div>
@@ -658,7 +659,7 @@ export default async function SanMatiasPage() {
         <div className="container px-4 mx-auto text-center space-y-8">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">¿Listo para tu próximo proyecto?</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Contactanos hoy mismo y asegurá tu lote en San Matías
+            Contactanos hoy mismo y asegurá tu lote en Jardines de Arroyo
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="rounded-full px-10 h-14 text-xl" asChild>
@@ -680,7 +681,7 @@ export default async function SanMatiasPage() {
         <div className="container px-4 mx-auto">
           <div className="max-w-4xl mx-auto space-y-8">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center">
-              Preguntas frecuentes sobre San Matías
+              Preguntas frecuentes sobre Jardines de Arroyo
             </h2>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
@@ -688,7 +689,7 @@ export default async function SanMatiasPage() {
                   ¿Qué infraestructura incluye el barrio?
                 </AccordionTrigger>
                 <AccordionContent className="text-base text-muted-foreground">
-                  San Matías cuenta con red eléctrica completa, red de agua corriente,
+                  Jardines de Arroyo cuenta con red eléctrica completa, red de agua corriente,
                   calles consolidadas y mejoradas, cordón cuneta para drenaje, y alumbrado
                   público LED. La infraestructura está instalada y operativa desde el inicio,
                   no es una promesa a futuro.

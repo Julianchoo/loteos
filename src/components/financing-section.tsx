@@ -5,21 +5,23 @@ import { toast } from "sonner";
 import { FinancingCalculator } from "@/components/financing-calculator";
 import { ProjectLeadForm } from "@/components/project-lead-form";
 
-interface SanMatiasFinancingSectionProps {
+interface FinancingSectionProps {
   basePrice: number;
   minCashDown: number;
   maxFinancingMonths: number;
   tna: number;
   projectId: string;
+  projectName: string;
 }
 
-export function SanMatiasFinancingSection({
+export function FinancingSection({
   basePrice,
   minCashDown,
   maxFinancingMonths,
   tna,
   projectId,
-}: SanMatiasFinancingSectionProps) {
+  projectName,
+}: FinancingSectionProps) {
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [calculatorValues, setCalculatorValues] = useState<{
     anticipo: number;
@@ -61,7 +63,7 @@ export function SanMatiasFinancingSection({
       {calculatorValues && (
         <ProjectLeadForm
           projectId={projectId}
-          projectName="San Matías"
+          projectName={projectName}
           calculatedValues={calculatorValues}
           open={showLeadForm}
           onOpenChange={setShowLeadForm}

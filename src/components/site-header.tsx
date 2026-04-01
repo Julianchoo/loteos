@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { TreePine, Menu, ChevronDown } from "lucide-react";
+import { TreePine, Menu, ChevronDown, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -17,10 +17,13 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useSession } from "@/lib/auth-client";
 import { ModeToggle } from "./ui/mode-toggle";
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
 
   return (
     <>
@@ -75,8 +78,8 @@ export function SiteHeader() {
                     </Link>
                   </MenubarItem>
                   <MenubarItem asChild>
-                    <Link href="/proyectos/san-matias" className="cursor-pointer flex flex-col items-start">
-                      <div className="font-medium">San Matías</div>
+                    <Link href="/proyectos/jardines-de-arroyo" className="cursor-pointer flex flex-col items-start">
+                      <div className="font-medium">Jardines de Arroyo</div>
                       <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
                     </Link>
                   </MenubarItem>
@@ -104,6 +107,17 @@ export function SiteHeader() {
                   </Link>
                 </MenubarTrigger>
               </MenubarMenu>
+
+              {isAdmin && (
+                <MenubarMenu>
+                  <MenubarTrigger asChild>
+                    <Link href="/admin" className="cursor-pointer flex items-center gap-1 text-primary">
+                      <LayoutDashboard className="h-3.5 w-3.5" />
+                      Admin
+                    </Link>
+                  </MenubarTrigger>
+                </MenubarMenu>
+              )}
             </Menubar>
 
             {/* Mobile Menu */}
@@ -135,11 +149,11 @@ export function SiteHeader() {
                       Proyectos →
                     </Link>
                     <Link
-                      href="/proyectos/san-matias"
+                      href="/proyectos/jardines-de-arroyo"
                       className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <div className="font-semibold">San Matías</div>
+                      <div className="font-semibold">Jardines de Arroyo</div>
                       <div className="text-sm text-muted-foreground mt-0.5">Arroyo de La Cruz</div>
                     </Link>
                     <Link
@@ -171,6 +185,20 @@ export function SiteHeader() {
                   >
                     Contacto
                   </Link>
+
+                  {isAdmin && (
+                    <>
+                      <Separator className="my-2" />
+                      <Link
+                        href="/admin"
+                        className="text-lg font-semibold text-primary hover:bg-accent/50 transition-all py-4 px-4 rounded-lg border-l-4 border-primary flex items-center gap-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <LayoutDashboard className="h-5 w-5" />
+                        Admin
+                      </Link>
+                    </>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
