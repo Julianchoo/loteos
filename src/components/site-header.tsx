@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { TreePine, Menu, ChevronDown, LayoutDashboard } from "lucide-react";
+import { TreePine, Menu, ChevronDown, LayoutDashboard, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -17,13 +16,22 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useSession } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
+import { signOut, useSession } from "@/lib/auth-client";
 import { ModeToggle } from "./ui/mode-toggle";
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session } = useSession();
-  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
+  const { data: session, isPending: sessionPending } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!session) { setIsAdmin(false); return; }
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d: { isAdmin: boolean }) => setIsAdmin(d.isAdmin))
+      .catch(() => setIsAdmin(false));
+  }, [session]);
 
   return (
     <>
@@ -204,8 +212,28 @@ export function SiteHeader() {
             </Sheet>
           </div>
 
-          <div className="flex items-center gap-4" role="group" aria-label="User actions">
+          <div className="flex items-center gap-2" role="group" aria-label="User actions">
             <ModeToggle />
+            {!sessionPending && (
+              session ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 text-muted-foreground"
+                  onClick={() => signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Salir</span>
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" asChild className="gap-1.5">
+                  <Link href="/login">
+                    <LogIn className="h-4 w-4" />
+                    <span className="hidden sm:inline">Ingresar</span>
+                  </Link>
+                </Button>
+              )
+            )}
           </div>
         </nav>
       </header>

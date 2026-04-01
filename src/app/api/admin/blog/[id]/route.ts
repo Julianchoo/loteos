@@ -1,14 +1,6 @@
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { getPostById, updatePost, deletePost } from "@/lib/blog";
-
-async function getAdminSession() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return null;
-  if ((session.user as { role?: string }).role !== "admin") return null;
-  return session;
-}
 
 interface RouteContext {
   params: Promise<{ id: string }>;

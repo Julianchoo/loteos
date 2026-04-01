@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { user } from "@/lib/schema";
 
 /**
  * Protected routes that require authentication.
@@ -35,7 +38,14 @@ export async function requireAuth() {
 export async function requireAdmin() {
   const session = await requireAuth();
 
-  if ((session.user as { role?: string }).role !== "admin") {
+  // Query DB directly — BetterAuth session doesn't expose custom fields
+  const [dbUser] = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  if (!dbUser || dbUser.role !== "admin") {
     redirect("/");
   }
 

@@ -17,7 +17,7 @@ export function SignInButton() {
   const [isPending, setIsPending] = useState(false)
 
   if (sessionPending) {
-    return <Button disabled>Loading...</Button>
+    return <Button disabled className="w-full">Cargando...</Button>
   }
 
   if (session) {
@@ -37,26 +37,32 @@ export function SignInButton() {
       })
 
       if (result.error) {
-        setError(result.error.message || "Failed to sign in")
+        setError("Email o contraseña incorrectos")
       } else {
-        router.push("/dashboard")
+        // Redirect admins directly to admin panel
+        const user = result.data?.user as { role?: string } | undefined
+        if (user?.role === "admin") {
+          router.push("/admin")
+        } else {
+          router.push("/dashboard")
+        }
         router.refresh()
       }
     } catch {
-      setError("An unexpected error occurred")
+      setError("Ocurrió un error inesperado")
     } finally {
       setIsPending(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
+    <form onSubmit={handleSubmit} className="space-y-4 w-full">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="tu@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -64,11 +70,11 @@ export function SignInButton() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Contraseña</Label>
         <Input
           id="password"
           type="password"
-          placeholder="Your password"
+          placeholder="Tu contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -79,17 +85,11 @@ export function SignInButton() {
         <p className="text-sm text-destructive">{error}</p>
       )}
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? "Ingresando..." : "Ingresar"}
       </Button>
       <div className="text-center text-sm text-muted-foreground">
         <Link href="/forgot-password" className="hover:underline">
-          Forgot password?
-        </Link>
-      </div>
-      <div className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-primary hover:underline">
-          Sign up
+          ¿Olvidaste tu contraseña?
         </Link>
       </div>
     </form>
