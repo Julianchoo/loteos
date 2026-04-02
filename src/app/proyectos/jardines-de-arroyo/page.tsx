@@ -250,17 +250,26 @@ export default async function JardinesDeArroyoPage() {
             <span>LANZAMIENTO EXCLUSIVO</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-            Jardines de Arroyo <span className="text-primary">Arroyo de La Cruz</span>
+            Jardines de Arroyo
           </h1>
+          <p className="inline-block text-2xl md:text-3xl font-semibold text-primary animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 bg-black/30 backdrop-blur-sm px-5 py-1.5 rounded-full">
+            Arroyo de La Cruz
+          </p>
           <div className="flex items-center justify-center gap-2 text-white/90 text-lg md:text-xl animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
             <MapPin className="w-5 h-5 text-primary" />
             <span>Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz</span>
           </div>
-          <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
             <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
               <a href="#financiacion">
                 <Calculator className="w-4 h-4 mr-2" />
                 Calculá tu cuota
+              </a>
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base font-bold bg-black/35 hover:bg-black/50 border-white/40 text-white backdrop-blur-sm" asChild>
+              <a href="#ubicacion">
+                <MapPin className="w-4 h-4 mr-2" />
+                Ver ubicación
               </a>
             </Button>
           </div>
