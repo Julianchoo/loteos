@@ -243,16 +243,13 @@ export default async function JardinesDeArroyoPage() {
         </div>
 
         <div className="container relative z-10 px-4 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-bold mb-4 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <Sparkles className="w-4 h-4" />
-            <span>LANZAMIENTO EXCLUSIVO</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <MapPin className="w-4 h-4" />
+            <span>Arroyo de la Cruz, Exaltación de la Cruz</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
             Jardines de Arroyo
           </h1>
-          <p className="inline-block text-2xl md:text-3xl font-semibold text-primary animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 bg-black/30 backdrop-blur-sm px-5 py-1.5 rounded-full">
-            Arroyo de La Cruz
-          </p>
           <div className="flex items-center justify-center gap-2 text-white/90 text-lg md:text-xl animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
             <MapPin className="w-5 h-5 text-primary" />
             <span>Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz</span>

@@ -81,13 +81,13 @@ export default async function SanNicolasPage() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-              <Button size="lg" asChild>
+              <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
                 <a href="#financiacion">
                   <Calculator className="mr-2 h-5 w-5" />
-                  Calcular Financiación
+                  Calculá tu cuota
                 </a>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" className="rounded-full px-8 h-12 text-base font-bold bg-black/35 hover:bg-black/50 border-white/40 text-white backdrop-blur-sm" asChild>
                 <a href="#ubicacion">
                   <MapPin className="mr-2 h-5 w-5" />
                   Ver Ubicación

@@ -46,7 +46,8 @@
       "Bash(node -e \":*)",
       "Bash(npm run:*)",
       "Bash(source .env.local)",
-      "Bash(source .env)"
+      "Bash(source .env)",
+      "Bash(find '/c/Users/julia/Python_Juli/Loteos ADLC/src' -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
     ]
   },
   "enableAllProjectMcpServers": true,
