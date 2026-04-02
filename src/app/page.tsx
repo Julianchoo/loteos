@@ -2,6 +2,7 @@ import Image from "next/image";
 import { MapPin, Mail, Phone, CheckCircle2, TreePine } from "lucide-react";
 import { AnimatedHero } from "@/components/animated-hero";
 import { ContactForm } from "@/components/contact-form";
+import { ParallaxBackground } from "@/components/parallax-background";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 
@@ -40,13 +41,10 @@ export default async function Home() {
       {/* Hero Section */}
       <section id="inicio" className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
+          <ParallaxBackground
             src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.jpg"
             alt="Fitzroya Desarrollos - Espacios Verdes"
-            fill
             priority
-            className="object-cover"
-            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
         </div>

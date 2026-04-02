@@ -1,5 +1,6 @@
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
+import { ParallaxBackground } from "@/components/parallax-background";
 import { Button } from "@/components/ui/button";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
 import type { Metadata } from "next";
@@ -55,20 +56,27 @@ export default async function SanNicolasPage() {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
+        <div className="absolute inset-0 z-0">
+          <ParallaxBackground
+            src="/images/hero-panorama.png"
+            alt="San Nicolás - Guernica"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
+        </div>
 
         <div className="container relative z-10 px-4 mx-auto">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium border border-primary/20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium shadow-xl">
               <MapPin className="w-4 h-4" />
               <span>Guernica, Buenos Aires</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white">
               San Nicolás
             </h1>
 
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto">
               Proyecto de 20 lotes en zona estratégica del sur del Gran Buenos Aires
             </p>
 

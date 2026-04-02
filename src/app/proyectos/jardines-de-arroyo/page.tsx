@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
+import { ParallaxBackground } from "@/components/parallax-background";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -233,13 +234,10 @@ export default async function JardinesDeArroyoPage() {
       {/* Hero Section */}
       <section className="relative h-[70vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <Image
+          <ParallaxBackground
             src="/images/hero-panorama.png"
             alt="Jardines de Arroyo - Arroyo de La Cruz"
-            fill
             priority
-            className="object-cover"
-            sizes="100vw"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
         </div>
