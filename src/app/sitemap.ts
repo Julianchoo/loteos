@@ -1,8 +1,15 @@
 import { getAllPublishedSlugs } from "@/lib/blog";
 import type { MetadataRoute } from "next";
 
+function toHttps(url: string): string {
+  if (url.startsWith("http://") && !url.includes("localhost")) {
+    return url.replace("http://", "https://");
+  }
+  return url;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = toHttps(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000");
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -25,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/proyectos/san-nicolas`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/proyectos/guernica`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,

@@ -51,7 +51,7 @@ export default function ProyectosPage() {
                   name: "Jardines de Arroyo",
                   description:
                     "182 lotes de 300m² en Arroyo de la Cruz desde USD 12.500",
-                  url: "https://fitzroya.com/proyectos/jardines-de-arroyo",
+                  url: "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo",
                 },
               ],
             },
