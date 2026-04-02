@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
-    description: "Lotes en venta en Buenos Aires. San Matías desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+    description: "Lotes en venta en Buenos Aires. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
   },
   twitter: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
@@ -93,12 +93,12 @@ export default async function Home() {
           </div>
 
           <div className="space-y-16">
-            {/* San Matías Arroyo de La Cruz */}
+            {/* Jardines de Arroyo */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl group border bg-muted">
                 <Image
                   src="/images/hero-panorama.png"
-                  alt="San Matías Arroyo de La Cruz"
+                  alt="Jardines de Arroyo - Arroyo de La Cruz"
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-700"
                   sizes="(max-width: 1024px) 100vw, 50vw"

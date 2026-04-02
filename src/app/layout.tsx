@@ -25,12 +25,12 @@ export const metadata: Metadata = {
     template: "%s | Fitzroya Desarrollos",
   },
   description:
-    "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz - Tu lugar en el mundo.",
+    "Especialistas en loteos y desarrollos inmobiliarios sustentables. Jardines de Arroyo - Arroyo de La Cruz - Tu lugar en el mundo.",
   keywords: [
     "Fitzroya",
     "Desarrollos",
     "Inmobiliaria",
-    "San Matías",
+    "Jardines de Arroyo",
     "Arroyo de La Cruz",
     "Exaltación de la Cruz",
     "Terrenos",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     locale: "es_AR",
     siteName: "Fitzroya Desarrollos",
     title: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
-    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables. San Matías Arroyo de La Cruz.",
+    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables. Jardines de Arroyo - Arroyo de La Cruz.",
   },
   twitter: {
     card: "summary_large_image",

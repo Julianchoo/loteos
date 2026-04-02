@@ -44,7 +44,9 @@
       "Bash(pnpm run:*)",
       "Bash(pnpm exec:*)",
       "Bash(node -e \":*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(source .env.local)",
+      "Bash(source .env)"
     ]
   },
   "enableAllProjectMcpServers": true,

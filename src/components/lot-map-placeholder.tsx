@@ -169,7 +169,7 @@ export function LotMapPlaceholder({ lots }: PlaceholderLotMapProps) {
                                 <div>
                                     <DialogTitle className="text-2xl font-black">Lote {selectedLot.number}</DialogTitle>
                                     <DialogDescription className="flex items-center gap-1">
-                                        <MapPin className="w-3 h-3" /> San Matías Arroyo de La Cruz
+                                        <MapPin className="w-3 h-3" /> Jardines de Arroyo - Arroyo de La Cruz
                                     </DialogDescription>
                                 </div>
                             </div>
