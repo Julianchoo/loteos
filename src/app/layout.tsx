@@ -1,4 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -100,6 +102,8 @@ export default function RootLayout({
           <main id="main-content">{children}</main>
           <SiteFooter />
           <Toaster richColors position="top-right" />
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
