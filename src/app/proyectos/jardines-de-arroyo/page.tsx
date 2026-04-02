@@ -151,6 +151,59 @@ export default async function JardinesDeArroyoPage() {
           })
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
+            "description": "182 lotes de 300m² en Arroyo de la Cruz, Exaltación de la Cruz, Buenos Aires. Barrio exclusivo de 9 hectáreas con red eléctrica, agua corriente, calles consolidadas y alumbrado público LED. A 6 km de Capilla del Señor y 90 km de Buenos Aires.",
+            "image": [
+              "https://www.fitzroyadesarrollos.com/images/hero-panorama.png",
+              "https://www.fitzroyadesarrollos.com/images/fitzroya-multiple.jpg"
+            ],
+            "brand": {
+              "@type": "Brand",
+              "name": "Fitzroya Desarrollos"
+            },
+            "offers": {
+              "@type": "AggregateOffer",
+              "lowPrice": 12500,
+              "highPrice": 20000,
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock",
+              "url": "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo",
+              "seller": {
+                "@type": "Organization",
+                "name": "Fitzroya Desarrollos"
+              }
+            },
+            "additionalProperty": [
+              {
+                "@type": "PropertyValue",
+                "name": "Superficie de lote",
+                "value": "300 m²"
+              },
+              {
+                "@type": "PropertyValue",
+                "name": "Cantidad de lotes",
+                "value": "182"
+              },
+              {
+                "@type": "PropertyValue",
+                "name": "Ubicación",
+                "value": "Arroyo de la Cruz, Exaltación de la Cruz, Buenos Aires"
+              },
+              {
+                "@type": "PropertyValue",
+                "name": "Financiación",
+                "value": "Directa hasta 72 cuotas en dólares"
+              }
+            ]
+          })
+        }}
+      />
 
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-3">
