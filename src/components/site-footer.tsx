@@ -28,7 +28,7 @@ export function SiteFooter() {
           <div>
             <h4 className="font-bold text-foreground mb-4">Contacto</h4>
             <ul className="space-y-2">
-              <li>Email: matias@fitzroyadesarrollos.com.ar</li>
+              <li>Email: matias@fitzroyadesarrollos.com</li>
               <li>Tel: +54 9 11 1234 5678</li>
               <li>Ubicación: Exaltación de la Cruz, PBA</li>
             </ul>

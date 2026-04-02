@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fitzroyadesarrollos.com.ar"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fitzroyadesarrollos.com"),
   title: {
     default: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
     template: "%s | Fitzroya Desarrollos",
