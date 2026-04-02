@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "San Nicolás Guernica - Lotes desde USD 14.500 | Fitzroya",
-  description: "20 lotes en venta en Guernica, sur del Gran Buenos Aires, desde USD 14.500. Proyecto de 1 hectárea con financiación directa. Escritura inmediata, servicios completos y ubicación estratégica sobre Ruta 210.",
+  description: "20 lotes desde USD 14.500 en Guernica, sur del GBA. Proyecto de 1 hectárea sobre Ruta 210 con financiación directa, escritura inmediata y servicios completos.",
   keywords: [
     "San Nicolás",
     "Guernica",

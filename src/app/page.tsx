@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
-  description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables en ubicaciones estratégicas. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+  description: "Lotes en venta en Buenos Aires. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa hasta 72 cuotas.",
   keywords: [
     "lotes en venta",
     "lotes Buenos Aires",

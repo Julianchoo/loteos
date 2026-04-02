@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz | Fitzroya",
-  description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Barrio exclusivo de 9 hectáreas con financiación directa hasta 60 cuotas. Red eléctrica, agua corriente y alumbrado público.",
+  description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz. Barrio exclusivo de 9 ha con financiación directa hasta 60 cuotas. Luz, agua y alumbrado público.",
   keywords: [
     "Jardines de Arroyo",
     "Arroyo de la Cruz",
