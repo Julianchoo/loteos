@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createLead } from "@/lib/actions/lead-actions";
 
 export function ContactForm() {
@@ -64,71 +67,62 @@ export function ContactForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="p-12 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 md:p-12 space-y-6">
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <label htmlFor="nombre" className="text-sm font-medium">
+                    <Label htmlFor="nombre">
                         Nombre <span className="text-destructive">*</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                         id="nombre"
                         name="nombre"
                         type="text"
                         required
                         disabled={isLoading}
-                        className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
                 <div className="space-y-2">
-                    <label htmlFor="apellido" className="text-sm font-medium">
+                    <Label htmlFor="apellido">
                         Apellido <span className="text-destructive">*</span>
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                         id="apellido"
                         name="apellido"
                         type="text"
                         required
                         disabled={isLoading}
-                        className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                 </div>
             </div>
             <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
+                <Label htmlFor="email">
                     Email <span className="text-destructive">*</span>
-                </label>
-                <input
+                </Label>
+                <Input
                     id="email"
                     name="email"
                     type="email"
                     required
                     disabled={isLoading}
-                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
             </div>
             <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium">
-                    Teléfono
-                </label>
-                <input
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input
                     id="phone"
                     name="phone"
                     type="tel"
                     placeholder="+54 9 11 1234 5678"
                     disabled={isLoading}
-                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
             </div>
             <div className="space-y-2">
-                <label htmlFor="message" className="text-sm font-medium">
-                    Mensaje
-                </label>
-                <textarea
+                <Label htmlFor="message">Mensaje</Label>
+                <Textarea
                     id="message"
                     name="message"
                     rows={4}
                     disabled={isLoading}
-                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
             </div>
             <Button

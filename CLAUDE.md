@@ -199,6 +199,7 @@ The project includes technical documentation in `docs/`:
 - Use the documentation files when implementing related features
 - Test changes with lint and typecheck before considering complete
 - When modifying AI functionality, refer to `docs/technical/ai/` guides
+- Ocassionally we will hit walls, bugs, databased not migrated, whatever. DO NOT SKIP OVER THESE, we have to fix problems. Just hiding features because they are not working is unacceptable. Skipping over database migrations is unacceptable. If there is a critical issue, raise it so we can address it first. Be VERY clear about problems that we decide to leave for later.
 
 ### Common Tasks
 
