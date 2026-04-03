@@ -36,6 +36,13 @@
       "when": 1775057133570,
       "tag": "0004_breezy_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775242683827,
+      "tag": "0005_big_weapon_omega",
+      "breakpoints": true
     }
   ]
 }

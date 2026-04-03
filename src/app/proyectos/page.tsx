@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, ArrowRight, CheckCircle2 } from "lucide-react";
+import { MapPin, ArrowRight, CheckCircle2, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getVisibleProjects } from "@/lib/actions/project-actions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -28,7 +29,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ProyectosPage() {
+// Static metadata per project (image, tags, summary) not stored in DB
+const PROJECT_META: Record<string, { image: string; summary: string; tags: string[] }> = {
+  "jardines-de-arroyo": {
+    image: "/images/hero-panorama.png",
+    summary: "182 lotes · 300 m² · Desde USD 12.500",
+    tags: ["Sin expensas", "Financiación directa", "GBA Norte"],
+  },
+  "san-nicolas": {
+    image: "/images/hero-panorama.png",
+    summary: "20 lotes · Desde USD 14.500",
+    tags: ["Sin expensas", "Financiación directa", "GBA Sur"],
+  },
+};
+
+export default async function ProyectosPage() {
+  const { data: projects } = await getVisibleProjects();
   return (
     <div className="flex flex-col min-h-screen">
       {/* JSON-LD Structured Data */}
@@ -88,54 +104,82 @@ export default function ProyectosPage() {
               Nuestros proyectos
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {/* Card Jardines de Arroyo */}
-              <Card className="overflow-hidden flex flex-col">
-                <div className="relative h-52">
-                  <Image
-                    src="/images/hero-panorama.png"
-                    alt="Jardines de Arroyo — Arroyo de la Cruz"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-primary text-primary-foreground">
-                      EN VENTA
-                    </Badge>
-                  </div>
-                </div>
-                <CardContent className="flex flex-col flex-1 pt-5 gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold mb-1">Jardines de Arroyo</h3>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 shrink-0" />
-                      <span>Arroyo de la Cruz, Exaltación de la Cruz</span>
+              {(projects ?? []).map((p) => {
+                const meta = PROJECT_META[p.id];
+                if (p.publishStatus === "coming_soon") {
+                  return (
+                    <Card key={p.id} className="overflow-hidden flex flex-col opacity-70">
+                      <div className="relative h-52 bg-muted flex items-center justify-center">
+                        <Clock className="h-12 w-12 text-muted-foreground/40" />
+                        <div className="absolute top-3 left-3">
+                          <Badge variant="secondary">PRÓXIMAMENTE</Badge>
+                        </div>
+                      </div>
+                      <CardContent className="flex flex-col flex-1 pt-5 gap-4">
+                        <div>
+                          <h3 className="text-xl font-bold mb-1">{p.name}</h3>
+                          {p.location && (
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4 shrink-0" />
+                              <span>{p.location}</span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Próximamente vamos a tener más información sobre este proyecto.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                // launched
+                return (
+                  <Card key={p.id} className="overflow-hidden flex flex-col">
+                    <div className="relative h-52">
+                      <Image
+                        src={meta?.image ?? "/images/hero-panorama.png"}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-primary text-primary-foreground">EN VENTA</Badge>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="text-sm text-muted-foreground border-t pt-3">
-                    182 lotes · 300 m² · Desde USD 12.500
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {["Sin expensas", "Financiación directa", "GBA Norte"].map(
-                      (tag) => (
-                        <Badge key={tag} variant="secondary">
-                          {tag}
-                        </Badge>
-                      )
-                    )}
-                  </div>
-
-                  <div className="mt-auto pt-2">
-                    <Button asChild className="w-full">
-                      <Link href="/proyectos/jardines-de-arroyo">
-                        Ver proyecto <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                    <CardContent className="flex flex-col flex-1 pt-5 gap-4">
+                      <div>
+                        <h3 className="text-xl font-bold mb-1">{p.name}</h3>
+                        {p.location && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPin className="h-4 w-4 shrink-0" />
+                            <span>{p.location}</span>
+                          </div>
+                        )}
+                      </div>
+                      {meta?.summary && (
+                        <div className="text-sm text-muted-foreground border-t pt-3">
+                          {meta.summary}
+                        </div>
+                      )}
+                      {meta?.tags && (
+                        <div className="flex flex-wrap gap-2">
+                          {meta.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary">{tag}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-auto pt-2">
+                        <Button asChild className="w-full">
+                          <Link href={`/proyectos/${p.id}`}>
+                            Ver proyecto <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </section>

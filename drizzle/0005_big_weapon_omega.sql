@@ -1,0 +1,1 @@
+ALTER TABLE "project" ADD COLUMN "publish_status" text DEFAULT 'launched' NOT NULL;
