@@ -16,12 +16,6 @@ import { project } from "@/lib/schema";
  * POST /api/cron/sync-projects
  * Headers: { "x-cron-secret": "your-cron-secret" }
  */
-function normalizePublishStatus(value: unknown): string {
-  if (value === "Hidden") return "hidden";
-  if (value === "Coming soon") return "coming_soon";
-  return "launched";
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Verify cron secret for security
@@ -117,7 +111,6 @@ export async function POST(request: NextRequest) {
           minCashDown: fields["Min Cash Down (USD)"]?.toString() || null,
           maxFinancingMonths: fields["Max Financing Months"] || null,
           tna: fields["TNA"]?.toString() || null,
-          publishStatus: normalizePublishStatus(fields["Publish status"]),
           airtableRecordId: airtableProject.id,
           lastSyncedAt: new Date(),
           updatedAt: new Date(),

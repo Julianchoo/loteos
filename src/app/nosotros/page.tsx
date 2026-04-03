@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, TreePine, Shield, Leaf, Heart, Eye, ArrowRight } from "lucide-react";
-import { ParallaxBackground } from "@/components/parallax-background";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -36,7 +35,14 @@ export default function NosotrosPage() {
       {/* Hero */}
       <section className="relative h-[60vh] flex items-end justify-start overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <ParallaxBackground src="/images/fitzroya-multiple.jpg" />
+          <Image
+            src="/images/fitzroya-multiple.jpg"
+            alt="Fitzroya Cupressoides - Árboles milenarios"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-1" />
         </div>
 

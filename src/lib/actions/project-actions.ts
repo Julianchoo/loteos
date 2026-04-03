@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { project } from "@/lib/schema";
 
@@ -15,7 +15,6 @@ export type ProjectWithPricing = {
   minCashDown: string | null;
   maxFinancingMonths: number | null;
   tna: string | null;
-  publishStatus: string;
   airtableRecordId: string | null;
   lastSyncedAt: Date | null;
   createdAt: Date;
@@ -55,23 +54,6 @@ export async function getProjects() {
     return { success: true, data: results as ProjectWithPricing[] };
   } catch (error) {
     console.error("Error fetching projects:", error);
-    return { success: false, error: "Failed to fetch projects", data: [] };
-  }
-}
-
-/**
- * Get visible projects (launched + coming_soon), excludes hidden
- */
-export async function getVisibleProjects() {
-  try {
-    const results = await db
-      .select()
-      .from(project)
-      .where(or(eq(project.publishStatus, "launched"), eq(project.publishStatus, "coming_soon")))
-      .orderBy(project.name);
-    return { success: true, data: results as ProjectWithPricing[] };
-  } catch (error) {
-    console.error("Error fetching visible projects:", error);
     return { success: false, error: "Failed to fetch projects", data: [] };
   }
 }

@@ -20,14 +20,7 @@ import { useEffect, useState } from "react";
 import { signOut, useSession } from "@/lib/auth-client";
 import { ModeToggle } from "./ui/mode-toggle";
 
-type ProjectNavItem = {
-  id: string;
-  name: string;
-  location: string | null;
-  publishStatus: string;
-};
-
-export function SiteHeader({ projects }: { projects: ProjectNavItem[] }) {
+export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, isPending: sessionPending } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -98,24 +91,18 @@ export function SiteHeader({ projects }: { projects: ProjectNavItem[] }) {
                       Ver todos los proyectos
                     </Link>
                   </MenubarItem>
-                  {projects.map((p) =>
-                    p.publishStatus === "launched" ? (
-                      <MenubarItem key={p.id} asChild>
-                        <Link href={`/proyectos/${p.id}`} className="cursor-pointer flex flex-col items-start">
-                          <div className="font-medium">{p.name}</div>
-                          {p.location && <div className="text-xs text-muted-foreground">{p.location}</div>}
-                        </Link>
-                      </MenubarItem>
-                    ) : (
-                      <MenubarItem key={p.id} disabled className="flex flex-col items-start opacity-60 cursor-default">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{p.name}</span>
-                          <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Próximamente</span>
-                        </div>
-                        {p.location && <div className="text-xs text-muted-foreground">{p.location}</div>}
-                      </MenubarItem>
-                    )
-                  )}
+                  <MenubarItem asChild>
+                    <Link href="/proyectos/jardines-de-arroyo" className="cursor-pointer flex flex-col items-start">
+                      <div className="font-medium">Jardines de Arroyo</div>
+                      <div className="text-xs text-muted-foreground">Arroyo de La Cruz</div>
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link href="/proyectos/san-nicolas" className="cursor-pointer flex flex-col items-start">
+                      <div className="font-medium">San Nicolás</div>
+                      <div className="text-xs text-muted-foreground">Guernica</div>
+                    </Link>
+                  </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
 
@@ -175,30 +162,22 @@ export function SiteHeader({ projects }: { projects: ProjectNavItem[] }) {
                     >
                       Proyectos →
                     </Link>
-                    {projects.map((p) =>
-                      p.publishStatus === "launched" ? (
-                        <Link
-                          key={p.id}
-                          href={`/proyectos/${p.id}`}
-                          className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <div className="font-semibold">{p.name}</div>
-                          {p.location && <div className="text-sm text-muted-foreground mt-0.5">{p.location}</div>}
-                        </Link>
-                      ) : (
-                        <div
-                          key={p.id}
-                          className="pl-6 py-3 rounded-lg ml-2 opacity-60 cursor-default"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">{p.name}</span>
-                            <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Próximamente</span>
-                          </div>
-                          {p.location && <div className="text-sm text-muted-foreground mt-0.5">{p.location}</div>}
-                        </div>
-                      )
-                    )}
+                    <Link
+                      href="/proyectos/jardines-de-arroyo"
+                      className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="font-semibold">Jardines de Arroyo</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">Arroyo de La Cruz</div>
+                    </Link>
+                    <Link
+                      href="/proyectos/san-nicolas"
+                      className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="font-semibold">San Nicolás</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">Guernica</div>
+                    </Link>
                   </div>
 
                   <Separator className="my-2" />

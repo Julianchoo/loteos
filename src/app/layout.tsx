@@ -4,7 +4,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { getVisibleProjects } from "@/lib/actions/project-actions";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
@@ -77,12 +76,11 @@ const jsonLd = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { data: projects } = await getVisibleProjects();
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
@@ -100,7 +98,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SiteHeader projects={projects ?? []} />
+          <SiteHeader />
           <main id="main-content">{children}</main>
           <SiteFooter />
           <Toaster richColors position="top-right" />

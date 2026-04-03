@@ -96,9 +96,6 @@ export const project = pgTable("project", {
   maxFinancingMonths: integer("max_financing_months"), // Maximum financing term in months
   tna: numeric("tna", { precision: 5, scale: 4 }), // Annual interest rate (e.g., 0.1500 for 15%)
 
-  // Publish status (synced from Airtable)
-  publishStatus: text("publish_status").default("launched").notNull(),
-
   // Airtable sync tracking
   airtableRecordId: text("airtable_record_id"),
   lastSyncedAt: timestamp("last_synced_at"),
