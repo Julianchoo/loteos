@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lead, leadFinancingPreference, leadProject } from "@/lib/schema";
 
@@ -26,11 +27,22 @@ interface CreateLeadWithFinancingData extends CreateLeadData {
   };
 }
 
+export interface UpdateLeadData {
+  status: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  contactChannel: string;
+  marketingSource: string | null;
+  marketingCampaign: string | null;
+  notes: string | null;
+}
+
 export async function createLead(data: CreateLeadData) {
   try {
     const leadId = randomUUID();
 
-    // Insert lead into database
     await db.insert(lead).values({
       id: leadId,
       firstName: data.firstName,
@@ -66,7 +78,6 @@ export async function createLeadWithFinancing(
     const financingId = randomUUID();
     const leadProjectId = randomUUID();
 
-    // Insert lead
     await db.insert(lead).values({
       id: leadId,
       firstName: data.firstName,
@@ -82,7 +93,6 @@ export async function createLeadWithFinancing(
       updatedAt: new Date(),
     });
 
-    // Insert financing preferences
     await db.insert(leadFinancingPreference).values({
       id: financingId,
       leadId,
@@ -93,12 +103,11 @@ export async function createLeadWithFinancing(
       createdAt: new Date(),
     });
 
-    // Link lead to project
     await db.insert(leadProject).values({
       id: leadProjectId,
       leadId,
       projectId: data.projectId,
-      interestLevel: "high", // Default to high for project-specific forms
+      interestLevel: "high",
       createdAt: new Date(),
     });
 
@@ -114,6 +123,25 @@ export async function createLeadWithFinancing(
         error instanceof Error
           ? error.message
           : "Failed to create lead with financing",
+    };
+  }
+}
+
+export async function updateLead(id: string, data: UpdateLeadData) {
+  try {
+    await db
+      .update(lead)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(lead.id, id));
+
+    revalidatePath("/admin/leads");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating lead:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update lead",
     };
   }
 }

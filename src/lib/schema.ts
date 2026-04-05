@@ -158,6 +158,7 @@ export const lead = pgTable(
 
     // Content
     initialMessage: text("initial_message"),
+    notes: text("notes"),
 
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),
