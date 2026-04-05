@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Users } from "lucide-react";
+import { Building2, FileText, Users, UserRound } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminPage() {
@@ -36,6 +36,40 @@ export default function AdminPage() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Agregá admins u otros usuarios desde acá.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/proyectos">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Proyectos
+              </CardTitle>
+              <CardDescription>Ver y editar datos de los proyectos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Editá precios, financiación y datos clave de cada proyecto.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/leads">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserRound className="h-5 w-5 text-primary" />
+                Leads
+              </CardTitle>
+              <CardDescription>Ver todos los contactos recibidos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Consultá los leads con su estado, canal y proyecto de interés.
               </p>
             </CardContent>
           </Card>

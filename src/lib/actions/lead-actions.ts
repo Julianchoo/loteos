@@ -1,9 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { after } from "next/server";
 import { randomUUID } from "crypto";
-import { syncLeadToAirtable } from "@/lib/airtable-sync";
 import { db } from "@/lib/db";
 import { lead, leadFinancingPreference, leadProject } from "@/lib/schema";
 
@@ -46,14 +44,6 @@ export async function createLead(data: CreateLeadData) {
       initialMessage: data.initialMessage || null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      syncStatus: "pending",
-    });
-
-    // Trigger sync to Airtable after response is sent
-    after(async () => {
-      await syncLeadToAirtable(leadId).catch((error) => {
-        console.error("Failed to sync lead to Airtable:", error);
-      });
     });
 
     revalidatePath("/");
@@ -90,7 +80,6 @@ export async function createLeadWithFinancing(
       initialMessage: data.initialMessage || null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      syncStatus: "pending",
     });
 
     // Insert financing preferences
@@ -111,13 +100,6 @@ export async function createLeadWithFinancing(
       projectId: data.projectId,
       interestLevel: "high", // Default to high for project-specific forms
       createdAt: new Date(),
-    });
-
-    // Trigger sync to Airtable after response is sent
-    after(async () => {
-      await syncLeadToAirtable(leadId).catch((error) => {
-        console.error("Failed to sync lead to Airtable:", error);
-      });
     });
 
     revalidatePath("/");
