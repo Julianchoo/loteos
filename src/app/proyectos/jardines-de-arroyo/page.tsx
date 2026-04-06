@@ -724,11 +724,6 @@ export default async function JardinesDeArroyoPage() {
                 Contactar Ahora <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="rounded-full px-10 h-14 text-xl" asChild>
-              <a href="#mapa-lotes">
-                Ver Lotes Disponibles
-              </a>
-            </Button>
           </div>
         </div>
       </section>
