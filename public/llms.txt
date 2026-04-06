@@ -118,9 +118,9 @@ Land lots in Buenos Aires province represent a solid investment opportunity:
 ## Contact Information
 
 - **Website**: https://www.fitzroyadesarrollos.com
-- **Contact Form**: https://loteos.vercel.app/#contacto
-- **Jardines de Arroyo Project**: https://loteos.vercel.app/proyectos/jardines-de-arroyo
-- **San Nicolás Project**: https://loteos.vercel.app/proyectos/san-nicolas
+- **Contact Form**: https://www.fitzroyadesarrollos.com/#contacto
+- **Jardines de Arroyo Project**: https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo
+- **San Nicolás Project**: https://www.fitzroyadesarrollos.com/proyectos/san-nicolas
 
 ---
 

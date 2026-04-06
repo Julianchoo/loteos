@@ -42,7 +42,7 @@ export default async function Home() {
       <section id="inicio" className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <ParallaxBackground
-            src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.jpg"
+            src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.webp"
             alt="Fitzroya Desarrollos - Espacios Verdes"
             priority
           />

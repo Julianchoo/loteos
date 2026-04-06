@@ -36,7 +36,7 @@ export default function NosotrosPage() {
       {/* Hero */}
       <section className="relative h-[60vh] flex items-end justify-start overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <ParallaxBackground src="/images/fitzroya-multiple.jpg" />
+          <ParallaxBackground src="/images/fitzroya-multiple.webp" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-1" />
         </div>
 
@@ -63,7 +63,7 @@ export default function NosotrosPage() {
             <div className="space-y-3">
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
                 <Image
-                  src="/images/fitzroya-multiple.jpg"
+                  src="/images/fitzroya-multiple.webp"
                   alt="Fitzroya Cupressoides"
                   fill
                   className="object-cover object-top"
@@ -141,7 +141,7 @@ export default function NosotrosPage() {
 
             <div className="relative aspect-square rounded-3xl overflow-hidden shadow-2xl border">
               <Image
-                src="/images/stocknature1.jpg"
+                src="/images/stocknature1.webp"
                 alt="Naturaleza y desarrollo sustentable"
                 fill
                 className="object-cover object-center"
@@ -214,7 +214,7 @@ export default function NosotrosPage() {
               {/* Image */}
               <div className="relative min-h-[320px] lg:min-h-full">
                 <Image
-                  src="/images/Alerce-in-Lenca-forest_1885.jpg"
+                  src="/images/Alerce-in-Lenca-forest_1885.webp"
                   alt="Alerce milenario en el bosque de Lenca"
                   fill
                   className="object-cover object-center"
