@@ -43,6 +43,7 @@ export default async function Home() {
         <div className="absolute inset-0 z-0">
           <ParallaxBackground
             src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.webp"
+            srcMobile="/images/stephen-cobb-mobile.webp"
             alt="Fitzroya Desarrollos - Espacios Verdes"
             priority
           />
