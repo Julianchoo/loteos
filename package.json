@@ -83,5 +83,12 @@
       "@types/react": "19.2.5",
       "@types/react-dom": "19.2.3"
     }
-  }
+  },
+  "browserslist": [
+    "chrome >= 93",
+    "safari >= 15.4",
+    "firefox >= 92",
+    "edge >= 93",
+    "not dead"
+  ]
 }
