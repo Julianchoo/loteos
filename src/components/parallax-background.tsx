@@ -15,13 +15,8 @@ export function ParallaxBackground({ src, priority }: ParallaxBackgroundProps) {
         <link rel="preload" as="image" href={src} fetchPriority="high" />
       )}
       <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${src})`,
-          backgroundAttachment: "fixed",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-scroll md:bg-fixed"
+        style={{ backgroundImage: `url(${src})` }}
       />
     </>
   );
