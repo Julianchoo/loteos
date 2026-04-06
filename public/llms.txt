@@ -4,8 +4,8 @@
 
 Fitzroya Desarrollos is a real estate development company specializing in residential land lots in the Buenos Aires province, Argentina. We develop strategic land projects with complete infrastructure, offering direct financing to make land ownership accessible.
 
-**Website**: https://loteos.vercel.app
-**Contact**: Available through web form at https://loteos.vercel.app/#contacto
+**Website**: https://www.fitzroyadesarrollos.com
+**Contact**: Available through web form at https://www.fitzroyadesarrollos.com/#contacto
 
 ## Our Projects
 
@@ -47,7 +47,7 @@ Fitzroya Desarrollos is a real estate development company specializing in reside
 - Immediate deed availability
 - Documentation in order and legalized
 
-**Page**: https://loteos.vercel.app/proyectos/jardines-de-arroyo
+**Page**: https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo
 
 ---
 
@@ -79,7 +79,7 @@ Fitzroya Desarrollos is a real estate development company specializing in reside
 - Documentation in order and legalized
 - Strategic location in southern Greater Buenos Aires
 
-**Page**: https://loteos.vercel.app/proyectos/san-nicolas
+**Page**: https://www.fitzroyadesarrollos.com/proyectos/san-nicolas
 
 ---
 
@@ -108,7 +108,7 @@ Land lots in Buenos Aires province represent a solid investment opportunity:
 
 ## How to Purchase
 
-1. Visit our website: https://loteos.vercel.app
+1. Visit our website: https://www.fitzroyadesarrollos.com
 2. Explore available lots on our interactive map
 3. Use our financing calculator to plan your payment
 4. Contact us through the web form
