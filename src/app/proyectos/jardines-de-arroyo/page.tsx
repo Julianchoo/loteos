@@ -13,8 +13,8 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz | Fitzroya",
-  description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz. Barrio exclusivo de 9 ha con financiación directa hasta 60 cuotas. Luz, agua y alumbrado público.",
+  title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz | Fitzroya",
+  description: "182 lotes de 300m² en Arroyo de la Cruz. Barrio exclusivo de 9 ha con financiación directa hasta 72 cuotas. Luz, agua y alumbrado público.",
   keywords: [
     "Jardines de Arroyo",
     "Arroyo de la Cruz",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "lotes en venta",
     "terrenos 300m2",
     "financiación directa",
-    "USD 12500",
+    "financiacion terrenos",
     "barrio abierto",
     "lotes Buenos Aires",
     "Parada Robles"
@@ -32,12 +32,12 @@ export const metadata: Metadata = {
     canonical: "/proyectos/jardines-de-arroyo",
   },
   openGraph: {
-    title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz",
-    description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas. Barrio exclusivo de 9 hectáreas.",
+    title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
+    description: "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas. Barrio exclusivo de 9 hectáreas.",
   },
   twitter: {
-    title: "Jardines de Arroyo - Lotes desde USD 12.500 en Arroyo de la Cruz",
-    description: "182 lotes de 300m² desde USD 12.500 en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 60 cuotas.",
+    title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
+    description: "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas.",
   },
 };
 
@@ -58,8 +58,6 @@ export default async function JardinesDeArroyoPage() {
   const minCashDown = projectData?.minCashDown ? Number(projectData.minCashDown) : 2500;
   const maxFinancingMonths = projectData?.maxFinancingMonths || 72;
   const tna = projectData?.tna ? Number(projectData.tna) : 0.15;
-  const cashPrice = 12500; // This could also come from Airtable if needed
-  const savings = basePrice - cashPrice;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -169,9 +167,7 @@ export default async function JardinesDeArroyoPage() {
               "name": "Fitzroya Desarrollos"
             },
             "offers": {
-              "@type": "AggregateOffer",
-              "lowPrice": 12500,
-              "highPrice": 20000,
+              "@type": "Offer",
               "priceCurrency": "USD",
               "availability": "https://schema.org/InStock",
               "url": "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo",
@@ -271,50 +267,45 @@ export default async function JardinesDeArroyoPage() {
         </div>
       </section>
 
-      {/* Cash Promotion Banner */}
+      {/* Plano del Barrio */}
       <section className="py-20 bg-background border-y">
         <div className="container px-4 mx-auto">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-3xl border-2 border-primary/20 shadow-xl overflow-hidden">
 
-              {/* Left — promo content */}
+              {/* Left — CTA */}
               <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 md:p-12 flex flex-col justify-center gap-8">
                 <div className="space-y-4">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-sm font-bold">
                     <Sparkles className="w-4 h-4 text-primary" />
-                    <span>PROMOCIÓN EXCLUSIVA</span>
+                    <span>FINANCIACIÓN DIRECTA</span>
                   </div>
                   <h2 className="text-3xl md:text-4xl font-bold">
-                    Precio Especial de Contado
+                    Precio a Consultar
                   </h2>
                   <p className="text-lg text-muted-foreground">
-                    Ahorrá USD {savings.toLocaleString()} pagando el lote en un solo pago
+                    Contamos con opciones de pago de contado y financiado. Consultanos para conocer el precio actualizado según el lote que te interesa.
                   </p>
                 </div>
 
-                <div className="bg-background rounded-2xl border-2 border-primary/30 p-8 space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Precio Financiado</p>
-                      <p className="text-2xl font-bold line-through text-muted-foreground">
-                        USD {basePrice.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground mb-1">Ahorro</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-500">
-                        -USD {savings.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">Precio de Contado</p>
-                    <p className="text-5xl md:text-6xl font-black text-primary">
-                      USD {cashPrice.toLocaleString()}
-                    </p>
-                  </div>
-                  <Button size="lg" className="w-full rounded-xl h-14 text-lg font-bold" asChild>
-                    <a href="#contacto">Consultar Promoción</a>
+                <div className="bg-background rounded-2xl border-2 border-primary/30 p-8 space-y-4">
+                  <p className="text-sm text-muted-foreground font-medium">Beneficios al consultar:</p>
+                  <ul className="space-y-3 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                      <span>Precio diferencial para pago de contado</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                      <span>Financiación hasta 72 cuotas fijas en USD</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                      <span>Sin banco, sin garante, solo DNI</span>
+                    </li>
+                  </ul>
+                  <Button size="lg" className="w-full rounded-xl h-14 text-lg font-bold mt-4" asChild>
+                    <a href="#contacto">Consultar Precio</a>
                   </Button>
                 </div>
               </div>
@@ -365,8 +356,8 @@ export default async function JardinesDeArroyoPage() {
               <p className="text-3xl font-black text-primary">300 m²</p>
             </div>
             <div className="p-6 bg-background rounded-2xl border text-center space-y-2">
-              <p className="text-sm text-muted-foreground font-medium">Desde</p>
-              <p className="text-3xl font-black text-primary">USD 12.5K</p>
+              <p className="text-sm text-muted-foreground font-medium">Financiación</p>
+              <p className="text-3xl font-black text-primary">Hasta 72 cuotas</p>
             </div>
           </div>
         </div>
@@ -671,7 +662,7 @@ export default async function JardinesDeArroyoPage() {
                   `Anticipo desde USD ${minCashDown.toLocaleString()}`,
                   `Financiación hasta en ${maxFinancingMonths} cuotas fijas en dólares (${Math.floor(maxFinancingMonths / 12)} años)`,
                   "Cuotas accesibles ajustadas a tu necesidad",
-                  `Descuento especial por pago de contado: USD ${cashPrice.toLocaleString()}`,
+                  "Descuento especial por pago de contado — consultanos",
                   "Sin gastos ocultos ni sorpresas"
                 ].map((text, i) => (
                   <li key={i} className="flex items-center gap-3 text-lg font-medium">

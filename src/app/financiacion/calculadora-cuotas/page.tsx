@@ -171,8 +171,7 @@ const projects = [
     slug: "jardines-de-arroyo",
     name: "Jardines de Arroyo",
     location: "Arroyo de la Cruz, Exaltación de la Cruz",
-    price: "desde USD 12.500",
-    financingFrom: "USD 2.500 de anticipo",
+    financingFrom: "Anticipo inicial + cuotas fijas en USD",
     description:
       "182 lotes de 300m² en barrio abierto con infraestructura completa. A 6 km de Capilla del Señor.",
     tags: ["Barrio abierto", "Luz y agua", "Sin expensas"],
@@ -180,12 +179,11 @@ const projects = [
   {
     slug: "san-nicolas",
     name: "San Nicolás",
-    location: "Zona Norte, Buenos Aires",
-    price: "desde USD 19.500",
-    financingFrom: "USD 4.000 de anticipo",
+    location: "Guernica, sur del GBA",
+    financingFrom: "Anticipo inicial + cuotas fijas en USD",
     description:
-      "Lotes premium en barrio privado con todos los servicios. Financiación directa hasta 72 cuotas.",
-    tags: ["Barrio privado", "Todos los servicios", "Financiación directa"],
+      "Lotes en zona estratégica del sur del Gran Buenos Aires. Financiación directa hasta 72 cuotas.",
+    tags: ["Sur GBA", "Todos los servicios", "Financiación directa"],
   },
 ];
 
@@ -332,8 +330,7 @@ export default function CalculadoraCuotasPage() {
                 mano. Sin gestiones bancarias.
               </li>
               <li>
-                <strong>Pagás el anticipo</strong> (desde USD 2.500 según el
-                proyecto) y el lote queda reservado a tu nombre.
+                <strong>Pagás el anticipo</strong> (monto según el proyecto) y el lote queda reservado a tu nombre.
               </li>
               <li>
                 <strong>Pagás las cuotas mensualmente</strong> durante el plazo
@@ -369,11 +366,7 @@ export default function CalculadoraCuotasPage() {
             </p>
 
             <p>
-              <strong>Ejemplo orientativo:</strong> En un lote de USD 19.500, si
-              ponés USD 4.000 de anticipo financiás USD 15.500. A 60 cuotas con
-              TNA 15%, la cuota es aproximadamente USD 369/mes. Si subís el
-              anticipo a USD 7.000, financiás USD 12.500 y la cuota baja a
-              aproximadamente USD 297/mes.
+              <strong>Ejemplo orientativo:</strong> Si ponés un anticipo mayor, el capital a financiar es menor y la cuota mensual baja. Usá la calculadora para simular distintos escenarios de anticipo y plazo, y encontrá el plan que mejor se adapta a tu presupuesto. Los valores son estimativos; consultanos para conocer el precio y condiciones exactas del lote que te interesa.
             </p>
 
             <h3 className="text-2xl font-bold">Pago Anticipado y Cancelación</h3>
@@ -468,7 +461,7 @@ export default function CalculadoraCuotasPage() {
                     ))}
                   </div>
                   <div className="border-t pt-4 space-y-1">
-                    <p className="font-bold text-lg">{project.price}</p>
+                    <p className="font-bold text-lg">Precio a consultar</p>
                     <p className="text-sm text-muted-foreground">
                       {project.financingFrom}
                     </p>

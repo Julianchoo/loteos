@@ -97,7 +97,7 @@ export function FinancingCalculator({
                         <Slider
                             value={[downPayment]}
                             min={minDownPayment}
-                            max={price}
+                            max={Math.round(price * 0.75)}
                             step={500}
                             onValueChange={(val: number[]) => setDownPayment(val[0] ?? minDownPayment)}
                             className="mt-2"
@@ -138,7 +138,7 @@ export function FinancingCalculator({
                         USD <ClientNumber value={monthlyPayment} options={{ maximumFractionDigits: 0 }} />
                     </p>
                     <p className="text-xs text-muted-foreground mt-2 italic">
-                        * Sujeto a aprobación y términos comerciales.
+                        * Valor estimativo. El precio y las condiciones exactas se confirman al consultar.
                     </p>
                 </div>
 

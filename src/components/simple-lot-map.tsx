@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin, Info, Calculator, Phone, ZoomIn, ZoomOut, Maximize2, DollarSign } from "lucide-react";
+import { MapPin, Info, Calculator, Phone, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClientNumber } from "@/components/ui/client-number";
@@ -24,8 +24,6 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
     const [selectedLot, setSelectedLot] = useState<Lot | null>(null);
     const [zoom, setZoom] = useState(1);
 
-    const cashPrice = Number(process.env.NEXT_PUBLIC_CASH_DISCOUNT_PRICE || 15000);
-    const basePrice = Number(process.env.NEXT_PUBLIC_LOT_BASE_PRICE || 19500);
     const defaultDownPayment = Number(process.env.NEXT_PUBLIC_DEFAULT_DOWN_PAYMENT || 3000);
 
     // Función para generar lotes si no hay datos
@@ -144,7 +142,7 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
 
                 <div className="text-center mt-6">
                     <p className="text-sm text-muted-foreground">
-                        Seleccioná un número de lote para ver detalles y precio
+                        Seleccioná un número de lote para ver detalles y disponibilidad
                     </p>
                 </div>
             </div>
@@ -173,10 +171,7 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                                     <Badge variant={selectedLot.status === 'available' ? 'default' : 'secondary'} className="mb-2">
                                         {selectedLot.status === 'available' ? 'Disponible' : selectedLot.status === 'reserved' ? 'Reservado' : 'Vendido'}
                                     </Badge>
-                                    <span className="text-2xl font-black text-primary">
-                                        USD <ClientNumber value={Number(selectedLot.price)} />
-                                    </span>
-                                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-tighter">Precio Financiado</span>
+                                    <span className="text-sm font-bold text-primary mt-1">Consultar precio</span>
                                 </div>
                                 <div className="p-4 bg-muted rounded-2xl border flex flex-col items-center justify-center text-center">
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
@@ -187,37 +182,19 @@ export function SimpleLotMap({ lots }: SimpleLotMapProps) {
                                 </div>
                             </div>
 
-                            <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-200 dark:border-green-900 space-y-2">
-                                <h4 className="text-sm font-bold text-green-700 dark:text-green-400 flex items-center gap-2">
-                                    <DollarSign className="w-4 h-4" /> Pago de Contado
-                                </h4>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-muted-foreground">Precio especial</span>
-                                    <span className="text-2xl font-black text-green-600 dark:text-green-400">
-                                        USD <ClientNumber value={Math.round(Number(selectedLot.price) * (cashPrice / basePrice))} />
-                                    </span>
-                                </div>
-                                <p className="text-xs text-green-700 dark:text-green-400">
-                                    Ahorrás USD <ClientNumber value={Number(selectedLot.price) - Math.round(Number(selectedLot.price) * (cashPrice / basePrice))} />
-                                </p>
-                            </div>
-
                             <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 space-y-2">
                                 <h4 className="text-sm font-bold flex items-center gap-2">
-                                    <Calculator className="w-4 h-4" /> Plan de Financiación
+                                    <Calculator className="w-4 h-4" /> Simulación de Financiación (estimativa)
                                 </h4>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Anticipo</span>
+                                    <span className="text-muted-foreground">Anticipo desde</span>
                                     <span className="font-bold">
                                         USD <ClientNumber value={defaultDownPayment} />
                                     </span>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Cuotas (48)</span>
-                                    <span className="font-bold text-primary">
-                                        USD <ClientNumber value={Math.round((Number(selectedLot.price) - defaultDownPayment) / 48)} /> / mes
-                                    </span>
-                                </div>
+                                <p className="text-xs text-muted-foreground italic mt-1">
+                                    * Los valores son orientativos. Consultanos para conocer el precio y plan exacto de este lote.
+                                </p>
                             </div>
 
                             <div className="flex gap-2 pt-2">

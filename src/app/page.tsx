@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
-  description: "Lotes en venta en Buenos Aires. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa hasta 72 cuotas.",
+  description: "Lotes en venta en Buenos Aires. Jardines de Arroyo en Arroyo de la Cruz y San Nicolás en Guernica. Financiación directa hasta 72 cuotas sin banco.",
   keywords: [
     "lotes en venta",
     "lotes Buenos Aires",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
-    description: "Lotes en venta en Buenos Aires. Jardines de Arroyo desde USD 12.500 y San Nicolás desde USD 14.500. Financiación directa.",
+    description: "Lotes en venta en Buenos Aires. Jardines de Arroyo en Arroyo de la Cruz y San Nicolás en Guernica. Financiación directa.",
   },
   twitter: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
@@ -138,8 +138,8 @@ export default async function Home() {
                     <p className="text-xl font-bold">300 m² c/u</p>
                   </div>
                   <div className="p-4 bg-muted rounded-xl">
-                    <p className="text-sm text-muted-foreground">Desde</p>
-                    <p className="text-xl font-bold">USD 12.500*</p>
+                    <p className="text-sm text-muted-foreground">Financiación</p>
+                    <p className="text-xl font-bold">Hasta 72 cuotas</p>
                   </div>
                 </div>
 
