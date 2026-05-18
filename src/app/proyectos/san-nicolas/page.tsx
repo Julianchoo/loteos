@@ -97,6 +97,38 @@ export default async function SanNicolasPage() {
         </div>
       </section>
 
+      {/* Project Video Section */}
+      <section className="py-20 bg-background">
+        <div className="container px-4 mx-auto">
+          <div className="grid max-w-5xl mx-auto gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="space-y-5 text-center lg:text-left">
+              <h2 className="text-3xl md:text-4xl font-black">
+                Conocé San Nicolás
+              </h2>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
+                Mirá una presentación rápida del proyecto y su entorno en Guernica.
+              </p>
+              <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
+                <a href="#financiacion">
+                  <Calculator className="mr-2 h-5 w-5" />
+                  Calcular mi plan
+                </a>
+              </Button>
+            </div>
+
+            <div className="w-full max-w-[360px] mx-auto lg:mx-0">
+              <video
+                src="/videos/presentacion-san-nicolas.MOV"
+                controls
+                playsInline
+                preload="metadata"
+                className="aspect-[9/16] w-full rounded-2xl border-4 border-border bg-muted object-cover shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container px-4 mx-auto">
