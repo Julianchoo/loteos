@@ -110,7 +110,7 @@ const howToSteps = [
   },
   {
     name: "Consultanos por tu lote",
-    text: "Elegí el proyecto que te interesa (Jardines de Arroyo o San Nicolás) y contactanos para reservar tu lote.",
+    text: "Elegí el proyecto que te interesa y contactanos para conocer disponibilidad, precio y condiciones.",
   },
 ];
 
@@ -171,6 +171,7 @@ const projects = [
     slug: "jardines-de-arroyo",
     name: "Jardines de Arroyo",
     location: "Arroyo de la Cruz, Exaltación de la Cruz",
+    commercialLabel: undefined,
     financingFrom: "Anticipo inicial + cuotas fijas en USD",
     description:
       "182 lotes de 300m² en barrio abierto con infraestructura completa. A 6 km de Capilla del Señor.",
@@ -180,10 +181,21 @@ const projects = [
     slug: "san-nicolas",
     name: "San Nicolás",
     location: "Guernica, sur del GBA",
+    commercialLabel: undefined,
     financingFrom: "Anticipo inicial + cuotas fijas en USD",
     description:
       "Lotes en zona estratégica del sur del Gran Buenos Aires. Financiación directa hasta 72 cuotas.",
     tags: ["Sur GBA", "Todos los servicios", "Financiación directa"],
+  },
+  {
+    slug: "general-rodriguez",
+    name: "General Rodríguez",
+    location: "General Rodríguez, Buenos Aires",
+    commercialLabel: "Financiación en hasta 60 cuotas",
+    financingFrom: "Consultá disponibilidad y condiciones",
+    description:
+      "Proyecto de 450 lotes frente a Barrio Bicentenario, en General Rodríguez.",
+    tags: ["450 lotes", "Frente a Barrio Bicentenario", "Hasta 60 cuotas"],
   },
 ];
 
@@ -429,11 +441,11 @@ export default function CalculadoraCuotasPage() {
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Elegí el proyecto que mejor se adapta a tu presupuesto y
-              calculá tu cuota personalizada.
+              consultá las condiciones disponibles.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project) => (
               <Card
                 key={project.slug}
@@ -461,7 +473,9 @@ export default function CalculadoraCuotasPage() {
                     ))}
                   </div>
                   <div className="border-t pt-4 space-y-1">
-                    <p className="font-bold text-lg">Precio a consultar</p>
+                    <p className="font-bold text-lg">
+                      {project.commercialLabel ?? "Precio a consultar"}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {project.financingFrom}
                     </p>
@@ -514,9 +528,8 @@ export default function CalculadoraCuotasPage() {
             ¿Listo para Reservar tu Terreno?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Mirá los proyectos disponibles, simulá tu cuota en la página de cada
-            uno y contactanos. En 24 horas te respondemos con disponibilidad y
-            opciones de financiación adaptadas a tu situación.
+            Mirá los proyectos disponibles y contactanos. Te respondemos con
+            disponibilidad, precio y opciones de financiación según el proyecto.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg">

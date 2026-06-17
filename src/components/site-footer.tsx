@@ -21,6 +21,7 @@ export function SiteFooter() {
             <h4 className="font-bold text-foreground mb-4">Proyectos</h4>
             <ul className="space-y-2">
               <li><a href="/proyectos/jardines-de-arroyo" className="hover:text-primary transition-colors">Jardines de Arroyo - Arroyo de La Cruz</a></li>
+              <li><a href="/proyectos/general-rodriguez" className="hover:text-primary transition-colors">General Rodríguez</a></li>
               <li><a href="#" className="hover:text-primary transition-colors">Próximos Desarrollos</a></li>
             </ul>
           </div>

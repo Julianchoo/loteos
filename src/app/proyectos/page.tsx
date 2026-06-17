@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Loteos en Buenos Aires — Barrios Abiertos sin Expensas | Fitzroya",
   description:
-    "Desarrollamos loteos y barrios abiertos sin expensas en Buenos Aires. Lotes desde USD 12.500 con financiación directa. Conocé nuestros proyectos en Arroyo de la Cruz, Exaltación de la Cruz.",
+    "Desarrollamos loteos y barrios abiertos sin expensas en Buenos Aires. Conocé nuestros proyectos en Arroyo de la Cruz y General Rodríguez.",
   keywords: [
     "loteo",
     "loteo Buenos Aires",
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
     "barrio abierto sin expensas",
     "desarrollos inmobiliarios Buenos Aires",
     "comprar lote Buenos Aires",
+    "General Rodríguez",
   ],
   alternates: {
     canonical: "/proyectos",
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Loteos en Buenos Aires — Barrios Abiertos sin Expensas | Fitzroya",
     description:
-      "Desarrollamos loteos y barrios abiertos sin expensas en Buenos Aires. Lotes desde USD 12.500 con financiación directa.",
+      "Desarrollamos loteos y barrios abiertos sin expensas en Buenos Aires. Proyectos en Arroyo de la Cruz y General Rodríguez.",
   },
 };
 
@@ -52,6 +53,13 @@ export default function ProyectosPage() {
                   description:
                     "182 lotes de 300m² en Arroyo de la Cruz desde USD 12.500",
                   url: "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo",
+                },
+                {
+                  "@type": "Offer",
+                  name: "General Rodríguez",
+                  description:
+                    "450 lotes en General Rodríguez, frente a Barrio Bicentenario",
+                  url: "https://www.fitzroyadesarrollos.com/proyectos/general-rodriguez",
                 },
               ],
             },
@@ -130,6 +138,57 @@ export default function ProyectosPage() {
                   <div className="mt-auto pt-2">
                     <Button asChild className="w-full">
                       <Link href="/proyectos/jardines-de-arroyo">
+                        Ver proyecto <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card General Rodríguez */}
+              <Card className="overflow-hidden flex flex-col">
+                <div className="relative h-52">
+                  <Image
+                    src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.webp"
+                    alt="General Rodríguez"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-primary text-primary-foreground">
+                      NUEVO
+                    </Badge>
+                  </div>
+                </div>
+                <CardContent className="flex flex-col flex-1 pt-5 gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">General Rodríguez</h3>
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span>General Rodríguez, Buenos Aires</span>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-muted-foreground border-t pt-3">
+                    450 lotes · Hasta 60 cuotas
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      "Frente a Barrio Bicentenario",
+                      "Financiación directa",
+                      "General Rodríguez",
+                    ].map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto pt-2">
+                    <Button asChild className="w-full">
+                      <Link href="/proyectos/general-rodriguez">
                         Ver proyecto <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>

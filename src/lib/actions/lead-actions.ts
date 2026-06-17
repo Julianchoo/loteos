@@ -27,6 +27,10 @@ interface CreateLeadWithFinancingData extends CreateLeadData {
   };
 }
 
+interface CreateProjectLeadData extends CreateLeadData {
+  projectId: string;
+}
+
 export interface UpdateLeadData {
   status: string;
   firstName: string;
@@ -123,6 +127,50 @@ export async function createLeadWithFinancing(
         error instanceof Error
           ? error.message
           : "Failed to create lead with financing",
+    };
+  }
+}
+
+export async function createProjectLead(data: CreateProjectLeadData) {
+  try {
+    const leadId = randomUUID();
+    const leadProjectId = randomUUID();
+
+    await db.insert(lead).values({
+      id: leadId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone || null,
+      contactChannel: data.contactChannel,
+      marketingSource: data.marketingSource || null,
+      marketingCampaign: data.marketingCampaign || null,
+      status: "new",
+      initialMessage: data.initialMessage || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await db.insert(leadProject).values({
+      id: leadProjectId,
+      leadId,
+      projectId: data.projectId,
+      interestLevel: "high",
+      createdAt: new Date(),
+    });
+
+    revalidatePath("/");
+    revalidatePath(`/proyectos/${data.projectId}`);
+
+    return { success: true, leadId };
+  } catch (error) {
+    console.error("Error creating project lead:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create project lead",
     };
   }
 }

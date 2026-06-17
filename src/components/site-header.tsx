@@ -103,6 +103,12 @@ export function SiteHeader() {
                       <div className="text-xs text-muted-foreground">Guernica</div>
                     </Link>
                   </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link href="/proyectos/general-rodriguez" className="cursor-pointer flex flex-col items-start">
+                      <div className="font-medium">General Rodríguez</div>
+                      <div className="text-xs text-muted-foreground">General Rodríguez</div>
+                    </Link>
+                  </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
 
@@ -177,6 +183,14 @@ export function SiteHeader() {
                     >
                       <div className="font-semibold">San Nicolás</div>
                       <div className="text-sm text-muted-foreground mt-0.5">Guernica</div>
+                    </Link>
+                    <Link
+                      href="/proyectos/general-rodriguez"
+                      className="pl-6 py-3 hover:bg-accent/60 rounded-lg transition-all border-l-2 border-transparent hover:border-primary/50 ml-2"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="font-semibold">General Rodríguez</div>
+                      <div className="text-sm text-muted-foreground mt-0.5">General Rodríguez</div>
                     </Link>
                   </div>
 
