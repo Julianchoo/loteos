@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
+import { toPublicProjectSummary } from "@/lib/public-projects";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -166,40 +168,10 @@ const jsonLd = {
   ],
 };
 
-const projects = [
-  {
-    slug: "jardines-de-arroyo",
-    name: "Jardines de Arroyo",
-    location: "Arroyo de la Cruz, Exaltación de la Cruz",
-    commercialLabel: undefined,
-    financingFrom: "Anticipo inicial + cuotas fijas en USD",
-    description:
-      "182 lotes de 300m² en barrio abierto con infraestructura completa. A 6 km de Capilla del Señor.",
-    tags: ["Barrio abierto", "Luz y agua", "Sin expensas"],
-  },
-  {
-    slug: "san-nicolas",
-    name: "San Nicolás",
-    location: "Guernica, sur del GBA",
-    commercialLabel: undefined,
-    financingFrom: "Anticipo inicial + cuotas fijas en USD",
-    description:
-      "Lotes en zona estratégica del sur del Gran Buenos Aires. Financiación directa hasta 72 cuotas.",
-    tags: ["Sur GBA", "Todos los servicios", "Financiación directa"],
-  },
-  {
-    slug: "general-rodriguez",
-    name: "General Rodríguez",
-    location: "General Rodríguez, Buenos Aires",
-    commercialLabel: "Financiación en hasta 60 cuotas",
-    financingFrom: "Consultá disponibilidad y condiciones",
-    description:
-      "Proyecto de 450 lotes frente a Barrio Bicentenario, en General Rodríguez.",
-    tags: ["450 lotes", "Frente a Barrio Bicentenario", "Hasta 60 cuotas"],
-  },
-];
+export default async function CalculadoraCuotasPage() {
+  const { data: visibleProjectRows } = await getProjectsForCurrentUser();
+  const visibleProjects = visibleProjectRows.map(toPublicProjectSummary);
 
-export default function CalculadoraCuotasPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* JSON-LD */}
@@ -272,11 +244,7 @@ export default function CalculadoraCuotasPage() {
             </p>
 
             <p>
-              Tanto si buscás{" "}
-              <strong>lotes financiados en la zona norte</strong> de Buenos
-              Aires como en la zona sur, nuestros proyectos cubren las dos
-              áreas. Jardines de Arroyo está en Exaltación de la Cruz (Capilla
-              del Señor, Cardales), y San Nicolás en zona norte bonaerense.
+              Los proyectos listados abajo son los disponibles actualmente para consulta publica.
             </p>
           </div>
 
@@ -446,9 +414,9 @@ export default function CalculadoraCuotasPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project) => (
+            {visibleProjects.map((project) => (
               <Card
-                key={project.slug}
+                key={project.id}
                 className="overflow-hidden border-2 hover:border-primary/50 transition-colors"
               >
                 <CardHeader className="bg-primary/5 pb-4">
@@ -481,7 +449,7 @@ export default function CalculadoraCuotasPage() {
                     </p>
                   </div>
                   <Button asChild className="w-full">
-                    <Link href={`/proyectos/${project.slug}`}>
+                    <Link href={project.href}>
                       Ver proyecto
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>

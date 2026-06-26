@@ -1,13 +1,16 @@
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Droplet, Shield, ArrowRight, Sparkles, ChevronRight } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
 import { ParallaxBackground } from "@/components/parallax-background";
+import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -42,15 +45,25 @@ export const metadata: Metadata = {
 };
 
 export default async function JardinesDeArroyoPage() {
+  const isAdmin = await isCurrentUserAdmin();
   let projectData = null;
+  let projectVisibility: boolean | null = null;
 
   try {
     const projectResult = await getProjectBySlug("jardines-de-arroyo");
     if (projectResult.success && projectResult.data) {
+      projectVisibility = projectResult.data.isVisible;
+      if (!projectResult.data.isVisible && !isAdmin) {
+        notFound();
+      }
       projectData = projectResult.data;
     }
   } catch (error) {
     console.error("Failed to load project data:", error);
+  }
+
+  if (projectVisibility === null && !isAdmin) {
+    notFound();
   }
 
   // Use values from Airtable/Postgres, with fallbacks
@@ -61,6 +74,9 @@ export default async function JardinesDeArroyoPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {isAdmin && projectVisibility !== null && (
+        <ProjectAdminVisibilityBanner isVisible={projectVisibility} />
+      )}
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"

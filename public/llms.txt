@@ -9,47 +9,6 @@ Fitzroya Desarrollos is a real estate development company specializing in reside
 
 ## Our Projects
 
-### Jardines de Arroyo - Arroyo de la Cruz
-
-**Location**: Ruta 192, Arroyo de la Cruz, Exaltación de la Cruz, Buenos Aires, Argentina
-**Google Maps**: https://maps.app.goo.gl/KKeZd8cXTS3j1SMF7
-
-**Project Overview**:
-- Total area: 9 hectares
-- Total lots: 185 lots
-- Lot size: 300 m² each
-- Minimum frontage: 12 meters
-- Development type: Open neighborhood (barrio abierto)
-
-**Pricing**:
-- Cash price: USD 12,500 (special promotion)
-- Financed price: USD 20,000
-- Savings with cash payment: USD 7,500
-
-**Financing Options**:
-- Minimum down payment: USD 3,500
-- Payment terms: Up to 60 months (5 years)
-- Monthly installments: From USD 267
-- Currency: Fixed installments in US dollars
-- Direct financing: No intermediaries
-
-**Infrastructure & Amenities**:
-- Complete electrical network installation
-- Water supply connection
-- Improved and consolidated streets
-- Perimeter curb and gutter drainage system
-- Public lighting throughout the neighborhood
-- All basic services available
-
-**Technical Specifications**:
-- Land use factor (FOS): 0.6
-- Total occupation factor (FOT): 1.0
-- Immediate deed availability
-- Documentation in order and legalized
-
-**Page**: https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo
-
----
 
 ### San Nicolás - Guernica
 
@@ -119,7 +78,6 @@ Land lots in Buenos Aires province represent a solid investment opportunity:
 
 - **Website**: https://www.fitzroyadesarrollos.com
 - **Contact Form**: https://www.fitzroyadesarrollos.com/#contacto
-- **Jardines de Arroyo Project**: https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo
 - **San Nicolás Project**: https://www.fitzroyadesarrollos.com/proyectos/san-nicolas
 
 ---

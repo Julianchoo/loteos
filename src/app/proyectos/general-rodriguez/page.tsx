@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -9,11 +10,13 @@ import {
   MapPin,
 } from "lucide-react";
 import { ParallaxBackground } from "@/components/parallax-background";
+import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
 import { ProjectInquiryForm } from "@/components/project-inquiry-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -53,12 +56,18 @@ export const metadata: Metadata = {
 };
 
 export default async function GeneralRodriguezPage() {
+  const isAdmin = await isCurrentUserAdmin();
   let totalLots = "450";
   let maxFinancingMonths = 60;
+  let projectVisibility: boolean | null = null;
 
   try {
     const projectResult = await getProjectBySlug(projectId);
     if (projectResult.success && projectResult.data) {
+      projectVisibility = projectResult.data.isVisible;
+      if (!projectResult.data.isVisible && !isAdmin) {
+        notFound();
+      }
       totalLots = projectResult.data.totalLots || totalLots;
       maxFinancingMonths =
         projectResult.data.maxFinancingMonths || maxFinancingMonths;
@@ -67,8 +76,15 @@ export default async function GeneralRodriguezPage() {
     console.error("Failed to load project data:", error);
   }
 
+  if (projectVisibility === null && !isAdmin) {
+    notFound();
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
+      {isAdmin && projectVisibility !== null && (
+        <ProjectAdminVisibilityBanner isVisible={projectVisibility} />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

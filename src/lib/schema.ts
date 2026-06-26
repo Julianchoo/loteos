@@ -89,6 +89,7 @@ export const project = pgTable("project", {
   location: text("location"),
   totalArea: text("total_area"),
   totalLots: text("total_lots"),
+  isVisible: boolean("is_visible").default(true).notNull(),
 
   // Pricing and Financing Configuration (synced from Airtable)
   basePrice: numeric("base_price", { precision: 10, scale: 2 }), // Base price in USD

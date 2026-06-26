@@ -62,6 +62,22 @@ export async function getOptionalSession() {
   return await auth.api.getSession({ headers: await headers() });
 }
 
+export async function isCurrentUserAdmin() {
+  const session = await getOptionalSession();
+
+  if (!session) {
+    return false;
+  }
+
+  const [dbUser] = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  return dbUser?.role === "admin";
+}
+
 /**
  * Checks if a given path is a protected route.
  *

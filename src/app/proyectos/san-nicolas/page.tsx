@@ -1,9 +1,12 @@
+import { notFound } from "next/navigation";
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
 import { ParallaxBackground } from "@/components/parallax-background";
+import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
 import { ReplayOnClickVideo } from "@/components/replay-on-click-video";
 import { Button } from "@/components/ui/button";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -63,15 +66,25 @@ export const metadata: Metadata = {
 };
 
 export default async function SanNicolasPage() {
+  const isAdmin = await isCurrentUserAdmin();
   let projectData = null;
+  let projectVisibility: boolean | null = null;
 
   try {
     const projectResult = await getProjectBySlug("san-nicolas");
     if (projectResult.success && projectResult.data) {
+      projectVisibility = projectResult.data.isVisible;
+      if (!projectResult.data.isVisible && !isAdmin) {
+        notFound();
+      }
       projectData = projectResult.data;
     }
   } catch (error) {
     console.error("Failed to load project data:", error);
+  }
+
+  if (projectVisibility === null && !isAdmin) {
+    notFound();
   }
 
   // Use values from Airtable/Postgres, with fallbacks
@@ -82,6 +95,9 @@ export default async function SanNicolasPage() {
 
   return (
     <div className="min-h-screen">
+      {isAdmin && projectVisibility !== null && (
+        <ProjectAdminVisibilityBanner isVisible={projectVisibility} />
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(videoStructuredData) }}
