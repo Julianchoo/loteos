@@ -263,14 +263,15 @@ export default async function GeneralRodriguezPage() {
             </div>
             <Card>
               <CardHeader>
-                <CardTitle>Datos confirmados</CardTitle>
+                <CardTitle>Accesos principales</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 {[
-                  "General RodrÃ­guez, Provincia de Buenos Aires",
-                  "450 lotes",
-                  "Frente a Barrio Bicentenario",
-                  `FinanciaciÃ³n en hasta ${maxFinancingMonths} cuotas`,
+                  "A 5 min del centro de Gral. Rodríguez",
+                  "A 10 min de Au. del Oeste",
+                  "A 20 min de Luján",
+                  "A 25 min de Pilar / Au. Panamericana",
+                  "A 60 min de CABA",
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
