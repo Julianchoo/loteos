@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TreePine } from "lucide-react";
+import Image from "next/image";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
 export default function LoginPage() {
@@ -10,9 +10,24 @@ export default function LoginPage() {
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-6">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-              <TreePine className="h-6 w-6 text-primary" />
+              <Image
+                src="/images/logo-icon/icon-192x192.png"
+                alt=""
+                width={40}
+                height={40}
+                className="h-10 w-10 dark:hidden"
+                aria-hidden="true"
+              />
+              <Image
+                src="/images/logo-green-2FBC5B-transparent.png"
+                alt=""
+                width={40}
+                height={40}
+                className="hidden h-10 w-10 dark:block"
+                aria-hidden="true"
+              />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-[#143827] dark:text-[#2FBC5B]">
               Fitzroya Desarrollos
             </span>
           </Link>

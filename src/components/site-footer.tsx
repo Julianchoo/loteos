@@ -1,4 +1,4 @@
-import { TreePine } from "lucide-react";
+import Image from "next/image";
 
 export function SiteFooter() {
   const currentYear = new Date().getFullYear();
@@ -8,9 +8,24 @@ export function SiteFooter() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start text-left">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-primary font-bold text-xl">
-              <TreePine className="h-6 w-6" />
-              <span>Fitzroya Desarrollos</span>
+            <div className="flex items-center gap-2 font-bold text-xl">
+              <Image
+                src="/images/logo-icon/icon-192x192.png"
+                alt=""
+                width={24}
+                height={24}
+                className="h-6 w-6 dark:hidden"
+                aria-hidden="true"
+              />
+              <Image
+                src="/images/logo-green-2FBC5B-transparent.png"
+                alt=""
+                width={24}
+                height={24}
+                className="hidden h-6 w-6 dark:block"
+                aria-hidden="true"
+              />
+              <span className="text-[#143827] dark:text-[#2FBC5B]">Fitzroya Desarrollos</span>
             </div>
             <p className="max-w-xs">
               Especialistas en la creación de barrios sustentables y oportunidades de inversión en zonas exclusivas.
