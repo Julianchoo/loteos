@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { TreePine, Menu, ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, ChevronDown, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -16,7 +18,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
 import { signOut, useSession } from "@/lib/auth-client";
 import { ModeToggle } from "./ui/mode-toggle";
 
@@ -60,13 +61,16 @@ export function SiteHeader() {
                 className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
                 aria-label="Fitzroya Desarrollos - Go to homepage"
               >
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10"
+                <Image
+                  src="/images/logo-dark-transparent.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
                   aria-hidden="true"
-                >
-                  <TreePine className="h-5 w-5" />
-                </div>
-                <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  priority
+                />
+                <span className="text-[#143827]">
                   Fitzroya Desarrollos
                 </span>
               </Link>
