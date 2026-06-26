@@ -267,9 +267,9 @@ export default async function GeneralRodriguezPage() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 {[
-                  "A 5 min del centro de Gral. Rodríguez",
+                  "A 5 min del centro de Gral. RodrÃ­guez",
                   "A 10 min de Au. del Oeste",
-                  "A 20 min de Luján",
+                  "A 20 min de LujÃ¡n",
                   "A 25 min de Pilar / Au. Panamericana",
                   "A 60 min de CABA",
                 ].map((item) => (
