@@ -2,15 +2,25 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signIn, useSession } from "@/lib/auth-client"
 
+function getSafeCallbackURL(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/admin"
+  }
+
+  return value
+}
+
 export function SignInButton() {
   const { data: session, isPending: sessionPending } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackURL = getSafeCallbackURL(searchParams.get("callbackURL"))
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -33,19 +43,13 @@ export function SignInButton() {
       const result = await signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL,
       })
 
       if (result.error) {
         setError("Email o contraseña incorrectos")
       } else {
-        // Redirect admins directly to admin panel
-        const user = result.data?.user as { role?: string } | undefined
-        if (user?.role === "admin") {
-          router.push("/admin")
-        } else {
-          router.push("/dashboard")
-        }
+        router.push(callbackURL)
         router.refresh()
       }
     } catch {

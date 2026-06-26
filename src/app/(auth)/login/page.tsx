@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { SignInButton } from "@/components/auth/sign-in-button";
 
 export default function LoginPage() {
@@ -39,7 +40,9 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-background border rounded-xl p-6 shadow-sm">
-          <SignInButton />
+          <Suspense fallback={null}>
+            <SignInButton />
+          </Suspense>
         </div>
 
         {/* Register link */}
