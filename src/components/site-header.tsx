@@ -62,15 +62,24 @@ export function SiteHeader() {
                 aria-label="Fitzroya Desarrollos - Go to homepage"
               >
                 <Image
-                  src="/images/logo-dark-transparent.png"
+                  src="/images/logo-icon/icon-192x192.png"
                   alt=""
                   width={32}
                   height={32}
-                  className="h-8 w-8"
+                  className="h-8 w-8 dark:hidden"
                   aria-hidden="true"
                   priority
                 />
-                <span className="text-[#143827]">
+                <Image
+                  src="/images/logo-green-2FBC5B-transparent.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="hidden h-8 w-8 dark:block"
+                  aria-hidden="true"
+                  priority
+                />
+                <span className="text-[#143827] dark:text-[#2FBC5B]">
                   Fitzroya Desarrollos
                 </span>
               </Link>
