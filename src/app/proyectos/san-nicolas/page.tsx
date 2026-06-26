@@ -1,12 +1,41 @@
 import { MapPin, Calculator, CheckCircle2, Home, TreePine, Zap, Shield, ArrowRight } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
 import { ParallaxBackground } from "@/components/parallax-background";
+import { ReplayOnClickVideo } from "@/components/replay-on-click-video";
 import { Button } from "@/components/ui/button";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
+const baseUrl = "https://www.fitzroyadesarrollos.com";
+const videoThumbnailUrl = `${baseUrl}/images/hero-panorama.png`;
+
+const videoStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "VideoObject",
+      name: "San Nicolás tomando forma",
+      description:
+        "Visualización del proyecto San Nicolás desde el plano del loteo hasta una idea del barrio terminado en Guernica.",
+      thumbnailUrl: [videoThumbnailUrl],
+      uploadDate: "2026-06-26T14:42:15Z",
+      contentUrl: `${baseUrl}/videos/san-nicolas-tomaforma.mp4`,
+      embedUrl: `${baseUrl}/proyectos/san-nicolas`,
+    },
+    {
+      "@type": "VideoObject",
+      name: "Presentación de San Nicolás",
+      description:
+        "Presentación rápida del proyecto San Nicolás y su entorno en Guernica.",
+      thumbnailUrl: [videoThumbnailUrl],
+      uploadDate: "2026-05-18T13:40:17Z",
+      contentUrl: `${baseUrl}/videos/presentacion-san-nicolas.MOV`,
+      embedUrl: `${baseUrl}/proyectos/san-nicolas`,
+    },
+  ],
+};
 export const metadata: Metadata = {
   title: "San Nicolás Guernica - Lotes en Guernica | Fitzroya",
   description: "20 lotes en Guernica, sur del GBA. Proyecto de 1 hectárea sobre Ruta 210 con financiación directa, escritura inmediata y servicios completos.",
@@ -53,6 +82,10 @@ export default async function SanNicolasPage() {
 
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoStructuredData) }}
+      />
       {/* Hero Section */}
       <section className="relative py-20 md:py-32 overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -100,31 +133,63 @@ export default async function SanNicolasPage() {
       {/* Project Video Section */}
       <section className="py-20 bg-background">
         <div className="container px-4 mx-auto">
-          <div className="grid max-w-5xl mx-auto gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="space-y-5 text-center lg:text-left">
+          <div className="max-w-5xl mx-auto space-y-8 text-center">
+            <div className="space-y-4">
               <h2 className="text-3xl md:text-4xl font-black">
                 Conocé San Nicolás
               </h2>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Mirá una presentación rápida del proyecto y su entorno en Guernica.
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Del plano del loteo a una idea concreta del barrio tomando forma: una vista rápida para imaginar cómo se proyecta San Nicolás en Guernica.
               </p>
-              <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
-                <a href="#financiacion">
-                  <Calculator className="mr-2 h-5 w-5" />
-                  Calcular mi plan
-                </a>
-              </Button>
             </div>
 
-            <div className="w-full max-w-[360px] mx-auto lg:mx-0">
-              <video
-                src="/videos/presentacion-san-nicolas.MOV"
-                controls
-                playsInline
-                preload="metadata"
-                className="aspect-[9/16] w-full rounded-2xl border-4 border-border bg-muted object-cover shadow-2xl"
-              />
+            <div className="grid gap-8 md:grid-cols-2 md:items-start">
+              <article className="mx-auto w-full max-w-[380px] rounded-2xl border bg-card p-3 shadow-lg">
+                <div className="space-y-3 text-left">
+                  <div>
+                    <h3 className="text-lg font-bold">El barrio tomando forma</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Del plano inicial a una visualización del entorno terminado.
+                    </p>
+                  </div>
+                  <ReplayOnClickVideo
+                    src="/videos/san-nicolas-tomaforma.mp4"
+                    poster="/images/hero-panorama.png"
+                    autoPlay
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="aspect-[9/16] w-full cursor-pointer rounded-xl bg-muted object-cover"
+                  />
+                </div>
+              </article>
+
+              <article className="mx-auto w-full max-w-[380px] rounded-2xl border bg-card p-3 shadow-lg">
+                <div className="space-y-3 text-left">
+                  <div>
+                    <h3 className="text-lg font-bold">Presentación del proyecto</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Una recorrida rápida por el proyecto y su entorno en Guernica.
+                    </p>
+                  </div>
+                  <video
+                    src="/videos/presentacion-san-nicolas.MOV"
+                    poster="/images/hero-panorama.png"
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="aspect-[9/16] w-full rounded-xl bg-muted object-cover"
+                  />
+                </div>
+              </article>
             </div>
+
+            <Button size="lg" className="rounded-full px-8 h-12 text-base font-bold" asChild>
+              <a href="#financiacion">
+                <Calculator className="mr-2 h-5 w-5" />
+                Calcular mi plan
+              </a>
+            </Button>
           </div>
         </div>
       </section>
