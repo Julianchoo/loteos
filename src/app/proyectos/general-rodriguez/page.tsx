@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -194,7 +195,17 @@ export default async function GeneralRodriguezPage() {
       </section>
 
       <section className="py-20 bg-background">
-        <div className="container px-4 mx-auto">
+        <div className="container px-4 mx-auto space-y-8">
+          <div className="overflow-hidden rounded-2xl border bg-muted shadow-sm">
+            <Image
+              src="/images/Rodriguez - Mapa PoIs.png"
+              alt="Mapa de puntos de interes cercanos al proyecto General Rodriguez"
+              width={1600}
+              height={900}
+              className="h-auto w-full"
+              sizes="(max-width: 768px) 100vw, 1200px"
+            />
+          </div>
           <div className="grid gap-8 md:grid-cols-3">
             <Card>
               <CardHeader>
