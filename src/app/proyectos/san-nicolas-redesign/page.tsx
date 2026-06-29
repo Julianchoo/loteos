@@ -207,15 +207,20 @@ export default async function SanNicolasRedesignPage() {
 
       <section className="py-20">
         <div className="container mx-auto grid gap-10 px-4 lg:grid-cols-[0.92fr_0.88fr] lg:items-stretch">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg border bg-muted shadow-sm md:aspect-video lg:h-full lg:min-h-[560px] lg:aspect-auto">
-            <Image
-              src={overviewImage}
-              alt="Plano general del proyecto San Nicolás"
-              fill
-              className="object-cover object-left"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
+          <figure className="flex flex-col gap-3">
+            <div className="h-full overflow-hidden rounded-lg border bg-foreground p-2 shadow-sm">
+              <ReplayOnClickVideo
+                src="/videos/san-nicolas-tomaforma.mp4"
+                poster={aerialImage}
+                autoPlay
+                muted
+                playsInline
+                preload="metadata"
+                className="aspect-[9/16] h-full max-h-[680px] min-h-[520px] w-full cursor-pointer rounded-md bg-muted object-cover"
+              />
+            </div>
+
+          </figure>
 
           <div className="flex flex-col gap-7">
             <div className="flex flex-col gap-4">
@@ -250,70 +255,48 @@ export default async function SanNicolasRedesignPage() {
           </div>
         </div>
       </section>
-
       <section className="py-20">
-        <div className="container mx-auto grid gap-12 px-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
-          <div className="flex flex-col gap-5">
-            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
-              <MapPin className="size-4" />
-              <span>Recorrido visual</span>
-            </div>
-            <div className="flex flex-col gap-4">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                Miralo en contexto
-              </h2>
-              <p className="text-lg leading-relaxed text-muted-foreground">
-                Una vista rápida del loteo y una visualización del barrio para
-                entender mejor la escala del proyecto.
-              </p>
-            </div>
-            <Button variant="outline" className="w-fit rounded-full px-6" asChild>
-              <a href="#ubicacion">
-                Ver ubicación
-                <ArrowRight data-icon="inline-end" />
-              </a>
-            </Button>
-          </div>
+        <div className="container mx-auto px-4">
+          <div className="relative min-h-[720px] overflow-hidden rounded-lg border bg-foreground shadow-2xl">
+            <Image
+              src={overviewImage}
+              alt="Plano general del proyecto San Nicolás"
+              fill
+              className="object-cover object-left brightness-45"
+              sizes="100vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/25" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25" />
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.62fr)] lg:items-end">
-            <figure className="flex flex-col gap-3">
-              <div className="overflow-hidden rounded-lg border bg-foreground p-2 shadow-sm">
-                <ReplayOnClickVideo
-                  src="/videos/san-nicolas-tomaforma.mp4"
-                  poster={aerialImage}
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="aspect-[9/16] max-h-[620px] w-full cursor-pointer rounded-md bg-muted object-cover"
-                />
+            <div className="relative grid min-h-[720px] gap-10 p-6 text-white md:p-10 lg:grid-cols-[0.9fr_0.7fr] lg:items-center lg:p-14">
+              <div className="max-w-xl self-end lg:self-center">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
+                    <MapPin className="size-4" />
+                    <span>Presentación del proyecto</span>
+                  </div>
+                  <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
+                    Conocé el proyecto San Nicolás
+                  </h2>
+                  <p className="text-lg leading-relaxed text-white/75">
+                    Una recorrida breve para entender el loteo, el entorno y la escala del proyecto.
+                  </p>
+                </div>
               </div>
-              <figcaption className="flex flex-col gap-1">
-                <span className="font-bold">El barrio tomando forma</span>
-                <span className="text-sm text-muted-foreground">
-                  Del plano inicial a una visualización del entorno terminado.
-                </span>
-              </figcaption>
-            </figure>
 
-            <figure className="flex flex-col gap-3 lg:pb-10">
-              <div className="overflow-hidden rounded-lg border bg-foreground p-2 shadow-sm">
-                <video
-                  src="/videos/presentacion-san-nicolas.MOV"
-                  poster={aerialImage}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="aspect-[9/16] max-h-[520px] w-full rounded-md bg-muted object-cover"
-                />
+              <div className="mx-auto w-full max-w-[340px] lg:ml-auto">
+                <div className="overflow-hidden rounded-lg border border-white/20 bg-background p-2 shadow-2xl">
+                  <video
+                    src="/videos/presentacion-san-nicolas.MOV"
+                    poster={aerialImage}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="aspect-[9/16] max-h-[600px] w-full rounded-md bg-muted object-cover"
+                  />
+                </div>
               </div>
-              <figcaption className="flex flex-col gap-1">
-                <span className="font-bold">Presentación del proyecto</span>
-                <span className="text-sm text-muted-foreground">
-                  Recorrida breve por el proyecto y su entorno en Guernica.
-                </span>
-              </figcaption>
-            </figure>
+            </div>
           </div>
         </div>
       </section>
