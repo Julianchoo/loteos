@@ -1,4 +1,4 @@
-﻿import Image from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
 import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
+import { ProjectContactForm } from "@/components/project-contact-form";
 import { ReplayOnClickVideo } from "@/components/replay-on-click-video";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -419,24 +420,43 @@ export default async function SanNicolasRedesignPage() {
         </div>
       </section>
 
-      <section className="py-16">
+      <section id="contacto" className="py-20">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col items-start justify-between gap-6 border-t pt-10 md:flex-row md:items-center">
-            <div className="max-w-2xl">
+          <div className="grid gap-10 border-t pt-12 lg:grid-cols-[0.85fr_1fr] lg:items-start">
+            <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
                 <FileText className="size-4" />
                 <span>Consulta comercial</span>
               </div>
-              <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
-                Revisá una financiación para San Nicolás
-              </h2>
+              <div className="flex flex-col gap-4">
+                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+                  Consultá por San Nicolás
+                </h2>
+                <p className="text-lg leading-relaxed text-muted-foreground">
+                  Dejanos tus datos y te respondemos con disponibilidad y
+                  condiciones comerciales del proyecto.
+                </p>
+              </div>
+              <Button variant="outline" className="w-fit rounded-full px-6" asChild>
+                <a href="#financiacion">
+                  Ver financiación
+                  <ArrowRight data-icon="inline-end" />
+                </a>
+              </Button>
             </div>
-            <Button size="lg" className="rounded-full px-8" asChild>
-              <a href="#financiacion">
-                Calcular mi plan
-                <ArrowRight data-icon="inline-end" />
-              </a>
-            </Button>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Contactar por el proyecto</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProjectContactForm
+                  projectId={projectId}
+                  projectName={projectName}
+                  defaultMessage="Consulta directa por San Nicolás. Financiación hasta 60 cuotas."
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
