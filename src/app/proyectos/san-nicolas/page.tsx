@@ -12,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
+import { LazyVideo } from "@/components/lazy-video";
 import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
 import { ProjectContactForm } from "@/components/project-contact-form";
 import { ReplayOnClickVideo } from "@/components/replay-on-click-video";
@@ -29,6 +30,7 @@ const projectId = "san-nicolas";
 const projectName = "San Nicolás";
 const aerialImage = "/images/San Nicolas/foto aerea opci3.png";
 const overviewImage = "/images/San Nicolas/zoom general (1).png";
+const videoPoster = "/images/San Nicolas/san-nicolas-video-poster.jpg";
 
 const facts = [
   { label: "Lotes", value: "20" },
@@ -231,7 +233,7 @@ export default async function SanNicolasPage() {
             <div className="h-full overflow-hidden rounded-lg border bg-foreground p-2 shadow-sm">
               <ReplayOnClickVideo
                 src="/videos/san-nicolas-tomaforma.mp4"
-                poster={aerialImage}
+                poster={videoPoster}
                 autoPlay
                 muted
                 playsInline
@@ -306,13 +308,12 @@ export default async function SanNicolasPage() {
 
               <div className="mx-auto w-full max-w-[340px] lg:ml-auto">
                 <div className="overflow-hidden rounded-lg border border-white/20 bg-background p-2 shadow-2xl">
-                  <video
-                    src="/videos/presentacion-san-nicolas.MOV"
-                    poster={aerialImage}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="aspect-[9/16] max-h-[600px] w-full rounded-md bg-muted object-cover"
+                  <LazyVideo
+                    src="/videos/presentacion-san-nicolas-com.mp4"
+                    poster={videoPoster}
+                    label="Reproducir presentación de San Nicolás"
+                    className="aspect-[9/16] max-h-[600px] w-full rounded-md"
+                    videoClassName="aspect-[9/16] max-h-[600px] w-full rounded-md bg-muted object-cover"
                   />
                 </div>
               </div>
