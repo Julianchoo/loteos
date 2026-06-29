@@ -6,9 +6,12 @@ import {
   Calculator,
   CheckCircle2,
   ChevronRight,
+  Droplets,
   FileText,
   Home,
+  Lightbulb,
   MapPin,
+  Route,
   Zap,
 } from "lucide-react";
 import { FinancingSection } from "@/components/financing-section";
@@ -19,6 +22,13 @@ import { ReplayOnClickVideo } from "@/components/replay-on-click-video";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
 import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
@@ -31,6 +41,21 @@ const projectName = "San Nicolás";
 const aerialImage = "/images/San Nicolas/foto aerea opci3.png";
 const overviewImage = "/images/San Nicolas/zoom general (1).png";
 const videoPoster = "/images/San Nicolas/san-nicolas-video-poster.jpg";
+
+const galleryImages = [
+  {
+    src: "/images/San Nicolas/satelital guernica.png",
+    alt: "Vista satelital de la zona de Guernica",
+  },
+  {
+    src: overviewImage,
+    alt: "Zoom general del proyecto San Nicolás",
+  },
+  {
+    src: aerialImage,
+    alt: "Foto aérea del proyecto San Nicolás",
+  },
+];
 
 const facts = [
   { label: "Lotes", value: "20" },
@@ -67,6 +92,13 @@ const nearbyItems = [
   "Centro de Guernica a 5 minutos",
   "Estación de tren cercana",
   "Comercios y servicios a metros",
+];
+
+const services = [
+  { icon: Zap, label: "Red eléctrica" },
+  { icon: Lightbulb, label: "Luminarias led" },
+  { icon: Droplets, label: "Desagües pluviales" },
+  { icon: Route, label: "Calles mejoradas" },
 ];
 
 export const metadata: Metadata = {
@@ -277,6 +309,7 @@ export default async function SanNicolasPage() {
           </div>
         </div>
       </section>
+
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="relative min-h-[720px] overflow-hidden rounded-lg border bg-foreground shadow-2xl">
@@ -419,6 +452,57 @@ export default async function SanNicolasPage() {
                   </ul>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section className="bg-muted/30 py-20">
+        <div className="container mx-auto flex flex-col gap-10 px-4">
+          <div className="flex max-w-4xl flex-col gap-4">
+            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
+              <MapPin className="size-4" />
+              <span>Infraestructura y servicios</span>
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Todo lo que necesitás para tu vida en Guernica
+            </h2>
+          </div>
+
+          <div className="grid gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-stretch">
+            <Carousel opts={{ align: "start", loop: true }} className="w-full">
+              <CarouselContent>
+                {galleryImages.map((image) => (
+                  <CarouselItem key={image.src}>
+                    <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-black shadow-sm">
+                      <Image
+                        src={image.src}
+                        alt={image.alt}
+                        fill
+                        className="object-contain"
+                        sizes="(min-width: 1024px) 58vw, 100vw"
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-3 bg-background/90 shadow-sm" />
+              <CarouselNext className="right-3 bg-background/90 shadow-sm" />
+            </Carousel>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:auto-rows-fr">
+              {services.map((service) => (
+                <div
+                  key={service.label}
+                  className="flex min-h-24 items-center gap-3 rounded-lg border bg-background p-5 shadow-sm lg:min-h-0"
+                >
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <service.icon className="size-5" />
+                  </div>
+                  <span className="font-semibold">{service.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
