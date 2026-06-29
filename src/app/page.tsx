@@ -6,6 +6,7 @@ import { ParallaxBackground } from "@/components/parallax-background";
 import { Button } from "@/components/ui/button";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -26,10 +27,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
     description: "Lotes en venta en Buenos Aires con financiacion directa.",
+    images: [sharedOpenGraphImage],
   },
   twitter: {
     title: "Lotes en Venta en Buenos Aires | Fitzroya Desarrollos",
     description: "Lotes en venta en Buenos Aires. Desarrollos inmobiliarios sustentables con financiacion directa.",
+    images: [sharedTwitterImage],
   },
 };
 

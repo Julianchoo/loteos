@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
@@ -86,10 +87,12 @@ export const metadata: Metadata = {
     title: "San Nicolás Guernica - Lotes en Guernica",
     description:
       "20 lotes en venta en Guernica. Proyecto de 1 hectárea con financiación directa.",
+    images: [sharedOpenGraphImage],
   },
   twitter: {
     title: "San Nicolás Guernica - Lotes en Guernica",
     description: "20 lotes en venta en Guernica. Financiación directa.",
+    images: [sharedTwitterImage],
   },
 };
 

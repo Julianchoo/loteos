@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 const geistSans = Geist({
@@ -19,7 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fitzroyadesarrollos.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://fitzroyadesarrollos.com"
+  ),
   title: {
     default: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
     template: "%s | Fitzroya Desarrollos",
@@ -43,12 +46,16 @@ export const metadata: Metadata = {
     locale: "es_AR",
     siteName: "Fitzroya Desarrollos",
     title: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
-    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables. Jardines de Arroyo - Arroyo de La Cruz.",
+    description:
+      "Especialistas en loteos y desarrollos inmobiliarios sustentables. Jardines de Arroyo - Arroyo de La Cruz.",
+    images: [sharedOpenGraphImage],
   },
   twitter: {
     card: "summary_large_image",
     title: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
-    description: "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
+    description:
+      "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
+    images: [sharedTwitterImage],
   },
   robots: {
     index: true,

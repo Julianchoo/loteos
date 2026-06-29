@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Loteos en Buenos Aires - Proyectos Disponibles | Fitzroya",
     description: "Proyectos disponibles con financiacion directa y barrios abiertos sin expensas.",
+    images: [sharedOpenGraphImage],
+  },
+  twitter: {
+    title: "Loteos en Buenos Aires - Proyectos Disponibles | Fitzroya",
+    description: "Proyectos disponibles con financiacion directa y barrios abiertos sin expensas.",
+    images: [sharedTwitterImage],
   },
 };
 

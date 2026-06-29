@@ -5,6 +5,7 @@ import { ParallaxBackground } from "@/components/parallax-background";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -26,6 +27,13 @@ export const metadata: Metadata = {
     title: "Quiénes Somos | Fitzroya Desarrollos",
     description:
       "Conocé nuestra historia, filosofía y valores. Desarrollos inmobiliarios sustentables con transparencia y compromiso.",
+    images: [sharedOpenGraphImage],
+  },
+  twitter: {
+    title: "Quiénes Somos | Fitzroya Desarrollos",
+    description:
+      "Conocé nuestra historia, filosofía y valores. Desarrollos inmobiliarios sustentables con transparencia y compromiso.",
+    images: [sharedTwitterImage],
   },
 };
 

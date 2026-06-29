@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
@@ -17,7 +18,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz | Fitzroya",
-  description: "182 lotes de 300m² en Arroyo de la Cruz. Barrio exclusivo de 9 ha con financiación directa hasta 72 cuotas. Luz, agua y alumbrado público.",
+  description:
+    "182 lotes de 300m² en Arroyo de la Cruz. Barrio exclusivo de 9 ha con financiación directa hasta 72 cuotas. Luz, agua y alumbrado público.",
   keywords: [
     "Jardines de Arroyo",
     "Arroyo de la Cruz",
@@ -29,18 +31,22 @@ export const metadata: Metadata = {
     "financiacion terrenos",
     "barrio abierto",
     "lotes Buenos Aires",
-    "Parada Robles"
+    "Parada Robles",
   ],
   alternates: {
     canonical: "/proyectos/jardines-de-arroyo",
   },
   openGraph: {
     title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
-    description: "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas. Barrio exclusivo de 9 hectáreas.",
+    description:
+      "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas. Barrio exclusivo de 9 hectáreas.",
+    images: [sharedOpenGraphImage],
   },
   twitter: {
     title: "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
-    description: "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas.",
+    description:
+      "182 lotes de 300m² en Arroyo de la Cruz, a 6 km de Capilla del Señor. Financiación directa hasta 72 cuotas.",
+    images: [sharedTwitterImage],
   },
 };
 

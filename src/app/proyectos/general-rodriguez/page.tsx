@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
@@ -48,11 +49,13 @@ export const metadata: Metadata = {
     title: "General Rodríguez - Lotes en General Rodríguez",
     description:
       "Proyecto de 450 lotes en General Rodríguez, frente a Barrio Bicentenario. Precio a consultar y financiación hasta 60 cuotas.",
+    images: [sharedOpenGraphImage],
   },
   twitter: {
     title: "General Rodríguez - Lotes en General Rodríguez",
     description:
       "Proyecto de 450 lotes en General Rodríguez. Precio a consultar y financiación hasta 60 cuotas.",
+    images: [sharedTwitterImage],
   },
 };
 

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -46,6 +47,13 @@ export const metadata: Metadata = {
     title: "Calculadora de Cuotas para Terrenos | Fitzroya",
     description:
       "Calculá tu cuota mensual para comprar un terreno financiado en pesos. Sin banco, sin garante, solo DNI. Hasta 72 cuotas.",
+    images: [sharedOpenGraphImage],
+  },
+  twitter: {
+    title: "Calculadora de Cuotas para Terrenos | Fitzroya",
+    description:
+      "Calculá tu cuota mensual para comprar un terreno financiado en pesos. Sin banco, sin garante, solo DNI. Hasta 72 cuotas.",
+    images: [sharedTwitterImage],
   },
 };
 

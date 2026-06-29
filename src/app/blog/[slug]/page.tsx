@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPublishedPostBySlug, getAllPublishedSlugs, formatBlogDate } from "@/lib/blog";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 interface Props {
@@ -36,7 +37,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
-      images: post.featuredImageUrl ? [{ url: post.featuredImageUrl }] : [],
+      images: [sharedOpenGraphImage],
+    },
+    twitter: {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      images: [sharedTwitterImage],
     },
   };
 }

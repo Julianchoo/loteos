@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, User } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getPublishedPosts, formatBlogDate } from "@/lib/blog";
+import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -16,6 +17,12 @@ export const metadata: Metadata = {
     title: "Blog | Fitzroya Desarrollos",
     description:
       "Consejos e información sobre inversión en lotes y desarrollos inmobiliarios en Buenos Aires.",
+    images: [sharedOpenGraphImage],
+  },
+  twitter: {
+    title: "Blog | Fitzroya Desarrollos",
+    description: "Consejos e información sobre inversión en lotes y desarrollos inmobiliarios en Buenos Aires.",
+    images: [sharedTwitterImage],
   },
 };
 
