@@ -24,6 +24,14 @@ This is a Next.js 16 App Router site for Fitzroya Desarrollos. It includes the p
 - Do not delete assets unless the user explicitly asks to delete the file. Removing a reference from UI is not the same as deleting the asset.
 - When the user asks for `checkpoint y push`, run verification, commit the current intended work, and push.
 
+## Windows / Sandbox Rules
+
+- This repo is edited on Windows/PowerShell. Prefer `-LiteralPath` for paths, especially paths with spaces, brackets, accents, or parentheses.
+- If `apply_patch` fails with a Windows sandbox/root error, do not keep retrying the same tool. State the failure briefly and use a PowerShell-native edit approach scoped to the intended file only.
+- For PowerShell edits, read the target file first, replace only the exact intended block, and verify with `git diff` immediately after. Do not use broad rewrites.
+- If image viewing tools fail because of sandbox limitations, do not spend time working around it unless the user explicitly needs visual inspection. Report the limitation and ask the user to visually confirm locally.
+- Do not request escalation just to bypass normal repo editing unless the operation genuinely needs access outside the workspace or network/GUI access.
+
 ## Project Visibility Rules
 
 The database is the source of truth for project visibility.
@@ -103,6 +111,14 @@ pnpm build:ci
 ```
 
 Lint warnings may already exist. Report warnings honestly, but do not claim lint failed if it exits successfully.
+
+After any non-`apply_patch` edit, run:
+
+```powershell
+git diff -- path/to/changed-file
+```
+
+Confirm the diff only contains the intended change before continuing.
 
 ## OpenRouter AI Rules
 
