@@ -31,7 +31,7 @@ export async function SiteFooter() {
           </div>
           <div>
             <h4 className="font-bold text-foreground mb-4">Contacto</h4>
-            <ul className="space-y-2"><li>Email: matias@fitzroyadesarrollos.com</li><li>Tel: +54 9 11 5103 9500</li><li>Ubicacion: Buenos Aires</li></ul>
+            <ul className="space-y-2"><li>Email: matias@fitzroyadesarrollos.com</li><li>Tel: +54 9 11 4970-8971</li><li>Ubicacion: Buenos Aires</li></ul>
           </div>
         </div>
         <div className="mt-12 pt-8 border-t text-center"><p>(c) {currentYear} Fitzroya Desarrollos. Todos los derechos reservados.</p></div>
