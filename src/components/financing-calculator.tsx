@@ -38,6 +38,7 @@ export function FinancingCalculator({
     const defaultDownPayment = Math.max(minDownPayment, price * 0.2); // 20% or minimum
     const defaultMonths = Math.min(60, maxMonths); // Default to 60 months or max
     const minMonths = 12;
+    const maxDownPayment = price;
 
     const [downPayment, setDownPayment] = useState(defaultDownPayment);
     const [months, setMonths] = useState(defaultMonths);
@@ -91,13 +92,16 @@ export function FinancingCalculator({
                                 type="number"
                                 value={downPayment}
                                 onChange={(e) => setDownPayment(Number(e.target.value))}
+                                onBlur={() => setDownPayment((value) => Math.min(maxDownPayment, Math.max(minDownPayment, value)))}
+                                min={minDownPayment}
+                                max={maxDownPayment}
                                 className="pl-9"
                             />
                         </div>
                         <Slider
                             value={[downPayment]}
                             min={minDownPayment}
-                            max={Math.round(price * 0.75)}
+                            max={maxDownPayment}
                             step={500}
                             onValueChange={(val: number[]) => setDownPayment(val[0] ?? minDownPayment)}
                             className="mt-2"
@@ -116,6 +120,9 @@ export function FinancingCalculator({
                                 type="number"
                                 value={months}
                                 onChange={(e) => setMonths(Number(e.target.value))}
+                                onBlur={() => setMonths((value) => Math.min(maxMonths, Math.max(minMonths, value)))}
+                                min={minMonths}
+                                max={maxMonths}
                                 className="pl-9"
                             />
                         </div>

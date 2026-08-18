@@ -37,6 +37,8 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 const projectId = "san-nicolas";
+const temporaryMinCashDown = 5000;
+const temporaryMaxFinancingMonths = 24;
 const projectName = "San Nicolás";
 const aerialImage = "/images/San Nicolas/foto aerea opci3.png";
 const overviewImage = "/images/San Nicolas/zoom general (1).png";
@@ -67,8 +69,8 @@ const facts = [
 const projectHighlights = [
   {
     icon: Calculator,
-    title: "Financiación hasta 60 cuotas",
-    description: "Financiación directa con planes de pago de hasta 60 cuotas.",
+    title: `Financiación hasta ${temporaryMaxFinancingMonths} cuotas`,
+    description: `Financiación directa con planes de pago de hasta ${temporaryMaxFinancingMonths} cuotas.`,
   },
   {
     icon: Zap,
@@ -153,10 +155,8 @@ export default async function SanNicolasPage() {
   }
 
   const basePrice = projectData?.basePrice ? Number(projectData.basePrice) : 14500;
-  const minCashDown = projectData?.minCashDown
-    ? Number(projectData.minCashDown)
-    : 2500;
-  const maxFinancingMonths = projectData?.maxFinancingMonths || 72;
+  const minCashDown = temporaryMinCashDown;
+  const maxFinancingMonths = temporaryMaxFinancingMonths;
   const tna = projectData?.tna ? Number(projectData.tna) : 0.15;
 
   return (
@@ -541,7 +541,7 @@ export default async function SanNicolasPage() {
                 <ProjectContactForm
                   projectId={projectId}
                   projectName={projectName}
-                  defaultMessage="Consulta directa por San Nicolás. Financiación hasta 60 cuotas."
+                  defaultMessage={`Consulta directa por San Nicolás. Financiación hasta ${temporaryMaxFinancingMonths} cuotas.`}
                 />
               </CardContent>
             </Card>
