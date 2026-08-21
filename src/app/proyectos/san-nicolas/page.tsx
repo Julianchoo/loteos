@@ -410,13 +410,13 @@ export default async function SanNicolasPage() {
           <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
             <div className="aspect-video overflow-hidden rounded-lg border bg-muted shadow-sm">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3274.045574882629!2d-58.36786562345093!3d-34.91289537280555!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMzTCsDU0JzQ2LjQiUyA1OMKwMjInMDQuMyJX!5e0!3m2!1ses!2sar!4v1234567890123!5m2!1ses!2sar"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4643.474965126075!2d-58.37016758507982!3d-34.91315392811206!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95a2d50063efc2d3%3A0x6650b1825a5ae323!2sBarrio%20San%20Nicol%C3%A1s%20-%20Fitzroya%20Desarrollos!5e1!3m2!1ses!2sar!4v1787327471333!5m2!1ses!2sar"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
 
