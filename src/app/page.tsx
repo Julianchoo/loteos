@@ -1,8 +1,6 @@
 import Image from "next/image";
-import { MapPin, Mail, Phone, CheckCircle2, TreePine } from "lucide-react";
-import { AnimatedHero } from "@/components/animated-hero";
+import { ArrowDown, Mail, MapPin, Phone } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
-import { ParallaxBackground } from "@/components/parallax-background";
 import { Button } from "@/components/ui/button";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
@@ -36,43 +34,89 @@ export const metadata: Metadata = {
   },
 };
 
+const principles = [
+  {
+    label: "Transparencia",
+    text: "Todos nuestros lotes cuentan con la documentación al día y procesos claros.",
+  },
+  {
+    label: "Ubicación",
+    text: "Elegimos zonas con alto potencial de revalorización y excelente conectividad.",
+  },
+  {
+    label: "Sustentabilidad",
+    text: "Respetamos el entorno natural en cada uno de nuestros desarrollos.",
+  },
+];
+
 export default async function Home() {
   const { data } = await getProjectsForCurrentUser();
   const projects = data.map(toPublicProjectSummary);
+  const leadProject = projects[0];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <section id="inicio" className="relative h-[85vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <ParallaxBackground src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.webp" srcMobile="/images/stephen-cobb-mobile.webp" alt="Fitzroya Desarrollos - Espacios Verdes" priority />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-background z-1" />
+    <main id="main-content" className="min-h-screen overflow-clip bg-background">
+      <section id="inicio" className="relative min-h-[calc(88svh-5rem)] bg-foreground text-background lg:min-h-[calc(78svh-5rem)]">
+        <div className="absolute inset-0">
+          <Image
+            src="/images/stephen-cobb-4YSQ6wD8lyA-unsplash.webp"
+            alt="Fitzroya Desarrollos - Espacios Verdes"
+            fill
+            priority
+            className="object-cover opacity-65"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-foreground/25" />
+          <div className="absolute inset-y-0 left-0 w-full bg-foreground/70 lg:w-[38%]" />
         </div>
-        <AnimatedHero />
+
+        <div className="container relative mx-auto flex min-h-[calc(88svh-5rem)] flex-col justify-between px-4 py-7 md:py-9 lg:min-h-[calc(78svh-5rem)]">
+          <div className="flex items-center justify-between gap-6 text-xs font-medium tracking-[0.16em]">
+            <span>BUENOS AIRES</span>
+            <span className="hidden text-right sm:block">TIERRA / PROYECTO / FUTURO</span>
+          </div>
+
+          <div className="grid items-end gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="flex flex-col gap-5">
+              <h1 className="max-w-5xl text-[clamp(4.7rem,12vw,11rem)] font-semibold leading-[0.72] tracking-[-0.075em]">
+                <span className="block">Tierra</span>
+                <span className="ml-[0.3em] block text-[0.78em] font-serif font-normal italic text-primary">
+                  con futuro.
+                </span>
+              </h1>
+              <p className="max-w-md text-lg leading-relaxed text-background/75 md:text-xl">
+                Creamos espacios para tu futuro. Proyectos sustentables en
+                ubicaciones estratégicas.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-6 lg:items-end">
+              {leadProject && (
+                <div className="max-w-sm border-l border-background/40 pl-5 lg:border-l-0 lg:border-r lg:pl-0 lg:pr-5 lg:text-right">
+                  <p className="text-sm text-background/60">Proyecto destacado</p>
+                  <p className="mt-2 text-2xl font-medium">{leadProject.name}</p>
+                  <p className="mt-1 text-sm text-background/70">
+                    {leadProject.location}
+                  </p>
+                </div>
+              )}
+              <Button size="lg" variant="secondary" asChild>
+                <a href="#proyectos">
+                  Explorar proyectos
+                  <ArrowDown data-icon="inline-end" />
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section id="nosotros" className="py-24 bg-muted/30">
-        <div className="container px-4 mx-auto text-center space-y-16">
-          <div className="space-y-4">
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight">Nuestra Empresa</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              En Fitzroya Desarrollos nos dedicamos a la adquisicion y desarrollo de tierras con un enfoque transparente y centrado en el cliente.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: CheckCircle2, title: "Transparencia", desc: "Todos nuestros lotes cuentan con la documentacion al dia y procesos claros." },
-              { icon: MapPin, title: "Ubicacion", desc: "Elegimos zonas con alto potencial de revalorizacion y excelente conectividad." },
-              { icon: TreePine, title: "Sustentabilidad", desc: "Respetamos el entorno natural en cada uno de nuestros desarrollos." }
-            ].map((item, i) => (
-              <div key={i} className="p-8 bg-background rounded-2xl border border-border/50 shadow-sm space-y-4 text-center ring-1 ring-border/5 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto text-primary">
-                  <item.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold">{item.title}</h3>
-                <p className="text-muted-foreground">{item.desc}</p>
-              </div>
-            ))}
-          </div>
+      <section className="bg-primary py-8 text-primary-foreground md:py-10">
+        <div className="container mx-auto px-4">
+          <p className="max-w-6xl text-2xl font-medium leading-tight tracking-tight md:text-4xl lg:text-5xl">
+            No vendemos una imagen de vida. Mostramos la tierra, la ubicación y
+            las condiciones para que puedas decidir.
+          </p>
         </div>
       </section>
 
@@ -118,23 +162,77 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="contacto" className="py-24">
-        <div className="container px-4 mx-auto max-w-5xl">
-          <div className="bg-background border rounded-3xl overflow-hidden shadow-2xl ring-1 ring-border/50">
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="p-6 md:p-12 bg-primary text-primary-foreground space-y-4 md:space-y-8">
-                <div className="space-y-3"><h2 className="text-2xl md:text-3xl font-bold">Hablamos?</h2><p className="opacity-80 text-base md:text-lg">Nuestro equipo esta listo para asesorarte en tu proxima inversion inmobiliaria.</p></div>
-                <div className="space-y-4 md:space-y-6 pt-4 md:pt-8">
-                  <div className="flex items-center gap-3"><div className="w-9 h-9 shrink-0 rounded-full bg-white/10 flex items-center justify-center"><Phone className="w-4 h-4" /></div><span className="text-sm md:text-base">+54 9 11 1234 5678</span></div>
-                  <div className="flex items-center gap-3"><div className="w-9 h-9 shrink-0 rounded-full bg-white/10 flex items-center justify-center"><Mail className="w-4 h-4" /></div><span className="text-sm md:text-base break-all">matias@fitzroyadesarrollos.com</span></div>
-                  <div className="flex items-center gap-3"><div className="w-9 h-9 shrink-0 rounded-full bg-white/10 flex items-center justify-center"><MapPin className="w-4 h-4" /></div><span className="text-sm md:text-base">Buenos Aires</span></div>
-                </div>
+      <section id="nosotros" className="bg-foreground py-20 text-background md:py-32">
+        <div className="container mx-auto px-4">
+          <div className="grid gap-16 lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="flex flex-col gap-10">
+              <p className="text-sm font-medium text-primary">Nuestra empresa</p>
+              <h2 className="text-6xl font-semibold leading-[0.82] tracking-[-0.065em] md:text-8xl lg:text-9xl">
+                Menos promesas.
+                <span className="block font-serif font-normal italic text-primary">
+                  Más claridad.
+                </span>
+              </h2>
+            </div>
+
+            <div className="flex flex-col justify-end gap-8">
+              <p className="text-lg leading-relaxed text-background/70">
+                En Fitzroya Desarrollos nos dedicamos a la adquisición y
+                desarrollo de tierras con un enfoque transparente y centrado en
+                el cliente.
+              </p>
+              <div className="flex flex-col border-y border-background/25">
+                {principles.map((principle) => (
+                  <div key={principle.label} className="grid gap-3 border-b border-background/25 py-5 last:border-b-0 sm:grid-cols-[0.38fr_0.62fr]">
+                    <h3 className="font-medium text-primary">{principle.label}</h3>
+                    <p className="leading-relaxed text-background/65">{principle.text}</p>
+                  </div>
+                ))}
               </div>
-              <ContactForm />
             </div>
           </div>
         </div>
       </section>
-    </div>
+
+      <section id="contacto" className="py-20 md:py-32">
+        <div className="container mx-auto grid gap-12 px-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+          <div className="flex flex-col gap-10 lg:sticky lg:top-28">
+            <div className="flex flex-col gap-5">
+              <p className="text-sm font-medium text-primary">El próximo paso</p>
+              <h2 className="text-5xl font-semibold leading-[0.9] tracking-[-0.055em] md:text-7xl">
+                Hablemos de tu futuro.
+              </h2>
+              <p className="max-w-md text-lg leading-relaxed text-muted-foreground">
+                Nuestro equipo está listo para asesorarte en tu próxima inversión
+                inmobiliaria.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-4">
+              <a
+                href="https://wa.me/5491149708971"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 border-b border-foreground pb-2 text-sm transition-colors hover:border-primary hover:text-primary"
+              >
+                <Phone className="size-4" />
+                WhatsApp: +54 9 11 4970-8971
+              </a>
+              <a
+                href="mailto:matias@fitzroyadesarrollos.com"
+                className="flex items-center gap-3 border-b border-foreground pb-2 text-sm transition-colors hover:border-primary hover:text-primary"
+              >
+                <Mail className="size-4" />
+                matias@fitzroyadesarrollos.com
+              </a>
+            </div>
+          </div>
+
+          <div className="border-l-4 border-primary bg-muted/30">
+            <ContactForm />
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
