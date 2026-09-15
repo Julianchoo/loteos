@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Agentic Coding Boilerplate",
-    short_name: "Agentic",
+    name: "Fitzroya Desarrollos",
+    short_name: "Fitzroya",
     description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+      "Fitzroya Desarrollos — proyectos y desarrollos inmobiliarios.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
-    theme_color: "#000000",
+    theme_color: "#2FBC5B",
     icons: [
       {
         src: "/images/logo-icon/icon-192x192.png",
