@@ -197,3 +197,38 @@
 @utility animate-accordion-up {
   animation: accordion-up 0.3s ease-out;
 }
+
+/* Scoped light palette for /home-exploracion, independent of the saved site theme. */
+.home-exploration {
+  color-scheme: light;
+  --background: #f7f8f0;
+  --foreground: #193e2e;
+  --card: #fdfef9;
+  --card-foreground: #193e2e;
+  --primary: #193e2e;
+  --primary-foreground: #f7f8f0;
+  --secondary: #edf1e3;
+  --secondary-foreground: #193e2e;
+  --muted: #edf1e3;
+  --muted-foreground: #64735d;
+  --accent: #d2e7a6;
+  --accent-foreground: #193e2e;
+  --border: #d7dfcb;
+  --input: #d7dfcb;
+  --ring: #6e874c;
+  --font-sans: "Segoe UI", system-ui, sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono: Consolas, "Liberation Mono", monospace;
+}
+
+.home-exploration .home-exploration-inverse {
+  --background: #193e2e;
+  --foreground: #f7f8f0;
+  --card: #193e2e;
+  --card-foreground: #f7f8f0;
+  --primary: #d2e7a6;
+  --primary-foreground: #193e2e;
+  --muted-foreground: #bdcbb0;
+  --border: #49634b;
+  --ring: #d2e7a6;
+}

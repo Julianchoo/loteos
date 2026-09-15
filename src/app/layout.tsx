@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteFrame } from "@/components/site-frame";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -114,9 +115,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           enableSystem
           disableTransitionOnChange
         >
-          <SiteHeader />
-          <main id="main-content">{children}</main>
-          <SiteFooter />
+          <SiteFrame header={<SiteHeader />} footer={<SiteFooter />}>
+            {children}
+          </SiteFrame>
           <Toaster richColors position="top-right" />
           <Analytics />
           <SpeedInsights />
