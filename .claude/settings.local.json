@@ -47,7 +47,8 @@
       "Bash(npm run:*)",
       "Bash(source .env.local)",
       "Bash(source .env)",
-      "Bash(find '/c/Users/julia/Python_Juli/Loteos ADLC/src' -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))"
+      "Bash(find '/c/Users/julia/Python_Juli/Loteos ADLC/src' -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\))",
+      "PowerShell(node \"C:\\\\Users\\\\julia\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-julia-Python-Juli-Loteos-ADLC\\\\3bf03784-9ccc-4714-8b4e-c3d5a608be53\\\\scratchpad\\\\webp.mjs\")"
     ]
   },
   "enableAllProjectMcpServers": true,
