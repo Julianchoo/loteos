@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Droplets,
   FileText,
+  HardHat,
   Home,
   Lightbulb,
   MapPin,
@@ -101,6 +102,38 @@ const services = [
   { icon: Lightbulb, label: "Luminarias led" },
   { icon: Droplets, label: "Desagües pluviales" },
   { icon: Route, label: "Calles mejoradas" },
+];
+
+const progressDate = "Sep 2026";
+
+// Material tomado en el predio. Los posters salen de un cuadro de cada video.
+const progressMedia = [
+  {
+    kind: "image" as const,
+    src: "/images/San Nicolas/SanNicolas-AVO1-3.jpeg",
+    caption: "Movimiento de suelos hacia el acceso",
+    alt: "Calle abierta con movimiento de suelos hacia el portón de acceso del predio",
+  },
+  {
+    kind: "video" as const,
+    src: "/videos/SanNicolas-AVO1-1.mp4",
+    poster: "/images/San Nicolas/avance-obra-1-poster.jpg",
+    caption: "Aporte de suelo sobre la calle principal",
+    alt: "Camión volcador descargando suelo sobre la calle del proyecto San Nicolás",
+  },
+  {
+    kind: "video" as const,
+    src: "/videos/SanNicolas-AVO1-2.mp4",
+    poster: "/images/San Nicolas/avance-obra-2-poster.jpg",
+    caption: "Recorrida por la calle ya abierta",
+    alt: "Recorrida por la calle abierta y nivelada del proyecto San Nicolás",
+  },
+  {
+    kind: "image" as const,
+    src: "/images/San Nicolas/SanNicolas-AVO1-4.jpeg",
+    caption: "Poda en altura para limpiar el terreno",
+    alt: "Cesta elevadora podando eucaliptos en el predio de San Nicolás",
+  },
 ];
 
 export const metadata: Metadata = {
@@ -504,6 +537,59 @@ export default async function SanNicolasPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="avance-de-obra" className="py-20">
+        <div className="container mx-auto flex flex-col gap-10 px-4">
+          <div className="flex max-w-2xl flex-col gap-4">
+            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
+              <HardHat className="size-4" />
+              <span>Avance de obra</span>
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Las máquinas ya están en el terreno
+            </h2>
+            <p className="text-lg leading-relaxed text-muted-foreground">
+              Poda, limpieza, apertura de calles y aporte de suelo. Esto es el
+              predio, no un render.
+            </p>
+          </div>
+
+          <div className="mx-auto grid w-full max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {progressMedia.map((item, index) => (
+              <figure key={item.src} className="flex flex-col gap-3">
+                {item.kind === "video" ? (
+                  <LazyVideo
+                    src={item.src}
+                    poster={item.poster}
+                    label={`Reproducir: ${item.caption}`}
+                    className="aspect-[9/16] w-full rounded-lg border shadow-sm"
+                    videoClassName="aspect-[9/16] w-full rounded-lg border bg-muted object-cover shadow-sm"
+                  />
+                ) : (
+                  <div className="relative aspect-[9/16] overflow-hidden rounded-lg border bg-muted shadow-sm">
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      fill
+                      sizes="(min-width: 1024px) 240px, (min-width: 640px) 45vw, 90vw"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <figcaption className="flex items-baseline gap-3 text-sm text-muted-foreground">
+                  <span className="font-mono text-xs tabular-nums text-primary">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span>
+                    {item.caption}{" "}
+                    <span className="whitespace-nowrap">({progressDate})</span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
           </div>
         </div>
       </section>
