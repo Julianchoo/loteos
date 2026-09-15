@@ -372,7 +372,7 @@ export default async function SanNicolasPage() {
             </div>
             <ul className="grid gap-3 text-sm">
               {[
-                `Anticipo desde USD ${minCashDown.toLocaleString()}`,
+                `Anticipo desde USD ${minCashDown.toLocaleString("es-AR")}`,
                 `Financiación hasta ${maxFinancingMonths} cuotas`,
                 "Consulta directa por el proyecto",
               ].map((item) => (

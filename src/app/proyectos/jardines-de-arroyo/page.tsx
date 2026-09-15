@@ -681,7 +681,7 @@ export default async function JardinesDeArroyoPage() {
 
               <ul className="space-y-4">
                 {[
-                  `Anticipo desde USD ${minCashDown.toLocaleString()}`,
+                  `Anticipo desde USD ${minCashDown.toLocaleString("es-AR")}`,
                   `Financiación hasta en ${maxFinancingMonths} cuotas fijas en dólares (${Math.floor(maxFinancingMonths / 12)} años)`,
                   "Cuotas accesibles ajustadas a tu necesidad",
                   "Descuento especial por pago de contado — consultanos",
