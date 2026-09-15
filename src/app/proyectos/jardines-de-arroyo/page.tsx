@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
-import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
+import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
@@ -154,19 +154,19 @@ export default async function JardinesDeArroyoPage() {
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Inicio",
-                "item": "https://www.fitzroyadesarrollos.com"
+                "item": siteUrl
               },
               {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Proyectos",
-                "item": "https://www.fitzroyadesarrollos.com/proyectos"
+                "item": `${siteUrl}/proyectos`
               },
               {
                 "@type": "ListItem",
                 "position": 3,
                 "name": "Jardines de Arroyo",
-                "item": "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo"
+                "item": `${siteUrl}/proyectos/jardines-de-arroyo`
               }
             ]
           })
@@ -181,8 +181,8 @@ export default async function JardinesDeArroyoPage() {
             "name": "Jardines de Arroyo - Lotes en Arroyo de la Cruz",
             "description": "182 lotes de 300m² en Arroyo de la Cruz, Exaltación de la Cruz, Buenos Aires. Barrio exclusivo de 9 hectáreas con red eléctrica, agua corriente, calles consolidadas y alumbrado público LED. A 6 km de Capilla del Señor y 90 km de Buenos Aires.",
             "image": [
-              "https://www.fitzroyadesarrollos.com/images/hero-panorama.png",
-              "https://www.fitzroyadesarrollos.com/images/fitzroya-multiple.jpg"
+              `${siteUrl}/images/hero-panorama.png`,
+              `${siteUrl}/images/fitzroya-multiple.jpg`
             ],
             "brand": {
               "@type": "Brand",
@@ -192,7 +192,7 @@ export default async function JardinesDeArroyoPage() {
               "@type": "Offer",
               "priceCurrency": "USD",
               "availability": "https://schema.org/InStock",
-              "url": "https://www.fitzroyadesarrollos.com/proyectos/jardines-de-arroyo",
+              "url": `${siteUrl}/proyectos/jardines-de-arroyo`,
               "seller": {
                 "@type": "Organization",
                 "name": "Fitzroya Desarrollos"

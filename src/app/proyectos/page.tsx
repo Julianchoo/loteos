@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
-import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
+import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export default async function ProyectosPage() {
                 "@type": "Offer",
                 name: item.name,
                 description: item.description,
-                url: `https://www.fitzroyadesarrollos.com${item.href}`,
+                url: `${siteUrl}${item.href}`,
               })),
             },
           }),

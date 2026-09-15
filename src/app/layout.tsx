@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
+import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
 const geistSans = Geist({
@@ -20,9 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://fitzroyadesarrollos.com"
-  ),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Fitzroya Desarrollos | Desarrollos Inmobiliarios",
     template: "%s | Fitzroya Desarrollos",
@@ -66,21 +64,11 @@ export const metadata: Metadata = {
 // JSON-LD structured data for SEO
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
+  "@type": "Organization",
   name: "Fitzroya Desarrollos",
   description:
     "Especialistas en loteos y desarrollos inmobiliarios sustentables.",
-  applicationCategory: "RealEstateApplication",
-  operatingSystem: "Any",
-  offers: {
-    "@type": "Offer",
-    price: "17500",
-    priceCurrency: "USD",
-  },
-  author: {
-    "@type": "Organization",
-    name: "Fitzroya Desarrollos",
-  },
+  url: siteUrl,
 };
 
 export default function RootLayout({

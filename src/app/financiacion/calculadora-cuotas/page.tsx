@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectsForCurrentUser } from "@/lib/actions/project-actions";
 import { toPublicProjectSummary } from "@/lib/public-projects";
-import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
+import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -157,19 +157,19 @@ const jsonLd = {
           "@type": "ListItem",
           position: 1,
           name: "Inicio",
-          item: "https://fitzroya.com.ar",
+          item: siteUrl,
         },
         {
           "@type": "ListItem",
           position: 2,
           name: "Financiación",
-          item: "https://fitzroya.com.ar/financiacion",
+          item: `${siteUrl}/financiacion`,
         },
         {
           "@type": "ListItem",
           position: 3,
           name: "Calculadora de Cuotas",
-          item: "https://fitzroya.com.ar/financiacion/calculadora-cuotas",
+          item: `${siteUrl}/financiacion/calculadora-cuotas`,
         },
       ],
     },

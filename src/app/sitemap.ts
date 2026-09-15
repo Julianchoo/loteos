@@ -1,24 +1,18 @@
 import { getVisibleProjects } from "@/lib/actions/project-actions";
 import { getAllPublishedSlugs } from "@/lib/blog";
+import { siteUrl } from "@/lib/seo";
 import type { MetadataRoute } from "next";
 
-function toHttps(url: string): string {
-  if (url.startsWith("http://") && !url.includes("localhost")) {
-    return url.replace("http://", "https://");
-  }
-  return url;
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = toHttps(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000");
+  const baseUrl = siteUrl;
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: "monthly", priority: 1 },
-    { url: `${baseUrl}/proyectos`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
-    { url: `${baseUrl}/nosotros`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${baseUrl}/financiacion`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
-    { url: `${baseUrl}/financiacion/calculadora-cuotas`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    { url: baseUrl, changeFrequency: "monthly", priority: 1 },
+    { url: `${baseUrl}/proyectos`, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${baseUrl}/nosotros`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${baseUrl}/financiacion/calculadora-cuotas`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/blog`, changeFrequency: "weekly", priority: 0.8 },
   ];
 
   let projectRoutes: MetadataRoute.Sitemap = [];
@@ -26,7 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { data: projects } = await getVisibleProjects();
     projectRoutes = projects.map((project) => ({
       url: `${baseUrl}/proyectos/${project.id}`,
-      lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.9,
     }));
@@ -37,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let blogRoutes: MetadataRoute.Sitemap = [];
   try {
     const slugs = await getAllPublishedSlugs();
-    blogRoutes = slugs.map((slug) => ({ url: `${baseUrl}/blog/${slug}`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.7 }));
+    blogRoutes = slugs.map((slug) => ({ url: `${baseUrl}/blog/${slug}`, changeFrequency: "monthly" as const, priority: 0.7 }));
   } catch {
     blogRoutes = [];
   }

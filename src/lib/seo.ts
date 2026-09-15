@@ -1,4 +1,6 @@
-﻿export const sharedOpenGraphImage = {
+export const siteUrl = "https://fitzroyadesarrollos.com";
+
+export const sharedOpenGraphImage = {
   url: "/images/opengraph/fitzroya-og.png",
   width: 1200,
   height: 630,

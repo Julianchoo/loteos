@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
-import { sharedOpenGraphImage, sharedTwitterImage } from "@/lib/seo";
+import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
 
@@ -100,19 +100,19 @@ export default async function GeneralRodriguezPage() {
                 "@type": "ListItem",
                 position: 1,
                 name: "Inicio",
-                item: "https://www.fitzroyadesarrollos.com",
+                item: siteUrl,
               },
               {
                 "@type": "ListItem",
                 position: 2,
                 name: "Proyectos",
-                item: "https://www.fitzroyadesarrollos.com/proyectos",
+                item: `${siteUrl}/proyectos`,
               },
               {
                 "@type": "ListItem",
                 position: 3,
                 name: projectName,
-                item: "https://www.fitzroyadesarrollos.com/proyectos/general-rodriguez",
+                item: `${siteUrl}/proyectos/general-rodriguez`,
               },
             ],
           }),
