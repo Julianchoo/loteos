@@ -28,7 +28,7 @@ const fallbackProjects: Record<string, Omit<PublicProjectSummary, "id" | "name" 
     financingFrom: "Anticipo inicial + cuotas fijas en USD",
   },
   "san-nicolas": {
-    image: "/images/San Nicolas/foto aerea opci3.png",
+    image: "/images/San Nicolas/foto aerea opci3.webp",
     alt: "San Nicolas - Guernica",
     location: "Guernica, Buenos Aires",
     badge: "EN VENTA",

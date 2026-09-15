@@ -40,13 +40,13 @@ const projectId = "san-nicolas";
 const temporaryMinCashDown = 5000;
 const temporaryMaxFinancingMonths = 24;
 const projectName = "San Nicolás";
-const aerialImage = "/images/San Nicolas/foto aerea opci3.png";
-const overviewImage = "/images/San Nicolas/zoom general (1).png";
+const aerialImage = "/images/San Nicolas/foto aerea opci3.webp";
+const overviewImage = "/images/San Nicolas/zoom general (1).webp";
 const videoPoster = "/images/San Nicolas/san-nicolas-video-poster.jpg";
 
 const galleryImages = [
   {
-    src: "/images/San Nicolas/satelital guernica.png",
+    src: "/images/San Nicolas/satelital guernica.webp",
     alt: "Vista satelital de la zona de Guernica",
   },
   {
