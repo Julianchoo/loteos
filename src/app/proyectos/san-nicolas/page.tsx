@@ -104,13 +104,29 @@ const services = [
   { icon: Route, label: "Calles mejoradas" },
 ];
 
-const progressDate = "Sep 2026";
-
-// Material tomado en el predio. Los posters salen de un cuadro de cada video.
+// Material tomado en el predio, en orden cronologico.
+// Los posters salen de un cuadro de cada video.
 const progressMedia = [
+  {
+    kind: "video" as const,
+    src: "/videos/aereo1.mp4",
+    poster: "/images/San Nicolas/limpieza-aerea-poster.jpg",
+    date: "Jun 2026",
+    caption: "El predio desde arriba, con el desmonte en curso",
+    alt: "Vista aérea del predio de San Nicolás durante los trabajos de desmonte",
+  },
+  {
+    kind: "video" as const,
+    src: "/videos/obra1.mp4",
+    poster: "/images/San Nicolas/limpieza-maquina-poster.jpg",
+    date: "Jun 2026",
+    caption: "Máquina despejando el terreno",
+    alt: "Máquina retirando maleza del terreno en el predio de San Nicolás",
+  },
   {
     kind: "image" as const,
     src: "/images/San Nicolas/SanNicolas-AVO1-3.jpeg",
+    date: "Sep 2026",
     caption: "Movimiento de suelos hacia el acceso",
     alt: "Calle abierta con movimiento de suelos hacia el portón de acceso del predio",
   },
@@ -118,6 +134,7 @@ const progressMedia = [
     kind: "video" as const,
     src: "/videos/SanNicolas-AVO1-1.mp4",
     poster: "/images/San Nicolas/avance-obra-1-poster.jpg",
+    date: "Sep 2026",
     caption: "Aporte de suelo sobre la calle principal",
     alt: "Camión volcador descargando suelo sobre la calle del proyecto San Nicolás",
   },
@@ -125,12 +142,14 @@ const progressMedia = [
     kind: "video" as const,
     src: "/videos/SanNicolas-AVO1-2.mp4",
     poster: "/images/San Nicolas/avance-obra-2-poster.jpg",
+    date: "Sep 2026",
     caption: "Recorrida por la calle ya abierta",
     alt: "Recorrida por la calle abierta y nivelada del proyecto San Nicolás",
   },
   {
     kind: "image" as const,
     src: "/images/San Nicolas/SanNicolas-AVO1-4.jpeg",
+    date: "Sep 2026",
     caption: "Poda en altura para limpiar el terreno",
     alt: "Cesta elevadora podando eucaliptos en el predio de San Nicolás",
   },
@@ -542,55 +561,70 @@ export default async function SanNicolasPage() {
       </section>
 
       <section id="avance-de-obra" className="py-20">
-        <div className="container mx-auto flex flex-col gap-10 px-4">
-          <div className="flex max-w-2xl flex-col gap-4">
-            <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
-              <HardHat className="size-4" />
-              <span>Avance de obra</span>
+        <div className="container mx-auto px-4">
+          <Carousel opts={{ align: "start" }} className="flex flex-col gap-10">
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="flex max-w-2xl flex-col gap-4">
+                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-primary">
+                  <HardHat className="size-4" />
+                  <span>Avance de obra</span>
+                </div>
+                <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+                  Las máquinas ya están en el terreno
+                </h2>
+                <p className="text-lg leading-relaxed text-muted-foreground">
+                  Del desmonte inicial a la calle abierta. Esto es el predio, no
+                  un render.
+                </p>
+              </div>
+              {/* Las flechas van en el encabezado: nunca tapan el material y
+                  siguen alcanzables en movil, donde no hay margen al costado. */}
+              <div className="flex shrink-0 gap-2">
+                <CarouselPrevious className="static size-9 translate-y-0" />
+                <CarouselNext className="static size-9 translate-y-0" />
+              </div>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-              Las máquinas ya están en el terreno
-            </h2>
-            <p className="text-lg leading-relaxed text-muted-foreground">
-              Poda, limpieza, apertura de calles y aporte de suelo. Esto es el
-              predio, no un render.
-            </p>
-          </div>
 
-          <div className="mx-auto grid w-full max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {progressMedia.map((item, index) => (
-              <figure key={item.src} className="flex flex-col gap-3">
-                {item.kind === "video" ? (
-                  <LazyVideo
-                    src={item.src}
-                    poster={item.poster}
-                    label={`Reproducir: ${item.caption}`}
-                    className="aspect-[9/16] w-full rounded-lg border shadow-sm"
-                    videoClassName="aspect-[9/16] w-full rounded-lg border bg-muted object-cover shadow-sm"
-                  />
-                ) : (
-                  <div className="relative aspect-[9/16] overflow-hidden rounded-lg border bg-muted shadow-sm">
-                    <Image
-                      src={item.src}
-                      alt={item.alt}
-                      fill
-                      sizes="(min-width: 1024px) 240px, (min-width: 640px) 45vw, 90vw"
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <figcaption className="flex items-baseline gap-3 text-sm text-muted-foreground">
-                  <span className="font-mono text-xs tabular-nums text-primary">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span>
-                    {item.caption}{" "}
-                    <span className="whitespace-nowrap">({progressDate})</span>
-                  </span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+            <CarouselContent>
+              {progressMedia.map((item, index) => (
+                <CarouselItem
+                  key={item.src}
+                  className="basis-4/5 sm:basis-1/2 lg:basis-1/4"
+                >
+                  <figure className="flex h-full flex-col gap-3">
+                    {item.kind === "video" ? (
+                      <LazyVideo
+                        src={item.src}
+                        poster={item.poster}
+                        label={`Reproducir: ${item.caption}`}
+                        className="aspect-[9/16] w-full rounded-lg border shadow-sm"
+                        videoClassName="aspect-[9/16] w-full rounded-lg border bg-muted object-cover shadow-sm"
+                      />
+                    ) : (
+                      <div className="relative aspect-[9/16] overflow-hidden rounded-lg border bg-muted shadow-sm">
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          fill
+                          sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 80vw"
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <figcaption className="flex items-baseline gap-3 text-sm text-muted-foreground">
+                      <span className="font-mono text-xs tabular-nums text-primary">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span>
+                        {item.caption}{" "}
+                        <span className="whitespace-nowrap">({item.date})</span>
+                      </span>
+                    </figcaption>
+                  </figure>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
       </section>
 
