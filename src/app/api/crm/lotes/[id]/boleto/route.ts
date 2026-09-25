@@ -1,0 +1,374 @@
+import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
+import { db } from "@/lib/db";
+import { amountToSpanishWords } from "@/lib/number-words";
+import { activeReservaJoin, flattenLoteReserva } from "@/lib/reservas";
+import { lead, lot, reservas } from "@/lib/schema";
+const Docxtemplater = require("docxtemplater");  
+const PizZip = require("pizzip");  
+
+const boletoSchema = z.object({
+  // Fecha del boleto
+  dia: z.string().min(1),
+  mes: z.string().min(1),
+  anio: z.string().min(1),
+  // Datos del comprador (editables en el formulario)
+  nombreComprador: z.string().optional().default(""),
+  dniComprador: z.string().optional().default(""),
+  // Datos adicionales del comprador (no guardados en DB)
+  nacionalidad: z.string().min(1),
+  fechaNacimiento: z.string().min(1),
+  estadoCivil: z.string().min(1),
+  cuitComprador: z.string().min(1),
+  domicilioComprador: z.string().min(1),
+  // Datos del inmueble (opcionales — se rellenan desde la DB, pero el usuario puede sobreescribir)
+  calleInmueble: z.string().optional().default(""),
+  limites: z.string().optional().default(""),
+  tituloPlano: z.string().optional().default("Título"),
+  medidas: z.string().optional().default(""),
+  // Precio (puede sobreescribirse)
+  precioTotalPalabras: z.string().optional().default(""),
+  precioTotalNum: z.string().optional().default(""),
+  anticipoPalabras: z.string().optional().default(""),
+  anticipoNum: z.string().optional().default(""),
+  saldoPalabras: z.string().optional().default(""),
+  saldoNum: z.string().optional().default(""),
+  tipoCambioBna: z.string().optional().default(""),
+  monedaBoleto: z.enum(["usd", "pesos_cac"]).default("pesos_cac"),
+  cantidadCuotas: z.string().optional().default(""),
+  cuotaMensualPalabras: z.string().optional().default(""),
+  cuotaMensual: z.string().optional().default(""),
+  // Tipo de pago
+  tipoPago: z.enum(["contado", "financiado"]).default("financiado"),
+  // Entrega
+  entregaCuota: z.boolean().optional().default(false),
+  numeroCuotaEntrega: z.string().optional().default(""),
+  // Apoderado vendedora (opcional)
+  hasApoderado: z.boolean().optional().default(false),
+  nombreApoderado: z.string().optional().default(""),
+  dniApoderado: z.string().optional().default(""),
+  // Co-comprador (opcional)
+  hasCoComprador: z.boolean().optional().default(false),
+  nombreCoComprador: z.string().optional().default(""),
+  dniCoComprador: z.string().optional().default(""),
+  nacionalidadCoComprador: z.string().optional().default(""),
+  fechaNacimientoCoComprador: z.string().optional().default(""),
+  domicilioCoComprador: z.string().optional().default(""),
+  cuitCoComprador: z.string().optional().default(""),
+  estadoCivilCoComprador: z.string().optional().default(""),
+  porcentajeCoComprador: z.string().optional().default("50"),
+});
+
+type BoletoData = z.infer<typeof boletoSchema>;
+
+function formatUsd(value: string | number | null | undefined): string {
+  if (!value) return "";
+  return Number(value).toLocaleString("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+function parseMoney(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const text = String(value).trim().replace(/\s+/g, "");
+  const cleaned = text.replace(/[^\d.,-]/g, "");
+  if (!cleaned || cleaned === "-") return null;
+
+  const lastDot = cleaned.lastIndexOf(".");
+  const lastComma = cleaned.lastIndexOf(",");
+  let normalized = cleaned;
+
+  if (lastDot !== -1 && lastComma !== -1) {
+    const decimalSeparator = lastDot > lastComma ? "." : ",";
+    const thousandsSeparator = decimalSeparator === "." ? "," : ".";
+    normalized = cleaned
+      .replace(new RegExp(`\\${thousandsSeparator}`, "g"), "")
+      .replace(decimalSeparator, ".");
+  } else {
+    const separator = lastDot !== -1 ? "." : lastComma !== -1 ? "," : "";
+    if (separator) {
+      const parts = cleaned.split(separator);
+      const lastPart = parts[parts.length - 1] ?? "";
+      normalized = lastPart.length === 3
+        ? parts.join("")
+        : cleaned.replace(separator, ".");
+    }
+  }
+
+  const parsed = Number(normalized);
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function formatArs(value: number | null): string {
+  if (value === null) return "";
+  return value.toLocaleString("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+function yearToSpanish(year: string): string {
+  const map: Record<string, string> = {
+    "2024": "dos mil veinticuatro",
+    "2025": "dos mil veinticinco",
+    "2026": "dos mil veintiséis",
+    "2027": "dos mil veintisiete",
+    "2028": "dos mil veintiocho",
+    "2029": "dos mil veintinueve",
+    "2030": "dos mil treinta",
+    "2031": "dos mil treinta y uno",
+    "2032": "dos mil treinta y dos",
+    "2033": "dos mil treinta y tres",
+    "2034": "dos mil treinta y cuatro",
+    "2035": "dos mil treinta y cinco",
+  };
+  return map[year] ?? year;
+}
+
+function formatBirthDate(value: string): string {
+  const trimmed = value.trim();
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const localMatch = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  const match = isoMatch ?? localMatch;
+
+  if (!match) return trimmed;
+
+  const day = isoMatch ? Number(match[3]) : Number(match[1]);
+  const month = Number(match[2]);
+  const year = isoMatch ? match[1] : match[3];
+  const monthNames = [
+    "enero",
+    "febrero",
+    "marzo",
+    "abril",
+    "mayo",
+    "junio",
+    "julio",
+    "agosto",
+    "septiembre",
+    "octubre",
+    "noviembre",
+    "diciembre",
+  ];
+
+  if (day < 1 || day > 31 || month < 1 || month > 12) return trimmed;
+
+  return `${day} de ${monthNames[month - 1]} de ${year}`;
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requireApiCrm();
+  if (isErrorResponse(authResult)) return authResult;
+
+  const { id } = await params;
+  const lotId = id;
+  if (!lotId) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+  }
+
+  const parsed = boletoSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.issues },
+      { status: 400 }
+    );
+  }
+
+  const form: BoletoData = parsed.data;
+
+  const [row] = await db
+    .select({ lote: lot, reserva: reservas, lead })
+    .from(lot)
+    .leftJoin(reservas, activeReservaJoin())
+    .leftJoin(lead, eq(reservas.leadId, lead.id))
+    .where(eq(lot.id, lotId));
+
+  if (!row) {
+    return NextResponse.json({ error: "Lote no encontrado" }, { status: 404 });
+  }
+  const canGenerateBoleto =
+    authResult.role === "admin" ||
+    row.lote.estado === "disponible" ||
+    row.reserva?.reservadoPor === authResult.email;
+  if (!canGenerateBoleto) {
+    return NextResponse.json(
+      { error: "No tenés permiso para generar el boleto de este lote" },
+      { status: 403 }
+    );
+  }
+
+  const parcela = flattenLoteReserva(row.lote, row.reserva, row.lead);
+  const loteNumero = parcela.parcela || parcela.number;
+  const modalidadContrato =
+    form.tipoPago === "financiado"
+      ? form.monedaBoleto === "usd"
+        ? "usd_fijo"
+        : "pesos_cac"
+      : null;
+  const numeroCuotaEntrega = form.numeroCuotaEntrega.trim();
+  const entregaCuota = form.entregaCuota && Boolean(numeroCuotaEntrega);
+  const saldoNum = form.saldoNum || formatUsd(parcela.saldoUsd);
+  const cuotaMensual = form.cuotaMensual || formatUsd(parcela.cuotas48);
+  const tipoCambioBna = parseMoney(form.tipoCambioBna);
+  const saldoUsd = parseMoney(saldoNum);
+  const cuotaMensualUsd = parseMoney(cuotaMensual);
+  const usePesosCac =
+    form.tipoPago === "financiado" && form.monedaBoleto === "pesos_cac";
+
+  if (usePesosCac) {
+    if (tipoCambioBna === null || tipoCambioBna <= 0) {
+      return NextResponse.json(
+        { error: "Ingresá el tipo de cambio vendedor BNA" },
+        { status: 400 }
+      );
+    }
+    if (saldoUsd === null || cuotaMensualUsd === null) {
+      return NextResponse.json(
+        { error: "No se pudo calcular saldo/cuota en pesos: revisá los importes en USD" },
+        { status: 400 }
+      );
+    }
+  }
+
+  const saldoPesosNum = formatArs(
+    tipoCambioBna === null || saldoUsd === null ? null : saldoUsd * tipoCambioBna
+  );
+  const cuotaPesosNum = formatArs(
+    tipoCambioBna === null || cuotaMensualUsd === null ? null : cuotaMensualUsd * tipoCambioBna
+  );
+  const nombreCoComprador = form.nombreCoComprador || parcela.nombreCoComprador || "";
+  const coCompradorIntro = form.hasCoComprador && Boolean(nombreCoComprador.trim());
+  const fechaNacimientoCoComprador =
+    form.fechaNacimientoCoComprador || parcela.fechaNacimientoCoComprador || "";
+
+  // Build template data
+  const data: Record<string, string | boolean> = {
+    // Date
+    dia: form.dia,
+    mes: form.mes,
+    anioLetras: yearToSpanish(form.anio),
+    // Buyer (from form, pre-filled with DB values but overrideable)
+    nombreComprador: form.nombreComprador || parcela.nombreComprador || "",
+    dniComprador: form.dniComprador || parcela.dniCuit || "",
+    nacionalidad: form.nacionalidad,
+    fechaNacimiento: form.fechaNacimiento,
+    fechaNacimientoLetras: formatBirthDate(form.fechaNacimiento),
+    estadoCivil: form.estadoCivil,
+    cuitComprador: form.cuitComprador,
+    domicilioComprador: form.domicilioComprador,
+    coCompradorIntro,
+    nombreCoComprador,
+    dniCoComprador: form.dniCoComprador || parcela.dniCoComprador || "",
+    nacionalidadCoComprador:
+      form.nacionalidadCoComprador || parcela.nacionalidadCoComprador || "",
+    fechaNacimientoCoComprador,
+    fechaNacimientoCoCompradorLetras: formatBirthDate(fechaNacimientoCoComprador),
+    estadoCivilCoComprador:
+      form.estadoCivilCoComprador || parcela.estadoCivilCoComprador || "",
+    cuitCoComprador: form.cuitCoComprador || parcela.cuitCoComprador || "",
+    domicilioCoComprador:
+      form.domicilioCoComprador || parcela.domicilioCoComprador || "",
+    // Property (from DB)
+    calleInmueble: form.calleInmueble || "",
+    limites: form.limites || "",
+    tituloPlano: form.tituloPlano || "Título",
+    lote: loteNumero,
+    manzana: parcela.manzana ?? "",
+    medidas: form.medidas || (parcela.superficieM2 ? `${parcela.superficieM2} m²` : ""),
+    parcelaCatastral: parcela.parcela ?? "",
+    partida: parcela.partidaArba ?? "",
+    matricula: parcela.matriculaFolio ?? "",
+    // Segunda cláusula
+    escritura: parcela.escritura ?? "",
+    fechaEscritura: "",
+    folio: "",
+    matriculaSegunda: parcela.matriculaFolio ?? "",
+    // Precio
+    precioTotalPalabras: form.precioTotalPalabras || "",
+    precioTotalNum: form.precioTotalNum || formatUsd(parcela.precioEtapa1),
+    anticipoPalabras: form.anticipoPalabras || "",
+    anticipoNum: form.anticipoNum || formatUsd(parcela.anticipoUsd),
+    saldoPalabras: form.saldoPalabras || "",
+    saldoNum,
+    tipoCambioBna: form.tipoCambioBna,
+    saldoPesosPalabras: amountToSpanishWords(saldoPesosNum) ?? "",
+    saldoPesosNum,
+    cantidadCuotas: form.cantidadCuotas || "",
+    cuotaMensualPalabras: form.cuotaMensualPalabras || "",
+    cuotaMensual,
+    cuotaPesosPalabras: amountToSpanishWords(cuotaPesosNum) ?? "",
+    cuotaPesosNum,
+    entregaCuota,
+    entregaAlSaldo: !entregaCuota,
+    numeroCuotaEntrega,
+  };
+
+  // Select template based on payment type
+  const templateName = form.tipoPago === "contado"
+    ? "boleto-template-contado.docx"
+    : form.monedaBoleto === "usd"
+      ? "boleto-template-cuotas-usd.docx"
+      : "boleto-template-cuotas.docx";
+  const templatePath = path.join(process.cwd(), "src", "templates", templateName);
+  if (row.reserva && modalidadContrato) {
+    await db
+      .update(reservas)
+      .set({ modalidadContrato, updatedAt: new Date() })
+      .where(eq(reservas.id, row.reserva.id));
+  }
+
+  let templateBuf: Buffer;
+  try {
+    templateBuf = fs.readFileSync(templatePath);
+  } catch {
+    return NextResponse.json(
+      { error: `Template no encontrado: ${templateName}` },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const zip = new PizZip(templateBuf);
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+    });
+
+    doc.render(data);
+
+    const buf: Buffer = doc.getZip().generate({ type: "nodebuffer" }) as Buffer;
+
+    const filename = `Boleto_Lote${loteNumero}_Manzana${parcela.manzana ?? ""}.docx`;
+
+    return new Response(new Uint8Array(buf), {
+      status: 200,
+      headers: {
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } catch (err) {
+    console.error("Error generating boleto:", err);
+    return NextResponse.json(
+      { error: "Error al generar el boleto" },
+      { status: 500 }
+    );
+  }
+}

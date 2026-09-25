@@ -1,0 +1,29 @@
+import { NextResponse } from "next/server";
+import { requireApiAdmin, isErrorResponse } from "@/lib/api-auth";
+import {
+  buildMensajeCuentaCorriente,
+  getCuentaCorrienteDetailByReserva,
+} from "@/lib/cuenta-corriente";
+
+export async function POST(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requireApiAdmin();
+  if (isErrorResponse(authResult)) return authResult;
+
+  const { id } = await params;
+  const reservaId = id;
+  if (!reservaId) {
+    return NextResponse.json({ error: "ID invalido" }, { status: 400 });
+  }
+
+  const detail = await getCuentaCorrienteDetailByReserva(reservaId);
+  if (!detail) {
+    return NextResponse.json(
+      { error: "Cuenta corriente no encontrada" },
+      { status: 404 }
+    );
+  }
+  return NextResponse.json({ message: buildMensajeCuentaCorriente(detail) });
+}

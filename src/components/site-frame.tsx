@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-// The design experiment owns its landmarks; all other routes keep the site shell.
+// The design experiment and the CRM own their landmarks; all other routes keep the site shell.
 export function SiteFrame({
   children,
   header,
@@ -15,7 +15,9 @@ export function SiteFrame({
 }) {
   const pathname = usePathname();
 
-  if (pathname === "/home-exploracion") return <>{children}</>;
+  if (pathname === "/home-exploracion" || pathname === "/crm" || pathname.startsWith("/crm/")) {
+    return <>{children}</>;
+  }
 
   return (
     <>

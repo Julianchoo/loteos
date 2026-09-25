@@ -37,6 +37,15 @@ The database is the source of truth for project visibility.
 - Do not reintroduce hardcoded project lists for public surfaces. Use DB-backed helpers.
 - If navigation/listings depend on session state, make the route/component dynamic and avoid cached public responses.
 
+## CRM Rules (/crm)
+
+- The CRM (ported from Barrio Stefani) lives in `src/app/crm`, `src/app/api/crm` and `src/components/crm`.
+- Roles: `admin` sees everything; `comercial` uses the CRM with limited permissions; `user` (public signup) has no CRM access. Roles are read from the DB (`requireCrmUser`, `requireApiCrm`, `requireApiAdmin`).
+- `lot` is shared with the public site. `lot.estado` is the CRM source of truth; always write it with `estadoLoteValues()` and keep `size`/`price` in sync with `legacyLotSize()`/`legacyLotPrice()` (`@/lib/lotes`).
+- CRM leads are the same `lead` rows the public forms create. Keep the existing status vocabulary (`@/lib/lead-status`).
+- Relations: `lot` → `reservas` (with `lead_id`) → `contratos` → `cuotas` / `pagos`. Cuentas corrientes adjust by BNA dollar (`tipos_cambio`) or CAC index (`indices_cac`); logic lives in `@/lib/cuenta-corriente`.
+- Only admins create lots (`POST /api/crm/lotes`).
+
 ## Database Rules
 
 - Use Drizzle ORM from `@/lib/db`.

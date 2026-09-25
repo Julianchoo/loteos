@@ -9,7 +9,7 @@ import { user } from "@/lib/schema";
  * Protected routes that require authentication.
  * These are also configured in src/proxy.ts for optimistic redirects.
  */
-export const protectedRoutes = ["/chat", "/dashboard", "/profile", "/admin"];
+export const protectedRoutes = ["/chat", "/dashboard", "/profile", "/admin", "/crm"];
 
 /**
  * Checks if the current request is authenticated.
@@ -30,7 +30,7 @@ export async function requireAuth() {
 
 /**
  * Checks if the current user is an admin.
- * Redirects to home if not authenticated or not an admin.
+ * Redirects comercial users to /crm and everyone else who is not an admin to home.
  *
  * @returns The session object if the user is an admin
  * @throws Redirects to home page if not authenticated or not admin
@@ -45,11 +45,41 @@ export async function requireAdmin() {
     .where(eq(user.id, session.user.id))
     .limit(1);
 
+  if (dbUser?.role === "comercial") {
+    redirect("/crm");
+  }
+
   if (!dbUser || dbUser.role !== "admin") {
     redirect("/");
   }
 
   return session;
+}
+
+/**
+ * Requires a CRM user (admin or comercial).
+ * Users flagged with mustChangePassword are sent to /cambiar-password first.
+ *
+ * @returns The session plus the user's DB role
+ */
+export async function requireCrmUser() {
+  const session = await requireAuth();
+
+  const [dbUser] = await db
+    .select({ role: user.role, mustChangePassword: user.mustChangePassword })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  if (!dbUser || (dbUser.role !== "admin" && dbUser.role !== "comercial")) {
+    redirect("/");
+  }
+
+  if (dbUser.mustChangePassword) {
+    redirect("/cambiar-password");
+  }
+
+  return { session, role: dbUser.role as "admin" | "comercial" };
 }
 
 /**

@@ -43,6 +43,13 @@
       "when": 1782496287010,
       "tag": "0005_left_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790343919222,
+      "tag": "0006_crm_lotes_reservas_cuentas",
+      "breakpoints": true
     }
   ]
 }

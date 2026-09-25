@@ -123,6 +123,7 @@ export function CreateUserDialog() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Usuario</SelectItem>
+                <SelectItem value="comercial">Comercial (CRM)</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
               </SelectContent>
             </Select>
