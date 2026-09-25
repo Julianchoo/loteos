@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, FileText, Users, UserRound } from "lucide-react";
+import { Building2, FileText, MapPin, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminPage() {
@@ -58,18 +58,18 @@ export default function AdminPage() {
           </Card>
         </Link>
 
-        <Link href="/admin/leads">
+        <Link href="/crm">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <UserRound className="h-5 w-5 text-primary" />
-                Leads
+                <MapPin className="h-5 w-5 text-primary" />
+                CRM
               </CardTitle>
-              <CardDescription>Ver todos los contactos recibidos</CardDescription>
+              <CardDescription>Lotes, reservas y cuentas corrientes</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Consultá los leads con su estado, canal y proyecto de interés.
+                Gestioná lotes por proyecto, reservas, boletos y cuotas en USD o Pesos + CAC.
               </p>
             </CardContent>
           </Card>

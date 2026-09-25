@@ -1,0 +1,788 @@
+"use client";
+
+import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileText, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { amountToSpanishWords } from "@/lib/number-words";
+import type { LoteConReserva } from "@/lib/schema";
+
+const MESES = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+function parseFechaFirma(fechaFirma: string | null | undefined) {
+  if (fechaFirma) {
+    const [y, m, d] = fechaFirma.split("-");
+    return {
+      dia: String(parseInt(d ?? "1")),
+      mes: MESES[parseInt(m ?? "1") - 1] ?? "enero",
+      anio: y ?? String(new Date().getFullYear()),
+    };
+  }
+  const today = new Date();
+  return {
+    dia: String(today.getDate()),
+    mes: MESES[today.getMonth()] ?? "enero",
+    anio: String(today.getFullYear()),
+  };
+}
+
+const ESTADOS_CIVILES = [
+  "soltero/a",
+  "casado/a",
+  "divorciado/a",
+  "viudo/a",
+  "unión convivencial",
+];
+
+const schema = z.object({
+  fechaFirma: z.string().optional(),
+  dia: z.string().min(1, "Requerido"),
+  mes: z.string().min(1, "Requerido"),
+  anio: z.string().min(4, "Requerido"),
+  // Buyer
+  nombreComprador: z.string().min(1, "Requerido"),
+  dniComprador: z.string().min(1, "Requerido"),
+  nacionalidad: z.string().min(1, "Requerido"),
+  fechaNacimiento: z.string().min(1, "Requerido"),
+  estadoCivil: z.string().min(1, "Requerido"),
+  cuitComprador: z.string().min(1, "Requerido"),
+  domicilioComprador: z.string().min(1, "Requerido"),
+  // Property extras
+  calleInmueble: z.string().optional(),
+  limites: z.string().optional(),
+  medidas: z.string().optional(),
+  // Price (in words + numbers)
+  precioTotalPalabras: z.string().optional(),
+  precioTotalNum: z.string().optional(),
+  anticipoPalabras: z.string().optional(),
+  anticipoNum: z.string().optional(),
+  saldoPalabras: z.string().optional(),
+  saldoNum: z.string().optional(),
+  tipoCambioBna: z.string().optional(),
+  cantidadCuotas: z.string().optional(),
+  cuotaMensualPalabras: z.string().optional(),
+  cuotaMensual: z.string().optional(),
+  // Entrega
+  numeroCuotaEntrega: z.string().optional(),
+  // Apoderado vendedora (managed by local state, not Zod)
+  nombreApoderado: z.string().optional(),
+  dniApoderado: z.string().optional(),
+  // Co-buyer (hasCoComprador is managed by local state, not Zod)
+  nombreCoComprador: z.string().optional(),
+  dniCoComprador: z.string().optional(),
+  nacionalidadCoComprador: z.string().optional(),
+  fechaNacimientoCoComprador: z.string().optional(),
+  domicilioCoComprador: z.string().optional(),
+  cuitCoComprador: z.string().optional(),
+  estadoCivilCoComprador: z.string().optional(),
+  porcentajeCoComprador: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof schema>;
+type CoCompradorDefaults = Partial<
+  Pick<
+    FormValues,
+    | "nombreCoComprador"
+    | "dniCoComprador"
+    | "nacionalidadCoComprador"
+    | "fechaNacimientoCoComprador"
+    | "domicilioCoComprador"
+    | "cuitCoComprador"
+    | "estadoCivilCoComprador"
+    | "porcentajeCoComprador"
+  >
+>;
+
+interface BoletoDialogProps {
+  parcela: LoteConReserva;
+  disabled?: boolean;
+  trigger?: ReactNode;
+  coCompradorDefaults?: CoCompradorDefaults;
+}
+
+function coCompradorValue(
+  defaults: CoCompradorDefaults | undefined,
+  parcelaValue: string | null | undefined,
+  key: keyof CoCompradorDefaults,
+  fallback = ""
+) {
+  return defaults?.[key] ?? parcelaValue ?? fallback;
+}
+
+function hasCoCompradorData(values: CoCompradorDefaults) {
+  return Object.values(values).some((value) => Boolean(value?.trim()));
+}
+
+export function BoletoDialog({
+  parcela,
+  disabled,
+  trigger,
+  coCompradorDefaults,
+}: BoletoDialogProps) {
+  const [open, setOpen] = useState(false);
+  const initialCoCompradorValues = {
+    nombreCoComprador: coCompradorValue(coCompradorDefaults, parcela.nombreCoComprador, "nombreCoComprador"),
+    dniCoComprador: coCompradorValue(coCompradorDefaults, parcela.dniCoComprador, "dniCoComprador"),
+    nacionalidadCoComprador: coCompradorValue(
+      coCompradorDefaults,
+      parcela.nacionalidadCoComprador,
+      "nacionalidadCoComprador"
+    ),
+    fechaNacimientoCoComprador: coCompradorValue(
+      coCompradorDefaults,
+      parcela.fechaNacimientoCoComprador,
+      "fechaNacimientoCoComprador"
+    ),
+    domicilioCoComprador: coCompradorValue(
+      coCompradorDefaults,
+      parcela.domicilioCoComprador,
+      "domicilioCoComprador"
+    ),
+    cuitCoComprador: coCompradorValue(coCompradorDefaults, parcela.cuitCoComprador, "cuitCoComprador"),
+    estadoCivilCoComprador: coCompradorValue(
+      coCompradorDefaults,
+      parcela.estadoCivilCoComprador,
+      "estadoCivilCoComprador"
+    ),
+    porcentajeCoComprador: coCompradorValue(
+      coCompradorDefaults,
+      parcela.porcentajeCoComprador,
+      "porcentajeCoComprador",
+      "50"
+    ),
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      fechaFirma: parcela.fechaFirma ?? "",
+      ...parseFechaFirma(parcela.fechaFirma),
+      nombreComprador: parcela.nombreComprador ?? "",
+      dniComprador: parcela.dniCuit ?? "",
+      nacionalidad: parcela.nacionalidad ?? "argentina/o",
+      fechaNacimiento: parcela.fechaNacimiento ?? "",
+      estadoCivil: parcela.estadoCivil ?? "",
+      cuitComprador: parcela.cuitComprador ?? "",
+      domicilioComprador: parcela.domicilioComprador ?? "",
+      calleInmueble: "",
+      limites: "",
+      medidas: parcela.superficieM2 ? `${parcela.superficieM2} m²` : "",
+      precioTotalPalabras: parcela.precioTotalPalabras ?? "",
+      precioTotalNum: parcela.precioTotalNum ?? (parcela.precioEtapa1 ? String(Number(parcela.precioEtapa1)) : ""),
+      anticipoPalabras: parcela.anticipoPalabras ?? "",
+      anticipoNum: parcela.anticipoNum ?? (parcela.anticipoUsd ? String(Number(parcela.anticipoUsd)) : ""),
+      saldoPalabras: parcela.saldoPalabras ?? "",
+      saldoNum: parcela.saldoNum ?? (parcela.saldoUsd ? String(Number(parcela.saldoUsd)) : ""),
+      tipoCambioBna: "",
+      cantidadCuotas: parcela.cantidadCuotas ?? (parcela.cuotas48 ? "48" : ""),
+      cuotaMensualPalabras: parcela.cuotaMensualPalabras ?? "",
+      cuotaMensual: parcela.cuotaMensual ?? (parcela.cuotas48 ? String(parcela.cuotas48) : ""),
+      numeroCuotaEntrega: parcela.tipoEntrega === "cuota" ? (parcela.mesEntrega ?? "") : "",
+      nombreApoderado: "",
+      dniApoderado: "",
+      ...initialCoCompradorValues,
+    },
+  });
+
+  const syncFechaFirma = useCallback((iso: string) => {
+    if (!iso) return;
+    const parsed = parseFechaFirma(iso);
+    form.setValue("dia", parsed.dia);
+    form.setValue("mes", parsed.mes);
+    form.setValue("anio", parsed.anio);
+  }, [form]);
+
+  const watchedFechaFirma = form.watch("fechaFirma");
+  useEffect(() => {
+    if (watchedFechaFirma) syncFechaFirma(watchedFechaFirma);
+  }, [watchedFechaFirma, syncFechaFirma]);
+
+  const [showApoderado, setShowApoderado] = useState(false);
+  const [tipoPago, setTipoPago] = useState<"contado" | "financiado">(
+    parcela.formaPago === "contado" ? "contado" : "financiado"
+  );
+  const [monedaBoleto, setMonedaBoleto] = useState<"usd" | "pesos_cac">("pesos_cac");
+  const [entregaCuota, setEntregaCuota] = useState(parcela.tipoEntrega === "cuota");
+  const [showCoComprador, setShowCoComprador] = useState(false);
+
+  // Reset form with current parcela data every time the dialog opens
+  useEffect(() => {
+    if (!open) return;
+    form.reset({
+      fechaFirma: parcela.fechaFirma ?? "",
+      ...parseFechaFirma(parcela.fechaFirma),
+      nombreComprador: parcela.nombreComprador ?? "",
+      dniComprador: parcela.dniCuit ?? "",
+      nacionalidad: parcela.nacionalidad ?? "argentina/o",
+      fechaNacimiento: parcela.fechaNacimiento ?? "",
+      estadoCivil: parcela.estadoCivil ?? "",
+      cuitComprador: parcela.cuitComprador ?? "",
+      domicilioComprador: parcela.domicilioComprador ?? "",
+      calleInmueble: "",
+      limites: "",
+      medidas: parcela.superficieM2 ? `${parcela.superficieM2} m²` : "",
+      precioTotalPalabras: parcela.precioTotalPalabras ?? "",
+      precioTotalNum: parcela.precioTotalNum ?? (parcela.precioEtapa1 ? String(Number(parcela.precioEtapa1)) : ""),
+      anticipoPalabras: parcela.anticipoPalabras ?? "",
+      anticipoNum: parcela.anticipoNum ?? (parcela.anticipoUsd ? String(Number(parcela.anticipoUsd)) : ""),
+      saldoPalabras: parcela.saldoPalabras ?? "",
+      saldoNum: parcela.saldoNum ?? (parcela.saldoUsd ? String(Number(parcela.saldoUsd)) : ""),
+      tipoCambioBna: "",
+      cantidadCuotas: parcela.cantidadCuotas ?? (parcela.cuotas48 ? "48" : ""),
+      cuotaMensualPalabras: parcela.cuotaMensualPalabras ?? "",
+      cuotaMensual: parcela.cuotaMensual ?? (parcela.cuotas48 ? String(parcela.cuotas48) : ""),
+      numeroCuotaEntrega: parcela.tipoEntrega === "cuota" ? (parcela.mesEntrega ?? "") : "",
+      nombreApoderado: "",
+      dniApoderado: "",
+      ...initialCoCompradorValues,
+    });
+    setShowApoderado(false);
+    setTipoPago(parcela.formaPago === "contado" ? "contado" : "financiado");
+    setMonedaBoleto("pesos_cac");
+    setEntregaCuota(parcela.tipoEntrega === "cuota");
+    setShowCoComprador(hasCoCompradorData(initialCoCompradorValues));
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function fillAmountWords() {
+    const mappings: Array<[keyof FormValues, keyof FormValues]> = [
+      ["precioTotalNum", "precioTotalPalabras"],
+      ["anticipoNum", "anticipoPalabras"],
+      ["saldoNum", "saldoPalabras"],
+      ["cuotaMensual", "cuotaMensualPalabras"],
+    ];
+
+    for (const [numberField, wordsField] of mappings) {
+      const words = amountToSpanishWords(form.getValues(numberField));
+      if (words) {
+        form.setValue(wordsField, words, { shouldDirty: true });
+      }
+    }
+  }
+
+  async function onSubmit(values: FormValues) {
+    try {
+      const res = await fetch(`/api/crm/lotes/${parcela.id}/boleto`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, tipoPago, monedaBoleto, hasApoderado: showApoderado, hasCoComprador: showCoComprador, entregaCuota, numeroCuotaEntrega: values.numeroCuotaEntrega ?? "" }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error ?? "Error al generar el boleto");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Boleto_Lote${parcela.parcela || parcela.number}_Manzana${parcela.manzana ?? ""}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Boleto generado y descargado");
+      setOpen(false);
+    } catch {
+      toast.error("Error de red al generar el boleto");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger ?? (
+          <Button variant="outline" className="gap-2" disabled={disabled}>
+            <FileText className="h-4 w-4" />
+            Generar Boleto
+          </Button>
+        )}
+      </DialogTrigger>
+
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            Generar Boleto — Lote {parcela.parcela || parcela.number}
+            {parcela.manzana ? ` · Manzana ${parcela.manzana}` : ""}
+          </DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2">
+
+            {/* ── Apoderado vendedora ── */}
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <Checkbox
+                  id="hasApoderado"
+                  checked={showApoderado}
+                  onCheckedChange={(checked) => setShowApoderado(!!checked)}
+                />
+                <label
+                  htmlFor="hasApoderado"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  La parte vendedora actúa por apoderado
+                </label>
+              </div>
+
+              {showApoderado && (
+                <div className="grid sm:grid-cols-2 gap-3 pl-6">
+                  <FormField
+                    control={form.control}
+                    name="nombreApoderado"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre y apellido del apoderado</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Juan Pérez" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dniApoderado"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>DNI del apoderado</FormLabel>
+                        <FormControl>
+                          <Input placeholder="12345678" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </section>
+
+            <Separator />
+
+            {/* ── Fecha de firma ── */}
+            <section>
+              <p className="text-sm font-semibold text-foreground mb-3">Fecha de firma</p>
+              <FormField
+                control={form.control}
+                name="fechaFirma"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de firma</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </section>
+
+            <Separator />
+
+            {/* ── Fecha del boleto (generada automáticamente desde fecha de firma) ── */}
+            <section>
+              <p className="text-sm font-semibold text-foreground mb-3">Fecha del boleto</p>
+              <div className="grid grid-cols-3 gap-3">
+                <FormField
+                  control={form.control}
+                  name="dia"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Día</FormLabel>
+                      <FormControl>
+                        <Input placeholder="15" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="mes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mes</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="mes" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {MESES.map((m) => (
+                            <SelectItem key={m} value={m}>
+                              {m}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="anio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Año</FormLabel>
+                      <FormControl>
+                        <Input placeholder="2026" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* ── Datos comprador ── */}
+            <section>
+              <p className="text-sm font-semibold text-foreground mb-3">Comprador</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { name: "nombreComprador" as const, label: "Nombre completo", placeholder: "Juan Pérez" },
+                  { name: "dniComprador" as const, label: "DNI", placeholder: "12345678" },
+                  { name: "nacionalidad" as const, label: "Nacionalidad", placeholder: "argentina/o" },
+                  { name: "fechaNacimiento" as const, label: "Fecha de nacimiento", placeholder: "MM/DD/YYYY" },
+                  { name: "cuitComprador" as const, label: "CUIT", placeholder: "20-12345678-9" },
+                  { name: "domicilioComprador" as const, label: "Domicilio", placeholder: "Av. Ejemplo 123, CABA" },
+                ].map(({ name, label, placeholder }) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{label}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={placeholder} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+                <FormField
+                  control={form.control}
+                  name="estadoCivil"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado civil</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="seleccioná" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ESTADOS_CIVILES.map((e) => (
+                            <SelectItem key={e} value={e}>
+                              {e}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* ── Co-comprador ── */}
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <Checkbox
+                  id="hasCoComprador"
+                  checked={showCoComprador}
+                  onCheckedChange={(checked) => setShowCoComprador(!!checked)}
+                />
+                <label
+                  htmlFor="hasCoComprador"
+                  className="text-sm font-semibold text-foreground cursor-pointer"
+                >
+                  Agregar co-comprador
+                </label>
+              </div>
+
+              {showCoComprador && (
+                <div className="grid sm:grid-cols-2 gap-3 pl-6">
+                  {[
+                    { name: "nombreCoComprador" as const, label: "Nombre completo", placeholder: "Juan Pérez" },
+                    { name: "dniCoComprador" as const, label: "DNI", placeholder: "12345678" },
+                    { name: "nacionalidadCoComprador" as const, label: "Nacionalidad", placeholder: "argentina/o" },
+                    { name: "fechaNacimientoCoComprador" as const, label: "Fecha de nacimiento", placeholder: "MM/DD/YYYY" },
+                    { name: "domicilioCoComprador" as const, label: "Domicilio", placeholder: "Av. Ejemplo 123, CABA" },
+                    { name: "cuitCoComprador" as const, label: "CUIT", placeholder: "20-12345678-9" },
+                    { name: "porcentajeCoComprador" as const, label: "Porcentaje de compra", placeholder: "50" },
+                  ].map(({ name, label, placeholder }) => (
+                    <FormField
+                      key={name}
+                      control={form.control}
+                      name={name}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{label}</FormLabel>
+                          <FormControl>
+                            <Input placeholder={placeholder} {...field} value={field.value ?? ""} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  <FormField
+                    control={form.control}
+                    name="estadoCivilCoComprador"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado civil</FormLabel>
+                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="seleccioná" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ESTADOS_CIVILES.map((e) => (
+                              <SelectItem key={e} value={e}>
+                                {e}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </section>
+
+            <Separator />
+
+            {/* ── Precio ── */}
+            <section>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">Precio (USD)</p>
+                <Button type="button" variant="outline" size="sm" onClick={fillAmountWords}>
+                  Completar letras
+                </Button>
+              </div>
+
+              {/* Tipo de pago */}
+              <div className="mb-3">
+                <p className="text-sm font-medium text-foreground mb-1">Tipo de pago</p>
+                <Select value={tipoPago} onValueChange={(v) => setTipoPago(v as "contado" | "financiado")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="financiado">Financiado (con cuotas)</SelectItem>
+                    <SelectItem value="contado">Contado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {tipoPago === "financiado" && (
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-foreground mb-1">Moneda del boleto</p>
+                  <Select value={monedaBoleto} onValueChange={(v) => setMonedaBoleto(v as "usd" | "pesos_cac")}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pesos_cac">Pesos + CAC</SelectItem>
+                      <SelectItem value="usd">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {tipoPago === "financiado" && monedaBoleto === "pesos_cac" && (
+                <FormField
+                  control={form.control}
+                  name="tipoCambioBna"
+                  render={({ field }) => (
+                    <FormItem className="mb-3">
+                      <FormLabel>Tipo de cambio vendedor BNA</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1450" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { name: "precioTotalPalabras" as const, label: "Precio total (en letras)", placeholder: "VEINTICINCO MIL" },
+                  { name: "precioTotalNum" as const, label: "Precio total (número)", placeholder: "25000" },
+                  { name: "anticipoPalabras" as const, label: "Anticipo (en letras)", placeholder: "CINCO MIL" },
+                  { name: "anticipoNum" as const, label: "Anticipo (número)", placeholder: "5000" },
+                  { name: "saldoPalabras" as const, label: "Saldo (en letras)", placeholder: "VEINTE MIL" },
+                  { name: "saldoNum" as const, label: "Saldo (número)", placeholder: "20000" },
+                ].map(({ name, label, placeholder }) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{label}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={placeholder} {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+
+                {tipoPago === "financiado" && [
+                  { name: "cantidadCuotas" as const, label: "Cantidad de cuotas", placeholder: "48" },
+                  { name: "cuotaMensualPalabras" as const, label: "Cuota mensual (en letras)", placeholder: "QUINIENTOS" },
+                  { name: "cuotaMensual" as const, label: "Cuota mensual (USD)", placeholder: "500" },
+                ].map(({ name, label, placeholder }) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{label}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={placeholder} {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+
+              {/* Entrega */}
+              <div className="mt-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Checkbox
+                    id="entregaCuota"
+                    checked={entregaCuota}
+                    onCheckedChange={(checked) => setEntregaCuota(!!checked)}
+                  />
+                  <label htmlFor="entregaCuota" className="text-sm text-foreground cursor-pointer">
+                    Entrega contra pago de cuota número específico
+                  </label>
+                </div>
+                {entregaCuota && (
+                  <FormField
+                    control={form.control}
+                    name="numeroCuotaEntrega"
+                    render={({ field }) => (
+                      <FormItem className="max-w-xs">
+                        <FormLabel>Número de cuota</FormLabel>
+                        <FormControl>
+                          <Input placeholder="ej: 12" type="number" min="1" {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* ── Inmueble extras ── */}
+            <section>
+              <p className="text-sm font-semibold text-foreground mb-3">Datos del inmueble (opcionales)</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { name: "calleInmueble" as const, label: "Calle con frente", placeholder: "Av. Ejemplo" },
+                  { name: "limites" as const, label: "Linderos (calles)", placeholder: "Av. Norte y Av. Sur" },
+                  { name: "medidas" as const, label: "Medidas y superficie", placeholder: "10 x 25 m — 250 m²" },
+                ].map(({ name, label, placeholder }) => (
+                  <FormField
+                    key={name}
+                    control={form.control}
+                    name={name}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{label}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={placeholder} {...field} value={field.value ?? ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="bg-green-700 hover:bg-green-800 text-white gap-2"
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    Descargar Boleto
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
