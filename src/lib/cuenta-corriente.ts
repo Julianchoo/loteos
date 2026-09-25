@@ -305,7 +305,16 @@ export async function createContratoForReserva(
   const fechaInicio = input.fechaInicio ?? reserva.fechaFirma ?? reserva.fechaReserva;
 
   if (!cantidadCuotas || !cuotaBaseUsd || !saldoInicialUsd || !fechaInicio) {
-    return { kind: "missing-data" as const };
+    const missingFields: string[] = [];
+    if (!cantidadCuotas) missingFields.push("Cantidad de cuotas: debe ser un número distinto de cero");
+    if (!cuotaBaseUsd) missingFields.push("Cuota mensual: debe ser un importe distinto de cero");
+    if (!saldoInicialUsd) missingFields.push("Saldo a financiar: debe ser un importe distinto de cero");
+    if (!fechaInicio) missingFields.push("Fecha de inicio: completá la fecha de firma o la fecha de reserva");
+    return {
+      kind: "missing-data" as const,
+      missingFields,
+      message: `No se puede crear la cuenta corriente. ${missingFields.join(". ")}.`,
+    };
   }
   if (input.modalidad === "pesos_cac" && (!input.tipoCambioBna || input.tipoCambioBna <= 0)) {
     return { kind: "missing-exchange-rate" as const };

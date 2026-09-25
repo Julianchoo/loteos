@@ -67,7 +67,7 @@ export async function POST(
   }
   if (result.kind === "missing-data") {
     return NextResponse.json(
-      { error: "Faltan datos para generar el plan de cuotas" },
+      { error: result.message, missingFields: result.missingFields },
       { status: 400 }
     );
   }

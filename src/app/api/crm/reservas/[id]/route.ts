@@ -313,7 +313,9 @@ export async function PATCH(
         ...updatedReserva,
         cuentaCorriente: {
           status: cuentaResult.kind,
-          message: cuentaCorrienteMessage(cuentaResult.kind),
+          message: cuentaResult.kind === "missing-data"
+            ? cuentaResult.message
+            : cuentaCorrienteMessage(cuentaResult.kind),
           contratoId:
             "contratoId" in cuentaResult ? cuentaResult.contratoId : null,
         },
