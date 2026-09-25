@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { LEAD_CHANNELS, LEAD_STATUSES } from "@/lib/lead-status";
-import { lead, user } from "@/lib/schema";
+import { lead, leadFinancingPreference, leadProject, lot, project, reservas, user } from "@/lib/schema";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 const createLeadSchema = z.object({
   firstName: z.string().trim().min(1),
@@ -28,12 +29,35 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
+  const projectId = searchParams.get("projectId");
 
   const conditions = [];
   if (status && (LEAD_STATUSES as readonly string[]).includes(status)) {
     conditions.push(eq(lead.status, status));
   }
   if (authResult.role !== "admin") conditions.push(eq(lead.asignadoA, authResult.id));
+  if (projectId) {
+    // Interested in the project (web forms) or holding a reserva on one of its lots.
+    conditions.push(sql`(
+      exists (
+        select 1 from ${leadProject}
+        where ${leadProject.leadId} = ${lead.id} and ${leadProject.projectId} = ${projectId}
+      )
+      or exists (
+        select 1 from ${reservas}
+        inner join ${lot} on ${lot.id} = ${reservas.lotId}
+        where ${reservas.leadId} = ${lead.id} and ${lot.projectId} = ${projectId}
+      )
+    )`);
+  }
+
+  const latestFinancing = (column: AnyPgColumn) =>
+    sql<string | null>`(
+      select ${column} from ${leadFinancingPreference}
+      where ${leadFinancingPreference.leadId} = ${lead.id}
+      order by ${leadFinancingPreference.createdAt} desc
+      limit 1
+    )`;
 
   const rows = await db
     .select({
@@ -43,6 +67,8 @@ export async function GET(request: Request) {
       phone: lead.phone,
       email: lead.email,
       contactChannel: lead.contactChannel,
+      marketingSource: lead.marketingSource,
+      marketingCampaign: lead.marketingCampaign,
       initialMessage: lead.initialMessage,
       status: lead.status,
       notes: lead.notes,
@@ -54,6 +80,16 @@ export async function GET(request: Request) {
       estadoCivil: lead.estadoCivil,
       cuitComprador: lead.cuitComprador,
       asignadoNombre: user.name,
+      projectNames: sql<string | null>`(
+        select string_agg(${project.name}, ', ' order by ${project.name})
+        from ${leadProject}
+        inner join ${project} on ${project.id} = ${leadProject.projectId}
+        where ${leadProject.leadId} = ${lead.id}
+      )`,
+      anticipoAmount: latestFinancing(leadFinancingPreference.anticipoAmount),
+      plazoMonths: latestFinancing(leadFinancingPreference.plazoMonths),
+      calculatedCuota: latestFinancing(leadFinancingPreference.calculatedCuota),
+      interestedPrice: latestFinancing(leadFinancingPreference.interestedPrice),
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
     })

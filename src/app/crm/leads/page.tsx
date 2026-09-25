@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useCrm } from "@/components/crm/crm-context";
+import { useCrm, withProject } from "@/components/crm/crm-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -49,7 +49,14 @@ type LeadRow = {
   phone: string | null;
   email: string;
   contactChannel: string;
+  marketingSource: string | null;
+  marketingCampaign: string | null;
   initialMessage: string | null;
+  projectNames: string | null;
+  anticipoAmount: string | null;
+  plazoMonths: string | null;
+  calculatedCuota: string | null;
+  interestedPrice: string | null;
   status: LeadStatus;
   notes: string | null;
   asignadoA: string | null;
@@ -110,7 +117,7 @@ const EMPTY_CREATE_FORM = {
 
 export default function LeadsPage() {
   const { data: session } = useSession();
-  const { isAdmin } = useCrm();
+  const { isAdmin, projectId } = useCrm();
   const canEditLead = (lead: LeadRow) => isAdmin || lead.asignadoA === session?.user?.id;
 
   const [leads, setLeads] = useState<LeadRow[]>([]);
@@ -128,6 +135,9 @@ export default function LeadsPage() {
     lastName: "",
     phone: "",
     email: "",
+    contactChannel: "in_person" as LeadChannel,
+    marketingSource: "",
+    marketingCampaign: "",
     dniCuit: "",
     domicilio: "",
     nacionalidad: "",
@@ -153,7 +163,7 @@ export default function LeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams();
+    const params = withProject(new URLSearchParams(), projectId);
     if (filterEstado !== "all") params.set("status", filterEstado);
     const res = await fetch(`/api/crm/leads?${params}`);
     const data = await res.json();
@@ -161,7 +171,7 @@ export default function LeadsPage() {
     setSelected(new Set());
     lastCheckedIndexRef.current = null;
     setLoading(false);
-  }, [filterEstado]);
+  }, [filterEstado, projectId]);
 
   useEffect(() => {
     fetchLeads();
@@ -277,6 +287,9 @@ export default function LeadsPage() {
       lastName: lead.lastName,
       phone: lead.phone ?? "",
       email: lead.email,
+      contactChannel: lead.contactChannel as LeadChannel,
+      marketingSource: lead.marketingSource ?? "",
+      marketingCampaign: lead.marketingCampaign ?? "",
       dniCuit: lead.dniCuit ?? "",
       domicilio: lead.domicilio ?? "",
       nacionalidad: lead.nacionalidad ?? "",
@@ -296,6 +309,9 @@ export default function LeadsPage() {
     if (editForm.lastName !== editLead.lastName) changed.lastName = editForm.lastName;
     if (editForm.phone !== (editLead.phone ?? "")) changed.phone = editForm.phone;
     if (editForm.email !== editLead.email) changed.email = editForm.email;
+    if (editForm.contactChannel !== editLead.contactChannel) changed.contactChannel = editForm.contactChannel;
+    if (editForm.marketingSource !== (editLead.marketingSource ?? "")) changed.marketingSource = editForm.marketingSource || null;
+    if (editForm.marketingCampaign !== (editLead.marketingCampaign ?? "")) changed.marketingCampaign = editForm.marketingCampaign || null;
     if (editForm.dniCuit !== (editLead.dniCuit ?? "")) changed.dniCuit = editForm.dniCuit || null;
     if (editForm.domicilio !== (editLead.domicilio ?? "")) changed.domicilio = editForm.domicilio || null;
     if (editForm.nacionalidad !== (editLead.nacionalidad ?? "")) changed.nacionalidad = editForm.nacionalidad || null;
@@ -325,6 +341,9 @@ export default function LeadsPage() {
                 lastName: editForm.lastName,
                 phone: editForm.phone || null,
                 email: editForm.email,
+                contactChannel: editForm.contactChannel,
+                marketingSource: editForm.marketingSource || null,
+                marketingCampaign: editForm.marketingCampaign || null,
                 dniCuit: editForm.dniCuit || null,
                 domicilio: editForm.domicilio || null,
                 nacionalidad: editForm.nacionalidad || null,
@@ -410,7 +429,7 @@ export default function LeadsPage() {
 
   const allSelected = leads.length > 0 && selected.size === leads.length;
   const someSelected = selected.size > 0 && selected.size < leads.length;
-  const colCount = 10;
+  const colCount = 11;
   const canCreate = Boolean(
     createForm.firstName.trim() &&
       createForm.lastName.trim() &&
@@ -427,7 +446,8 @@ export default function LeadsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Leads</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Consultas recibidas desde el formulario de contacto
+          Consultas del sitio web y leads cargados por el equipo comercial
+          {!loading && ` · ${leads.length} en total`}
         </p>
       </div>
 
@@ -468,7 +488,8 @@ export default function LeadsPage() {
               <TableHead>Nombre</TableHead>
               <TableHead>Teléfono</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Canal</TableHead>
+              <TableHead>Canal / fuente</TableHead>
+              <TableHead>Proyecto</TableHead>
               <TableHead>Mensaje</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Asignado a</TableHead>
@@ -507,6 +528,18 @@ export default function LeadsPage() {
                     <TableCell className="text-sm">{lead.email}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">
                       {LEAD_CHANNEL_LABELS[lead.contactChannel as LeadChannel] ?? lead.contactChannel}
+                      {lead.marketingSource && (
+                        <span className="block text-xs text-muted-foreground">{lead.marketingSource}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {lead.projectNames ?? "—"}
+                      {lead.calculatedCuota && (
+                        <span className="block text-xs text-muted-foreground whitespace-nowrap">
+                          Cuota USD {lead.calculatedCuota}
+                          {lead.plazoMonths ? ` · ${lead.plazoMonths}m` : ""}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                       {lead.initialMessage ?? "—"}
@@ -697,6 +730,35 @@ export default function LeadsPage() {
             <DialogTitle>Editar lead</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {editLead && (editLead.initialMessage || editLead.projectNames || editLead.calculatedCuota) && (
+              <div className="space-y-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                {editLead.projectNames && (
+                  <p>
+                    <span className="text-muted-foreground">Proyecto de interés: </span>
+                    {editLead.projectNames}
+                  </p>
+                )}
+                {editLead.calculatedCuota && (
+                  <p>
+                    <span className="text-muted-foreground">Financiación simulada: </span>
+                    {[
+                      editLead.interestedPrice && `precio USD ${editLead.interestedPrice}`,
+                      editLead.anticipoAmount && `anticipo USD ${editLead.anticipoAmount}`,
+                      editLead.plazoMonths && `${editLead.plazoMonths} meses`,
+                      `cuota USD ${editLead.calculatedCuota}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
+                {editLead.initialMessage && (
+                  <p className="whitespace-pre-wrap">
+                    <span className="text-muted-foreground">Mensaje: </span>
+                    {editLead.initialMessage}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="edit-firstName">Nombre</Label>
               <Input id="edit-firstName" value={editForm.firstName} onChange={(e) => setEditForm((f) => ({ ...f, firstName: e.target.value }))} />
@@ -712,6 +774,34 @@ export default function LeadsPage() {
             <div className="space-y-1.5">
               <Label htmlFor="edit-email">Email</Label>
               <Input id="edit-email" type="email" value={editForm.email} onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-contactChannel">Canal de contacto</Label>
+              <Select
+                value={editForm.contactChannel}
+                onValueChange={(v) => setEditForm((f) => ({ ...f, contactChannel: v as LeadChannel }))}
+              >
+                <SelectTrigger id="edit-contactChannel">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_CHANNELS.map((channel) => (
+                    <SelectItem key={channel} value={channel}>
+                      {LEAD_CHANNEL_LABELS[channel]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-marketingSource">Fuente</Label>
+                <Input id="edit-marketingSource" value={editForm.marketingSource} onChange={(e) => setEditForm((f) => ({ ...f, marketingSource: e.target.value }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-marketingCampaign">Campaña</Label>
+                <Input id="edit-marketingCampaign" value={editForm.marketingCampaign} onChange={(e) => setEditForm((f) => ({ ...f, marketingCampaign: e.target.value }))} />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="edit-dniCuit">DNI / CUIT</Label>

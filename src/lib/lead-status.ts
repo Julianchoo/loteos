@@ -1,4 +1,4 @@
-// Lead vocabulary shared by the public forms, /admin/leads and the CRM.
+// Lead vocabulary shared by the public forms and the CRM (/crm/leads).
 
 export const LEAD_STATUSES = [
   "new",

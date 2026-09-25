@@ -58,7 +58,7 @@ export default function AdminPage() {
           </Card>
         </Link>
 
-        <Link href="/admin/leads">
+        <Link href="/crm/leads">
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

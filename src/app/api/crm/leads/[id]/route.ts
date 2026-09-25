@@ -16,6 +16,8 @@ const updateSchema = z
     phone: z.string().trim().min(1).optional(),
     email: z.string().email().optional(),
     contactChannel: z.enum(LEAD_CHANNELS).optional(),
+    marketingSource: z.string().nullable().optional(),
+    marketingCampaign: z.string().nullable().optional(),
     dniCuit: z.string().nullable().optional(),
     domicilio: z.string().nullable().optional(),
     nacionalidad: z.string().nullable().optional(),

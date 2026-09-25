@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lead, leadFinancingPreference, leadProject } from "@/lib/schema";
 
@@ -29,18 +28,6 @@ interface CreateLeadWithFinancingData extends CreateLeadData {
 
 interface CreateProjectLeadData extends CreateLeadData {
   projectId: string;
-}
-
-export interface UpdateLeadData {
-  status: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string | null;
-  contactChannel: string;
-  marketingSource: string | null;
-  marketingCampaign: string | null;
-  notes: string | null;
 }
 
 export async function createLead(data: CreateLeadData) {
@@ -171,25 +158,6 @@ export async function createProjectLead(data: CreateProjectLeadData) {
         error instanceof Error
           ? error.message
           : "Failed to create project lead",
-    };
-  }
-}
-
-export async function updateLead(id: string, data: UpdateLeadData) {
-  try {
-    await db
-      .update(lead)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(lead.id, id));
-
-    revalidatePath("/admin/leads");
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating lead:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update lead",
     };
   }
 }

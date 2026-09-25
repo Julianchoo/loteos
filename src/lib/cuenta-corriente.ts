@@ -681,13 +681,16 @@ function buildPendingSummary(row: SummaryRowBase): CuentaCorrienteSummary {
   };
 }
 
+// TODO: reemplazar los placeholders con los datos bancarios de Fitzroya.
 const DATOS_CUENTA = [
   "Los datos de la cuenta Bancaria para TRANSFERIR son:",
-  "Nombre: Edgardo Fernando Pashkowec",
-  "CUIT: 20-31144417-5",
-  "Alias: zuaque.cubren.zanoni",
-  "CVU: 0000397900000000001317",
+  "Nombre: [Insert Nombre titular]",
+  "CUIT: [Insert CUIT]",
+  "Alias: [Insert Alias]",
+  "CVU: [Insert CVU]",
 ].join("\n");
+
+const EMAIL_COMPROBANTES = "[Insert Email]";
 
 function formatNumber(value: number, maximumFractionDigits = 2) {
   return value.toLocaleString("es-AR", {
@@ -816,7 +819,7 @@ export function buildMensajeCuentaCorriente(input: MensajeCuentaCorrienteInput) 
     `El valor de la cuota ${period}, con vencimiento el ${dueDate}, es de $${formatNumber(amountArs)} pesos. Correspondiente a ${formatNumber(adjustedAmount)} USD a ${formatNumber(input.tipoCambioActual)} Tipo de Cambio BNA del día ${formatCommunicationDate(input.fechaTipoCambioActual)}.`,
     DATOS_CUENTA,
     "Por otro lado, les recordamos que para aquellos casos de fuerza mayor en los que se tenga que abonar en dólares en efectivo, deberán coordinar la visita presencial con un mínimo de 48 horas de anticipación.",
-    "Les recordamos que los únicos medios habilitados de comunicación oficial para recepción de LOS COMPROBANTES DE TRANSFERENCIA Y LA COORDINACIÓN DE LA VISITA PARA PAGO son el correo electrónico INFO@EULERDESARROLLOS.COM.AR",
+    `Les recordamos que los únicos medios habilitados de comunicación oficial para recepción de LOS COMPROBANTES DE TRANSFERENCIA Y LA COORDINACIÓN DE LA VISITA PARA PAGO son el correo electrónico ${EMAIL_COMPROBANTES}`,
   ].join("\n\n");
 }
 
