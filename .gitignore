@@ -53,3 +53,5 @@ nul
 # brochure generator: scratch de trabajo y .pptx de salida
 /tmp/
 /output/
+.vercel
+.env*
