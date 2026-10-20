@@ -50,6 +50,13 @@
       "when": 1790343919222,
       "tag": "0006_crm_lotes_reservas_cuentas",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792517785297,
+      "tag": "0007_seed_nuevo_amanecer",
+      "breakpoints": true
     }
   ]
 }
