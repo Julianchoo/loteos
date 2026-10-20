@@ -13,8 +13,8 @@ const brand = {
   rail: "#8a9a7c",
 };
 
-const project = { x: 330, y: 300 };
-const finca = { x: 196, y: 318 };
+const project = { x: 420, y: 312 };
+const finca = { x: 290, y: 326 };
 const guernica = { x: 505, y: 150 };
 const alejandroKorn = { x: 548, y: 418 };
 const interchange = { x: 497, y: 212 };
@@ -133,7 +133,7 @@ export function NuevoAmanecerPoiMap() {
 
       {/* Acceso desde el loteo */}
       <path
-        d={`M${project.x} ${project.y} C ${project.x + 60} ${project.y - 40}, ${interchange.x - 80} ${interchange.y + 30}, ${interchange.x - 6} ${interchange.y + 8}`}
+        d={`M${project.x + 46} ${project.y - 10} C ${project.x + 90} ${project.y - 20}, ${interchange.x - 30} ${interchange.y + 50}, ${interchange.x - 4} ${interchange.y + 12}`}
         fill="none"
         stroke={brand.moss}
         strokeWidth={3.5}

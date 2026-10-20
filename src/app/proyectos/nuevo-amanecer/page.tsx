@@ -38,8 +38,7 @@ const projectId = NUEVO_AMANECER_PROJECT_ID;
 const projectName = "Nuevo Amanecer";
 const address = "Guernica, Partido de Presidente Perón, Provincia de Buenos Aires";
 const mapsUrl = "https://maps.app.goo.gl/17EuMqSaRascdFxb8";
-// Completar con "lat,lng" del predio para mostrar el mapa embebido de Google.
-const coordinates: string | null = null;
+const coordinates = "-34.956653,-58.397438";
 
 const { totalLotes, totalManzanas, superficieMin, superficieMax } =
   nuevoAmanecerStats;
@@ -55,11 +54,11 @@ const pointsOfInterest = [
   },
   {
     title: "Guernica",
-    description: "Comercios, escuelas, servicios y estación del Roca.",
+    description: "A unos 5 km: comercios, escuelas, servicios y estación del Roca.",
   },
   {
     title: "Alejandro Korn",
-    description: "Centro comercial y estación del Roca sobre la Ruta 210.",
+    description: "A unos 3 km: centro comercial y estación del Roca sobre la Ruta 210.",
   },
 ];
 
@@ -345,7 +344,7 @@ export default async function NuevoAmanecerPage() {
               Ubicación
             </p>
             <h2 className="text-3xl font-bold md:text-4xl">
-              Cerca de todo en el sur del GBA
+              Entre Guernica y Alejandro Korn
             </h2>
             <p className="text-lg text-muted-foreground">{address}</p>
           </div>
@@ -380,20 +379,18 @@ export default async function NuevoAmanecerPage() {
             </Card>
           </div>
 
-          {coordinates && (
-            <div className="aspect-video overflow-hidden rounded-2xl border bg-muted">
-              <iframe
-                title="Ubicación de Nuevo Amanecer en Google Maps"
-                src={`https://www.google.com/maps?q=${coordinates}&z=15&output=embed`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-          )}
+          <div className="aspect-video overflow-hidden rounded-2xl border bg-muted">
+            <iframe
+              title="Ubicación de Nuevo Amanecer en Google Maps"
+              src={`https://www.google.com/maps?q=${coordinates}&z=15&output=embed`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
         </div>
       </section>
 
