@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { NuevoAmanecerPlano } from "@/components/nuevo-amanecer-plano";
 import { NuevoAmanecerPoiMap } from "@/components/nuevo-amanecer-poi-map";
+import { NuevoAmanecerSetupBanner } from "@/components/nuevo-amanecer-setup-banner";
 import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
 import { ProjectInquiryForm } from "@/components/project-inquiry-form";
 import { Badge } from "@/components/ui/badge";
@@ -171,6 +172,7 @@ export default async function NuevoAmanecerPage() {
       {isAdmin && projectVisibility !== null && (
         <ProjectAdminVisibilityBanner isVisible={projectVisibility} />
       )}
+      {isAdmin && projectVisibility === null && <NuevoAmanecerSetupBanner />}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
