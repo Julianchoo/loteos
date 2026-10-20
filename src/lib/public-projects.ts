@@ -48,6 +48,16 @@ const fallbackProjects: Record<string, Omit<PublicProjectSummary, "id" | "name" 
     commercialLabel: "Financiacion en hasta 60 cuotas",
     financingFrom: "Consulta disponibilidad y condiciones",
   },
+  "nuevo-amanecer": {
+    image: "/images/Nuevo Amanecer/nuevo-amanecer-cover.webp",
+    alt: "Plano del loteo Nuevo Amanecer en Guernica",
+    location: "Guernica, Buenos Aires",
+    badge: "NUEVO",
+    facts: "80 lotes - 602 a 910 m2 - 5 manzanas",
+    tags: ["Al lado de la Finca San Antonio", "Autopista Presidente Peron", "Sur GBA"],
+    description: "Loteo de 80 lotes en Guernica, al lado de la Finca San Antonio.",
+    financingFrom: "Consulta disponibilidad y condiciones",
+  },
 };
 
 export function toPublicProjectSummary(project: ProjectWithPricing): PublicProjectSummary {

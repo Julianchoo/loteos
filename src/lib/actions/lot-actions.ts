@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { lot, contactRequest } from "@/lib/schema";
 
@@ -11,6 +12,16 @@ export async function getLots() {
     } catch (error) {
         console.error("Error fetching lots:", error);
         return { success: false, error: "Failed to fetch lots" };
+    }
+}
+
+export async function getLotsByProject(projectId: string) {
+    try {
+        const results = await db.select().from(lot).where(eq(lot.projectId, projectId));
+        return { success: true, data: results };
+    } catch (error) {
+        console.error("Error fetching project lots:", error);
+        return { success: false, error: "Failed to fetch lots", data: [] };
     }
 }
 
