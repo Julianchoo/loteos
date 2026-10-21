@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { crmTransaction } from "@/lib/crm-transaction";
 import { contratoVigente, cuentaCorrienteUrl } from "@/lib/cuenta-corriente";
 import { db } from "@/lib/db";
-import { getMinimumAnticipoUsd, MIN_ANTICIPO_PCT } from "@/lib/financiacion";
+import { condicionesLote, getMinimumAnticipoUsd } from "@/lib/financiacion";
 import { estadoLoteValues, legacyLotPrice, legacyLotSize } from "@/lib/lotes";
 import {
   currentReservaJoin,
@@ -121,6 +121,13 @@ const updateSchema = z
     cuotas48: z.string().nullable().optional(),
     cuotas60: z.string().nullable().optional(),
     nota: z.string().nullable().optional(),
+    // Condiciones de financiación del lote (null = las generales).
+    anticipoMinimoPct: z
+      .string()
+      .refine((value) => Number(value) >= 0 && Number(value) <= 100, "Debe ser un % entre 0 y 100")
+      .nullable()
+      .optional(),
+    plazoMaximo: z.number().int().min(1).max(360).nullable().optional(),
     confirmarEdicionVendida: z.boolean().optional(),
   })
   .strict();
@@ -154,6 +161,8 @@ const PARCELA_ADMIN_FIELDS = [
   "cuotas48",
   "cuotas60",
   "nota",
+  "anticipoMinimoPct",
+  "plazoMaximo",
 ] as const;
 
 const PARCELA_COMERCIAL_FIELDS = [
@@ -249,11 +258,13 @@ export async function PUT(
           return { kind: "missing-list-price" as const };
         }
 
-        const minimumAnticipo = getMinimumAnticipoUsd(precioLista);
+        const { anticipoMinimoPct } = condicionesLote(current);
+        const minimumAnticipo = getMinimumAnticipoUsd(precioLista, anticipoMinimoPct);
         if (requestedAnticipo === null || requestedAnticipo < minimumAnticipo) {
           return {
             kind: "invalid-anticipo" as const,
             minimumAnticipo,
+            anticipoMinimoPct,
           };
         }
       }
@@ -583,7 +594,7 @@ export async function PUT(
     if (result.kind === "invalid-anticipo") {
       return NextResponse.json(
         {
-          error: `El anticipo mínimo para este lote es USD ${result.minimumAnticipo} (${MIN_ANTICIPO_PCT}% del precio de lista)`,
+          error: `El anticipo mínimo para este lote es USD ${result.minimumAnticipo} (${result.anticipoMinimoPct}% del precio de lista)`,
         },
         { status: 400 }
       );

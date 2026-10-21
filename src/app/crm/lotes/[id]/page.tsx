@@ -32,7 +32,12 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/lib/auth-client";
-import { calculateInstallment } from "@/lib/financiacion";
+import {
+  calculateInstallment,
+  condicionesLote,
+  MIN_ANTICIPO_PCT,
+  PLAZO_MAX_PUBLICO,
+} from "@/lib/financiacion";
 import {
   estadoColors,
   estadoLabels,
@@ -72,6 +77,8 @@ const schema = z.object({
   cuotas48: z.string().nullable().optional(),
   cuotas60: z.string().nullable().optional(),
   nota: z.string().nullable().optional(),
+  anticipoMinimoPct: z.string().nullable().optional(),
+  plazoMaximo: z.string().nullable().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -104,6 +111,8 @@ const LOTE_PARAM_FIELDS = [
   "cuotas48",
   "cuotas60",
   "nota",
+  "anticipoMinimoPct",
+  "plazoMaximo",
 ] as const;
 
 const editableLoteFields = [
@@ -114,6 +123,8 @@ const editableLoteFields = [
   { name: "calleFrente" as const, label: "Calle de frente" },
   { name: "calleLindera1" as const, label: "Calle lindera 1" },
   { name: "calleLindera2" as const, label: "Calle lindera 2" },
+  { name: "anticipoMinimoPct" as const, label: `Anticipo mínimo (vacío = ${MIN_ANTICIPO_PCT})`, suffix: "%" },
+  { name: "plazoMaximo" as const, label: `Plazo máximo (vacío = ${PLAZO_MAX_PUBLICO})`, suffix: "cuotas" },
 ];
 
 const comercialEditableLoteFieldNames = [
@@ -270,6 +281,8 @@ export default function LoteDetailPage() {
       cuotas48: data.cuotas48 ?? "",
       cuotas60: data.cuotas60 ?? "",
       nota: data.nota ?? "",
+      anticipoMinimoPct: data.anticipoMinimoPct ?? "",
+      plazoMaximo: data.plazoMaximo != null ? String(data.plazoMaximo) : "",
     });
     setLoading(false);
   }
@@ -288,6 +301,7 @@ export default function LoteDetailPage() {
       payload[field] = value === "" ? null : value;
     }
     if (!payload.number) delete payload.number;
+    payload.plazoMaximo = payload.plazoMaximo === null ? null : Number(payload.plazoMaximo);
     payload.anticipoPct = String(DEFAULT_ANTICIPO_PCT);
     Object.assign(payload, soldEditConfirmationPayload);
     payload.tasaMensual = String(DEFAULT_TASA_MENSUAL);
@@ -509,6 +523,8 @@ export default function LoteDetailPage() {
                             "metrosFrente",
                             "metrosFondo",
                             "anticipoPct",
+                            "anticipoMinimoPct",
+                            "plazoMaximo",
                             "tasaMensual",
                           ].includes(name)
                             ? "number"
@@ -577,6 +593,8 @@ export default function LoteDetailPage() {
                 ["Saldo USD", readonlySaldoUsd !== null ? `USD ${readonlySaldoUsd.toLocaleString("es-AR")}` : "-"],
                 ["48 cuotas", readonlyCuotas48 !== null ? `USD ${readonlyCuotas48}` : "-"],
                 ["60 cuotas", readonlyCuotas60 !== null ? `USD ${readonlyCuotas60}` : "-"],
+                ["Anticipo mínimo", `${condicionesLote(lote).anticipoMinimoPct}%`],
+                ["Plazo máximo", `${condicionesLote(lote).plazoMaximo} cuotas`],
               ].map(([label, value]) => (
                 <div key={label}>
                   <span className="text-muted-foreground">{label}</span>

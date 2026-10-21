@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Ruler } from "lucide-react";
 import {
-  LoteConsultaDialog,
+  LoteConsultaPanel,
   type LoteConsulta,
-} from "@/components/lote-consulta-dialog";
+} from "@/components/lote-consulta-panel";
 import { Button } from "@/components/ui/button";
 import {
   nuevoAmanecerBounds,
@@ -53,6 +53,8 @@ export type LotePublico = {
   estado: EstadoLote;
   /** Precio de lista; null si no está disponible o no tiene precio cargado. */
   precio: number | null;
+  anticipoMinimoPct: number;
+  plazoMaximo: number;
 };
 
 interface NuevoAmanecerPlanoProps {
@@ -68,6 +70,12 @@ export function NuevoAmanecerPlano({ lotes = {}, detallado = false, refId }: Nue
   const [selected, setSelected] = useState<NuevoAmanecerLote | null>(null);
   const [hovered, setHovered] = useState<NuevoAmanecerLote | null>(null);
   const [consulta, setConsulta] = useState<LoteConsulta | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Al elegir un lote, el panel con la calculadora queda a la vista (en mobile queda abajo del plano).
+  useEffect(() => {
+    if (consulta) panelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [consulta]);
 
   const active = hovered ?? selected;
   const loteDb = (lote: NuevoAmanecerLote) =>
@@ -89,6 +97,8 @@ export function NuevoAmanecerPlano({ lotes = {}, detallado = false, refId }: Nue
       ],
       disponible: db.estado === "disponible",
       precio: db.precio,
+      anticipoMinimoPct: db.anticipoMinimoPct,
+      plazoMaximo: db.plazoMaximo,
     });
   };
 
@@ -308,45 +318,48 @@ export function NuevoAmanecerPlano({ lotes = {}, detallado = false, refId }: Nue
         </p>
       </div>
 
-      <div
-        className="flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
-        aria-live="polite"
-      >
-        {active ? (
-          <>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-                Manzana {active.manzana} · Lote {active.numero}
-              </p>
-              <p className="text-3xl font-black tracking-tight">
-                {active.superficie} m²
-              </p>
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Ruler className="size-4" />
-                {formatMeters(active.frente)} m de frente ×{" "}
-                {formatMeters(active.fondo)} m de fondo ·{" "}
-                {estadoLabel[estadoDe(active)]}
-              </p>
-            </div>
-            <Button className="rounded-full" onClick={() => abrirConsulta(active)}>
-              Simular cuota y consultar
-              <ArrowRight className="ml-2 size-4" />
-            </Button>
-          </>
+      <div ref={panelRef} className="scroll-mt-24" aria-live="polite">
+        {consulta ? (
+          <LoteConsultaPanel
+            key={consulta.id}
+            lote={consulta}
+            refId={refId}
+            onClose={() => {
+              setConsulta(null);
+              setSelected(null);
+            }}
+          />
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Tocá un lote para ver sus medidas, simular la cuota y consultar.
-          </p>
+          <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+            {active ? (
+              <>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+                    Manzana {active.manzana} · Lote {active.numero}
+                  </p>
+                  <p className="text-3xl font-black tracking-tight">
+                    {active.superficie} m²
+                  </p>
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Ruler className="size-4" />
+                    {formatMeters(active.frente)} m de frente ×{" "}
+                    {formatMeters(active.fondo)} m de fondo ·{" "}
+                    {estadoLabel[estadoDe(active)]}
+                  </p>
+                </div>
+                <Button className="rounded-full" onClick={() => abrirConsulta(active)}>
+                  Simular cuota y consultar
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Tocá un lote para ver sus medidas, simular la cuota y consultar.
+              </p>
+            )}
+          </div>
         )}
       </div>
-
-      <LoteConsultaDialog
-        lote={consulta}
-        refId={refId}
-        onOpenChange={(open) => {
-          if (!open) setConsulta(null);
-        }}
-      />
     </div>
   );
 }

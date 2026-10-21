@@ -7,6 +7,7 @@ import {
   calculateInstallment,
   formatUsd,
   getMinimumAnticipoUsd,
+  MIN_ANTICIPO_PCT,
   PLAZO_MAX_PUBLICO,
   roundCurrency,
   TASA_PUBLICA,
@@ -27,23 +28,28 @@ function formatDeliveryInstallment(value: number): string {
 
 /**
  * Calculadora de cuota. En modo `publico` el precio viene fijo (el del lote),
- * la tasa queda en 1% y el plazo llega hasta 60 cuotas. Para recalcular con
- * otro precio, el padre cambia la `key`.
+ * la tasa queda en 1% y el anticipo mínimo y el plazo máximo son los del lote
+ * (por defecto, los generales). Para recalcular con otro precio, el padre cambia la `key`.
  */
 export type Simulacion = { anticipo: number; plazo: number; cuotaMensual: number };
 
 export function CalculadoraCuota({
   precio = 15000,
   publico = false,
+  anticipoMinimoPct = MIN_ANTICIPO_PCT,
+  plazoMaximo = PLAZO_MAX_PUBLICO,
   onSimulacion,
 }: {
   precio?: number;
   publico?: boolean;
+  anticipoMinimoPct?: number;
+  plazoMaximo?: number;
   onSimulacion?: (simulacion: Simulacion) => void;
 }) {
+  const minimoUsd = (value: number) => getMinimumAnticipoUsd(value, anticipoMinimoPct);
   const [calculator, setCalculator] = useState<Calculator>(() =>
     publico
-      ? { precio, anticipo: getMinimumAnticipoUsd(precio), tasa: TASA_PUBLICA, plazo: PLAZO_MAX_PUBLICO }
+      ? { precio, anticipo: minimoUsd(precio), tasa: TASA_PUBLICA, plazo: plazoMaximo }
       : { precio, anticipo: 4500, tasa: 1, plazo: 48 }
   );
 
@@ -61,7 +67,7 @@ export function CalculadoraCuota({
   const tc = enPesos ? tipoCambio?.valor ?? null : null;
   const formatMonto = (value: number) => (tc ? formatArs(value * tc) : formatUsd(value));
 
-  const minimumAnticipo = getMinimumAnticipoUsd(calculator.precio);
+  const minimumAnticipo = minimoUsd(calculator.precio);
 
   const calculatorResult = useMemo(() => {
     const saldo = Math.max(calculator.precio - calculator.anticipo, 0);
@@ -103,7 +109,7 @@ export function CalculadoraCuota({
       if (key === "precio") {
         next.anticipo = Math.max(
           next.anticipo,
-          getMinimumAnticipoUsd(value)
+          minimoUsd(value)
         );
       }
       if (key === "anticipo") {
@@ -111,14 +117,14 @@ export function CalculadoraCuota({
           Math.max(
             value,
             enforceAnticipoMinimum
-              ? getMinimumAnticipoUsd(current.precio)
+              ? minimoUsd(current.precio)
               : 0
           ),
           current.precio
         );
       }
       if (key === "plazo" && publico) {
-        next.plazo = Math.min(next.plazo, PLAZO_MAX_PUBLICO);
+        next.plazo = Math.min(next.plazo, plazoMaximo);
       }
       return next;
     });
@@ -153,7 +159,7 @@ export function CalculadoraCuota({
       key: "plazo" as const,
       label: "Plazo",
       min: 1,
-      max: publico ? PLAZO_MAX_PUBLICO : 120,
+      max: publico ? plazoMaximo : 120,
       step: 1,
       suffix: "meses",
     },

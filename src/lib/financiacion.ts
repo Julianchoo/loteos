@@ -15,9 +15,24 @@ export function calculateInstallment(saldo: number, tasaMensual: number, plazo: 
   );
 }
 
-export function getMinimumAnticipoUsd(precioLista: number) {
-  const minimum = (Math.max(precioLista, 0) * MIN_ANTICIPO_PCT) / 100;
+export function getMinimumAnticipoUsd(precioLista: number, anticipoMinimoPct = MIN_ANTICIPO_PCT) {
+  const minimum = (Math.max(precioLista, 0) * anticipoMinimoPct) / 100;
   return Math.ceil(minimum / ANTICIPO_STEP_USD) * ANTICIPO_STEP_USD;
+}
+
+// Condiciones de un lote: las que tenga cargadas o, si no, las generales.
+export function condicionesLote(lote: {
+  anticipoMinimoPct?: string | number | null;
+  plazoMaximo?: number | null;
+}) {
+  const pct = lote.anticipoMinimoPct;
+  return {
+    anticipoMinimoPct:
+      pct !== null && pct !== undefined && pct !== "" && Number.isFinite(Number(pct))
+        ? Number(pct)
+        : MIN_ANTICIPO_PCT,
+    plazoMaximo: lote.plazoMaximo ?? PLAZO_MAX_PUBLICO,
+  };
 }
 
 export function formatUsd(value: number): string {

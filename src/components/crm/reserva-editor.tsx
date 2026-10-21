@@ -31,6 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   ANTICIPO_STEP_USD,
   calculateInstallment,
+  condicionesLote,
   getMinimumAnticipoUsd,
   roundCurrency,
 } from "@/lib/financiacion";
@@ -221,7 +222,7 @@ function calculatorFromLote(data: LoteConReserva) {
     precio,
     anticipo: Math.min(Math.round(precio * 0.3), precio),
     tasa: 1,
-    plazo: parseNumber(data.cantidadCuotas) ?? 48,
+    plazo: parseNumber(data.cantidadCuotas) ?? Math.min(48, condicionesLote(data).plazoMaximo),
   };
 }
 
@@ -247,6 +248,10 @@ export function ReservaEditor({
     modalidadFromReserva(lote.modalidadContrato)
   );
   const [calculator, setCalculator] = useState(() => calculatorFromLote(lote));
+  // Anticipo mínimo y plazo máximo del lote; el plazo máximo lo puede pasar solo un admin.
+  const condiciones = condicionesLote(lote);
+  const plazoMaximo = isAdmin ? 120 : condiciones.plazoMaximo;
+  const minimoUsd = (precio: number) => getMinimumAnticipoUsd(precio, condiciones.anticipoMinimoPct);
   const [leadSearch, setLeadSearch] = useState("");
   const [leadResults, setLeadResults] = useState<LeadOption[]>([]);
 
@@ -316,7 +321,7 @@ export function ReservaEditor({
       if (key === "precio") {
         next.anticipo = Math.max(
           next.anticipo,
-          getMinimumAnticipoUsd(value)
+          minimoUsd(value)
         );
       }
       if (key === "anticipo") {
@@ -324,12 +329,13 @@ export function ReservaEditor({
           Math.max(
             value,
             enforceAnticipoMinimum
-              ? getMinimumAnticipoUsd(current.precio)
+              ? minimoUsd(current.precio)
               : 0
           ),
           current.precio
         );
       }
+      if (key === "plazo") next.plazo = Math.min(next.plazo, plazoMaximo);
       return next;
     });
   }
@@ -508,6 +514,8 @@ export function ReservaEditor({
             calculatorResult={calculatorResult}
             disabled={calculatorDisabled}
             editableFields={editableCalculatorFields}
+            minimumAnticipo={minimoUsd(calculator.precio)}
+            plazoMaximo={plazoMaximo}
             onChange={updateCalculatorValue}
             onApply={applyCalculatorToReserva}
           />
@@ -874,6 +882,8 @@ export function ReservaEditor({
               calculatorResult={calculatorResult}
               disabled={calculatorDisabled}
               editableFields={editableCalculatorFields}
+              minimumAnticipo={minimoUsd(calculator.precio)}
+              plazoMaximo={plazoMaximo}
               onChange={updateCalculatorValue}
               onApply={applyCalculatorToReserva}
             />
@@ -904,9 +914,13 @@ function CalculatorContent({
   calculatorResult,
   disabled,
   editableFields,
+  minimumAnticipo,
+  plazoMaximo,
   onChange,
   onApply,
 }: {
+  minimumAnticipo: number;
+  plazoMaximo: number;
   calculator: CalculatorState;
   calculatorResult: CalculatorResult;
   disabled: boolean;
@@ -918,7 +932,6 @@ function CalculatorContent({
   ) => void;
   onApply: () => void;
 }) {
-  const minimumAnticipo = getMinimumAnticipoUsd(calculator.precio);
   const anticipoInvalid = calculator.anticipo < minimumAnticipo;
   const fields = [
     {
@@ -949,7 +962,7 @@ function CalculatorContent({
       key: "plazo" as const,
       label: "Plazo",
       min: 1,
-      max: 120,
+      max: plazoMaximo,
       step: 1,
       suffix: "meses",
     },

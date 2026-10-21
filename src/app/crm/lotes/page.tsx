@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
+import { condicionesLote, MIN_ANTICIPO_PCT, PLAZO_MAX_PUBLICO } from "@/lib/financiacion";
 import type { EstadoLote, LoteConReserva } from "@/lib/schema";
 
 const estadoColors: Record<EstadoLote, string> = {
@@ -85,6 +86,8 @@ type ColKey =
   | "saldo"
   | "cuotas"
   | "cuotaMensual"
+  | "anticipoMinimo"
+  | "plazoMaximo"
   | "observaciones";
 
 const OPTIONAL_COLS: { key: ColKey; label: string }[] = [
@@ -105,6 +108,8 @@ const OPTIONAL_COLS: { key: ColKey; label: string }[] = [
   { key: "saldo", label: "Saldo" },
   { key: "cuotas", label: "Cuotas" },
   { key: "cuotaMensual", label: "Cuota mensual" },
+  { key: "anticipoMinimo", label: "Anticipo mínimo" },
+  { key: "plazoMaximo", label: "Plazo máximo" },
   { key: "observaciones", label: "Observaciones" },
 ];
 
@@ -135,6 +140,8 @@ function getCellValue(lote: LoteConReserva, key: ColKey): string {
     case "saldo": return lote.saldoNum ? `USD ${lote.saldoNum}` : "—";
     case "cuotas": return lote.cantidadCuotas ?? "—";
     case "cuotaMensual": return lote.cuotaMensual ? `USD ${lote.cuotaMensual}` : "—";
+    case "anticipoMinimo": return `${condicionesLote(lote).anticipoMinimoPct}%`;
+    case "plazoMaximo": return `${condicionesLote(lote).plazoMaximo} cuotas`;
     case "observaciones": return lote.observaciones ?? "—";
   }
 }
@@ -157,6 +164,8 @@ const DEFAULT_COLS: Record<ColKey, boolean> = {
   saldo: false,
   cuotas: false,
   cuotaMensual: false,
+  anticipoMinimo: false,
+  plazoMaximo: false,
   observaciones: false,
 };
 
@@ -222,6 +231,8 @@ export default function LotesPage({
   const [bulkEstado, setBulkEstado] = useState<EstadoLote | "">("");
   const [bulkPriceMode, setBulkPriceMode] = useState<"set" | "increase">("set");
   const [bulkPriceValue, setBulkPriceValue] = useState("");
+  const [bulkAnticipoMinimo, setBulkAnticipoMinimo] = useState("");
+  const [bulkPlazoMaximo, setBulkPlazoMaximo] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Record<ColKey, boolean>>(DEFAULT_COLS);
 
@@ -490,6 +501,72 @@ export default function LotesPage({
       }
     } catch {
       setLotes(prev);
+      toast.error(NETWORK_ERROR);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkCondicionesUpdate = async () => {
+    if (!isAdmin || selected.size === 0) return;
+
+    const payload: { anticipoMinimoPct?: string; plazoMaximo?: number } = {};
+    if (bulkAnticipoMinimo.trim()) {
+      const pct = Number(bulkAnticipoMinimo);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        toast.error("El anticipo mínimo tiene que ser un % entre 0 y 100");
+        return;
+      }
+      payload.anticipoMinimoPct = String(pct);
+    }
+    if (bulkPlazoMaximo.trim()) {
+      const plazo = Number(bulkPlazoMaximo);
+      if (!Number.isInteger(plazo) || plazo < 1 || plazo > 360) {
+        toast.error("El plazo máximo tiene que ser un número entero de cuotas entre 1 y 360");
+        return;
+      }
+      payload.plazoMaximo = plazo;
+    }
+    if (Object.keys(payload).length === 0) return;
+
+    // Un lote vendido ya tiene sus condiciones en la venta: no se toca.
+    const targets = lotes.filter((lote) => selected.has(lote.id) && !isSoldLote(lote));
+    const skipped = selected.size - targets.length;
+    if (targets.length === 0) {
+      toast.error("Los lotes seleccionados están vendidos: sus condiciones ya no se cambian");
+      return;
+    }
+
+    setBulkLoading(true);
+    try {
+      const results = await Promise.all(
+        targets.map((lote) =>
+          fetch(`/api/crm/lotes/${lote.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+        )
+      );
+      const failed = results
+        .map((res, i) => ({ res, lote: targets[i] }))
+        .filter(({ res }) => !res.ok)
+        .map(({ res, lote }) => ({
+          res,
+          label: lote ? `Mz ${lote.manzana} Lote ${lote.number}` : "Lote",
+        }));
+      if (failed.length > 0) {
+        await toastBulkErrors(failed, targets.length, "lotes");
+      } else {
+        toast.success(
+          `Condiciones actualizadas en ${targets.length} lote(s)${skipped > 0 ? `; ${skipped} vendido(s) sin cambios` : ""}`
+        );
+        setSelected(new Set());
+        setBulkAnticipoMinimo("");
+        setBulkPlazoMaximo("");
+      }
+      fetchLotes();
+    } catch {
       toast.error(NETWORK_ERROR);
     } finally {
       setBulkLoading(false);
@@ -948,6 +1025,36 @@ export default function LotesPage({
               >
                 {bulkLoading ? "Aplicando..." : "Aplicar precio"}
               </Button>
+              <div className="h-8 w-px bg-border" />
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={bulkAnticipoMinimo}
+                onChange={(e) => setBulkAnticipoMinimo(e.target.value)}
+                placeholder={`Anticipo mín. % (${MIN_ANTICIPO_PCT})`}
+                aria-label="Anticipo mínimo en %"
+                className="h-8 w-40 text-sm"
+              />
+              <Input
+                type="number"
+                min="1"
+                max="360"
+                step="1"
+                value={bulkPlazoMaximo}
+                onChange={(e) => setBulkPlazoMaximo(e.target.value)}
+                placeholder={`Plazo máx. (${PLAZO_MAX_PUBLICO})`}
+                aria-label="Plazo máximo en cuotas"
+                className="h-8 w-36 text-sm"
+              />
+              <Button
+                size="sm"
+                onClick={handleBulkCondicionesUpdate}
+                disabled={(!bulkAnticipoMinimo && !bulkPlazoMaximo) || bulkLoading}
+              >
+                {bulkLoading ? "Aplicando..." : "Aplicar condiciones"}
+              </Button>
             </>
           )}
           <Button
@@ -957,6 +1064,8 @@ export default function LotesPage({
               setSelected(new Set());
               setBulkEstado("");
               setBulkPriceValue("");
+              setBulkAnticipoMinimo("");
+              setBulkPlazoMaximo("");
             }}
           >
             Cancelar

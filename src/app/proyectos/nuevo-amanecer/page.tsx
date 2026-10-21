@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLotsByProject } from "@/lib/actions/lot-actions";
 import { getProjectBySlug } from "@/lib/actions/project-actions";
+import { condicionesLote } from "@/lib/financiacion";
 import {
   NUEVO_AMANECER_PROJECT_ID,
   nuevoAmanecerBounds,
@@ -163,6 +164,7 @@ export default async function NuevoAmanecerPage({
         // El público no ve si un lote está reservado o vendido: todo lo que no está a la venta es "no disponible".
         estado: isAdmin || lote.estado === "disponible" ? lote.estado : "no_disponible",
         precio: lote.estado === "disponible" && precio > 0 ? precio : null,
+        ...condicionesLote(lote),
       };
     }
   }

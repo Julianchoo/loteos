@@ -71,6 +71,13 @@
       "when": 1792587094134,
       "tag": "0009_square_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792589491319,
+      "tag": "0010_cloudy_shocker",
+      "breakpoints": true
     }
   ]
 }

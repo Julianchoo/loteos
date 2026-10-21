@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 import {
   calculateInstallment,
   getMinimumAnticipoUsd,
-  PLAZO_MAX_PUBLICO,
+  condicionesLote,
   TASA_PUBLICA,
 } from "@/lib/financiacion";
 import { lead, leadFinancingPreference, leadProject, lot, user } from "@/lib/schema";
@@ -180,7 +180,7 @@ const lotLeadSchema = z.object({
   phone: z.string().trim().max(30).optional(),
   message: z.string().trim().max(1000).optional(),
   anticipo: z.number().positive().optional(),
-  plazo: z.number().int().min(1).max(PLAZO_MAX_PUBLICO).optional(),
+  plazo: z.number().int().min(1).max(360).optional(),
   // Id del comercial que compartió el link del plano (?ref=...).
   ref: z.string().max(100).optional(),
 });
@@ -205,6 +205,8 @@ export async function createLotLead(input: z.input<typeof lotLeadSchema>) {
         number: lot.number,
         estado: lot.estado,
         precioBase: lot.precioBase,
+        anticipoMinimoPct: lot.anticipoMinimoPct,
+        plazoMaximo: lot.plazoMaximo,
       })
       .from(lot)
       .where(eq(lot.id, data.lotId));
@@ -213,11 +215,18 @@ export async function createLotLead(input: z.input<typeof lotLeadSchema>) {
     const precio = Number(lote.precioBase);
     let financing: { anticipo: number; plazo: number; cuota: number } | null = null;
     if (lote.estado === "disponible" && precio > 0 && data.anticipo && data.plazo) {
-      const minimo = getMinimumAnticipoUsd(precio);
+      const condiciones = condicionesLote(lote);
+      const minimo = getMinimumAnticipoUsd(precio, condiciones.anticipoMinimoPct);
       if (data.anticipo < minimo || data.anticipo > precio) {
         return {
           success: false,
           error: `El anticipo tiene que estar entre USD ${minimo} y USD ${precio}`,
+        };
+      }
+      if (data.plazo > condiciones.plazoMaximo) {
+        return {
+          success: false,
+          error: `Este lote se financia en hasta ${condiciones.plazoMaximo} cuotas`,
         };
       }
       financing = {

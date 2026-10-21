@@ -215,6 +215,9 @@ export const lot = pgTable(
     saldoUsd: numeric("saldo_usd"),
     cuotas48: numeric("cuotas_48"),
     cuotas60: numeric("cuotas_60"),
+    // Condiciones de financiación del lote; null = las generales (@/lib/financiacion).
+    anticipoMinimoPct: numeric("anticipo_minimo_pct"),
+    plazoMaximo: integer("plazo_maximo"),
     nota: text("nota"),
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
