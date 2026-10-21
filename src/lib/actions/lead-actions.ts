@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/lib/db";
-import { lead, leadFinancingPreference, leadProject } from "@/lib/schema";
+import {
+  calculateInstallment,
+  getMinimumAnticipoUsd,
+  PLAZO_MAX_PUBLICO,
+  TASA_PUBLICA,
+} from "@/lib/financiacion";
+import { lead, leadFinancingPreference, leadProject, lot } from "@/lib/schema";
 
 interface CreateLeadData {
   firstName: string;
@@ -159,6 +167,101 @@ export async function createProjectLead(data: CreateProjectLeadData) {
           ? error.message
           : "Failed to create project lead",
     };
+  }
+}
+
+const lotLeadSchema = z.object({
+  lotId: z.string().min(1),
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.string().trim().email(),
+  phone: z.string().trim().max(30).optional(),
+  message: z.string().trim().max(1000).optional(),
+  anticipo: z.number().positive().optional(),
+  plazo: z.number().int().min(1).max(PLAZO_MAX_PUBLICO).optional(),
+});
+
+/**
+ * Consulta por un lote desde el plano público: crea el lead atado al proyecto
+ * y al lote, con la simulación si el lote tiene precio. La cuota se recalcula
+ * acá con el precio de la base: no se confía en el navegador.
+ */
+export async function createLotLead(input: z.input<typeof lotLeadSchema>) {
+  const parsed = lotLeadSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: "Revisá los datos del formulario" };
+  }
+  const data = parsed.data;
+
+  try {
+    const [lote] = await db
+      .select({
+        projectId: lot.projectId,
+        manzana: lot.manzana,
+        number: lot.number,
+        estado: lot.estado,
+        precioBase: lot.precioBase,
+      })
+      .from(lot)
+      .where(eq(lot.id, data.lotId));
+    if (!lote) return { success: false, error: "Lote inexistente" };
+
+    const precio = Number(lote.precioBase);
+    let financing: { anticipo: number; plazo: number; cuota: number } | null = null;
+    if (lote.estado === "disponible" && precio > 0 && data.anticipo && data.plazo) {
+      const minimo = getMinimumAnticipoUsd(precio);
+      if (data.anticipo < minimo || data.anticipo > precio) {
+        return {
+          success: false,
+          error: `El anticipo tiene que estar entre USD ${minimo} y USD ${precio}`,
+        };
+      }
+      financing = {
+        anticipo: data.anticipo,
+        plazo: data.plazo,
+        cuota: calculateInstallment(precio - data.anticipo, TASA_PUBLICA, data.plazo),
+      };
+    }
+
+    const leadId = randomUUID();
+    const loteLabel = `Manzana ${lote.manzana ?? "-"} · Lote ${lote.number}`;
+
+    await db.transaction(async (tx) => {
+      await tx.insert(lead).values({
+        id: leadId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone || null,
+        contactChannel: "web_form_project",
+        status: "new",
+        initialMessage: data.message
+          ? `${loteLabel}\n\n${data.message}`
+          : `Consulta por ${loteLabel}`,
+      });
+      await tx.insert(leadProject).values({
+        id: randomUUID(),
+        leadId,
+        projectId: lote.projectId,
+        lotId: data.lotId,
+        interestLevel: "high",
+      });
+      if (financing) {
+        await tx.insert(leadFinancingPreference).values({
+          id: randomUUID(),
+          leadId,
+          anticipoAmount: financing.anticipo.toString(),
+          plazoMonths: financing.plazo.toString(),
+          calculatedCuota: financing.cuota.toString(),
+          interestedPrice: precio.toString(),
+        });
+      }
+    });
+
+    return { success: true, leadId };
+  } catch (error) {
+    console.error("Error creating lot lead:", error);
+    return { success: false, error: "No pudimos enviar la consulta" };
   }
 }
 

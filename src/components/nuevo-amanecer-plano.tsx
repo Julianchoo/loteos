@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { ArrowRight, Ruler } from "lucide-react";
+import {
+  LoteConsultaDialog,
+  type LoteConsulta,
+} from "@/components/lote-consulta-dialog";
 import { Button } from "@/components/ui/button";
 import {
   nuevoAmanecerBounds,
@@ -44,18 +48,45 @@ function formatMeters(value: number) {
   });
 }
 
+export type LotePublico = {
+  id: string;
+  estado: EstadoLote;
+  /** Precio de lista; null si no está disponible o no tiene precio cargado. */
+  precio: number | null;
+};
+
 interface NuevoAmanecerPlanoProps {
-  /** Estado comercial por lote ("manzana-numero"); los lotes sin dato se muestran disponibles. */
-  estados?: Record<string, EstadoLote>;
+  /** Lotes de la base por "manzana-numero"; los lotes sin dato se muestran disponibles. */
+  lotes?: Record<string, LotePublico>;
 }
 
-export function NuevoAmanecerPlano({ estados = {} }: NuevoAmanecerPlanoProps) {
+export function NuevoAmanecerPlano({ lotes = {} }: NuevoAmanecerPlanoProps) {
   const [selected, setSelected] = useState<NuevoAmanecerLote | null>(null);
   const [hovered, setHovered] = useState<NuevoAmanecerLote | null>(null);
+  const [consulta, setConsulta] = useState<LoteConsulta | null>(null);
 
   const active = hovered ?? selected;
+  const loteDb = (lote: NuevoAmanecerLote) =>
+    lotes[nuevoAmanecerLoteKey(lote.manzana, lote.numero)];
   const estadoDe = (lote: NuevoAmanecerLote) =>
-    estados[nuevoAmanecerLoteKey(lote.manzana, lote.numero)] ?? "disponible";
+    loteDb(lote)?.estado ?? "disponible";
+
+  const abrirConsulta = (lote: NuevoAmanecerLote) => {
+    setSelected(lote);
+    const db = loteDb(lote);
+    if (!db) return; // Lote del plano que todavía no está en la base.
+    setConsulta({
+      id: db.id,
+      titulo: `Manzana ${lote.manzana} · Lote ${lote.numero}`,
+      datos: [
+        ["Estado", estadoLabel[db.estado]],
+        ["Superficie", `${lote.superficie} m²`],
+        ["Medidas", `${formatMeters(lote.frente)} × ${formatMeters(lote.fondo)} m`],
+      ],
+      disponible: db.estado === "disponible",
+      precio: db.precio,
+    });
+  };
 
   const fillFor = (lote: NuevoAmanecerLote) => {
     const isActive =
@@ -184,11 +215,11 @@ export function NuevoAmanecerPlano({ estados = {} }: NuevoAmanecerPlanoProps) {
                         onMouseLeave={() => setHovered(null)}
                         onFocus={() => setHovered(lote)}
                         onBlur={() => setHovered(null)}
-                        onClick={() => setSelected(lote)}
+                        onClick={() => abrirConsulta(lote)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
                             event.preventDefault();
-                            setSelected(lote);
+                            abrirConsulta(lote);
                           }
                         }}
                       >
@@ -289,19 +320,24 @@ export function NuevoAmanecerPlano({ estados = {} }: NuevoAmanecerPlanoProps) {
                 {estadoLabel[estadoDe(active)]}
               </p>
             </div>
-            <Button asChild className="rounded-full">
-              <a href="#consulta">
-                Consultar por este lote
-                <ArrowRight className="ml-2 size-4" />
-              </a>
+            <Button className="rounded-full" onClick={() => abrirConsulta(active)}>
+              Simular cuota y consultar
+              <ArrowRight className="ml-2 size-4" />
             </Button>
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Pasá el cursor o tocá un lote para ver su superficie y medidas.
+            Tocá un lote para ver sus medidas, simular la cuota y consultar.
           </p>
         )}
       </div>
+
+      <LoteConsultaDialog
+        lote={consulta}
+        onOpenChange={(open) => {
+          if (!open) setConsulta(null);
+        }}
+      />
     </div>
   );
 }

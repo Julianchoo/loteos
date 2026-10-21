@@ -317,6 +317,8 @@ export const leadProject = pgTable(
     projectId: text("project_id")
       .notNull()
       .references(() => project.id, { onDelete: "cascade" }),
+    // Lote puntual por el que consultó (desde el plano público), si lo hay.
+    lotId: text("lot_id").references(() => lot.id, { onDelete: "set null" }),
 
     interestLevel: text("interest_level"), // high, medium, low
     notes: text("notes"),

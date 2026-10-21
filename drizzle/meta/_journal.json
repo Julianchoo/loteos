@@ -57,6 +57,13 @@
       "when": 1792517785297,
       "tag": "0007_seed_nuevo_amanecer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792586067821,
+      "tag": "0008_far_tempest",
+      "breakpoints": true
     }
   ]
 }

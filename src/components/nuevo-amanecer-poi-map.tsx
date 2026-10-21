@@ -1,204 +1,121 @@
-// Esquema ilustrativo (no a escala) de la ubicación de Nuevo Amanecer y sus
-// puntos de interés. Las posiciones son relativas dentro de un lienzo de
-// 800 x 520; ajustarlas acá si cambia la referencia.
+"use client";
+
+// Mapa real (OpenStreetMap + Leaflet) de Nuevo Amanecer y sus puntos de
+// interés. Coordenadas verificadas en Google Maps / OpenStreetMap.
+
+import { useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
 
 const brand = {
   forest: "#193e2e",
   moss: "#6e874c",
   lime: "#d2e7a6",
   cream: "#f7f8f0",
-  field: "#eef2e4",
-  town: "#dfe7cf",
-  road: "#ffffff",
-  rail: "#8a9a7c",
 };
 
-const project = { x: 420, y: 312 };
-const finca = { x: 290, y: 326 };
-const guernica = { x: 505, y: 150 };
-const alejandroKorn = { x: 548, y: 418 };
-const interchange = { x: 497, y: 212 };
+type Poi = {
+  name: string;
+  detail: string;
+  lat: number;
+  lng: number;
+  main?: boolean;
+};
 
-function TownLabel({
-  x,
-  y,
-  title,
-  subtitle,
-}: {
-  x: number;
-  y: number;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <ellipse rx={74} ry={48} fill={brand.town} opacity={0.9} />
-      <circle r={6} fill={brand.cream} stroke={brand.forest} strokeWidth={3} />
-      <g transform="translate(14 -6)">
-        <rect
-          x={0}
-          y={-16}
-          width={Math.max(title.length * 10.5, subtitle.length * 6.2) + 26}
-          height={40}
-          rx={10}
-          fill={brand.cream}
-          stroke={brand.forest}
-          strokeWidth={1.5}
-        />
-        <text x={13} y={2} fontSize={17} fontWeight={700} fill={brand.forest}>
-          {title}
-        </text>
-        <text x={13} y={17} fontSize={10.5} fill={brand.moss}>
-          {subtitle}
-        </text>
-      </g>
-    </g>
-  );
+const pois: Poi[] = [
+  {
+    name: "Nuevo Amanecer",
+    detail: "80 lotes · 5 manzanas",
+    lat: -34.956653,
+    lng: -58.397438,
+    main: true,
+  },
+  {
+    name: "Finca San Antonio",
+    detail: "Al lado del loteo",
+    lat: -34.955049,
+    lng: -58.396975,
+  },
+  {
+    name: "Estación Guernica",
+    detail: "Tren Roca",
+    lat: -34.91796,
+    lng: -58.38068,
+  },
+  {
+    name: "Estación Alejandro Korn",
+    detail: "Tren Roca",
+    lat: -34.98056,
+    lng: -58.37391,
+  },
+];
+
+function markerHtml(poi: Poi) {
+  const size = poi.main ? 22 : 14;
+  const fill = poi.main ? brand.forest : brand.cream;
+  const stroke = poi.main ? brand.lime : brand.forest;
+  return `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:3px solid ${stroke};box-shadow:0 2px 6px rgba(25,62,46,.4)"></span>`;
 }
 
 export function NuevoAmanecerPoiMap() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let map: import("leaflet").Map | undefined;
+    let cancelled = false;
+
+    // Leaflet usa window al importarse: se carga solo en el cliente.
+    import("leaflet").then(({ default: L }) => {
+      if (cancelled || !containerRef.current) return;
+
+      map = L.map(containerRef.current, { scrollWheelZoom: false });
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }).addTo(map);
+
+      for (const poi of pois) {
+        const size = poi.main ? 22 : 14;
+        L.marker([poi.lat, poi.lng], {
+          icon: L.divIcon({
+            html: markerHtml(poi),
+            className: "",
+            iconSize: [size, size],
+            iconAnchor: [size / 2, size / 2],
+          }),
+          zIndexOffset: poi.main ? 1000 : 0,
+          title: poi.name,
+        })
+          .bindTooltip(
+            `<strong>${poi.name}</strong><br/><span style="color:${brand.moss}">${poi.detail}</span>`,
+            {
+              permanent: true,
+              // La finca está pegada al loteo: su etiqueta va del otro lado.
+              direction: poi.name === "Finca San Antonio" ? "left" : "right",
+              offset: [poi.name === "Finca San Antonio" ? -10 : 10, 0],
+            }
+          )
+          .addTo(map);
+      }
+
+      map.fitBounds(
+        L.latLngBounds(pois.map((poi) => [poi.lat, poi.lng])),
+        { padding: [40, 40] }
+      );
+    });
+
+    return () => {
+      cancelled = true;
+      map?.remove();
+    };
+  }, []);
+
   return (
-    <svg
-      viewBox="0 0 800 520"
-      className="h-auto w-full"
-      role="img"
-      aria-label="Esquema de ubicación de Nuevo Amanecer junto a la Finca San Antonio, con la Autopista Presidente Perón, Guernica y Alejandro Korn"
-      style={{ fontFamily: "var(--font-sans)" }}
-    >
-      <defs>
-        <pattern id="na-poi-fields" width="28" height="28" patternUnits="userSpaceOnUse">
-          <rect width="28" height="28" fill={brand.field} />
-          <path d="M0 28 L28 0" stroke={brand.cream} strokeWidth={2} />
-        </pattern>
-        <filter id="na-poi-shadow" x="-30%" y="-30%" width="160%" height="160%">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor={brand.forest} floodOpacity="0.25" />
-        </filter>
-      </defs>
-
-      <rect width="800" height="520" fill="url(#na-poi-fields)" />
-
-      {/* Pueblos */}
-      <TownLabel x={guernica.x} y={guernica.y} title="Guernica" subtitle="Centro y estación Roca" />
-      <TownLabel
-        x={alejandroKorn.x}
-        y={alejandroKorn.y}
-        title="Alejandro Korn"
-        subtitle="Centro y estación Roca"
-      />
-
-      {/* Ruta 210 + FC Roca */}
-      <path
-        d="M470 0 C 490 150, 500 260, 560 520"
-        fill="none"
-        stroke={brand.road}
-        strokeWidth={9}
-        strokeLinecap="round"
-      />
-      <path
-        d="M455 0 C 475 150, 485 260, 545 520"
-        fill="none"
-        stroke={brand.rail}
-        strokeWidth={2}
-        strokeDasharray="10 5"
-      />
-      <g transform="translate(560 300)">
-        <rect x={-4} y={-13} width={58} height={22} rx={6} fill={brand.road} stroke={brand.rail} />
-        <text x={25} y={3} textAnchor="middle" fontSize={11} fontWeight={700} fill={brand.forest}>
-          RP 210
-        </text>
-      </g>
-
-      {/* Autopista Presidente Perón */}
-      <path
-        d={`M0 120 C 160 150, 330 200, ${interchange.x} ${interchange.y}`}
-        fill="none"
-        stroke={brand.forest}
-        strokeWidth={16}
-        strokeLinecap="round"
-      />
-      <path
-        d={`M0 120 C 160 150, 330 200, ${interchange.x} ${interchange.y}`}
-        fill="none"
-        stroke={brand.lime}
-        strokeWidth={1.5}
-        strokeDasharray="12 10"
-      />
-      <circle cx={interchange.x} cy={interchange.y} r={11} fill={brand.cream} stroke={brand.forest} strokeWidth={4} />
-      <g transform="translate(36 86)">
-        <rect width={232} height={30} rx={15} fill={brand.forest} />
-        <text x={116} y={20} textAnchor="middle" fontSize={13} fontWeight={700} fill={brand.cream}>
-          Autopista Presidente Perón
-        </text>
-      </g>
-
-      {/* Acceso desde el loteo */}
-      <path
-        d={`M${project.x + 46} ${project.y - 10} C ${project.x + 90} ${project.y - 20}, ${interchange.x - 30} ${interchange.y + 50}, ${interchange.x - 4} ${interchange.y + 12}`}
-        fill="none"
-        stroke={brand.moss}
-        strokeWidth={3.5}
-        strokeDasharray="8 7"
-        strokeLinecap="round"
-      />
-
-      {/* Finca San Antonio */}
-      <g transform={`translate(${finca.x} ${finca.y})`}>
-        <rect x={-58} y={-38} width={92} height={76} rx={12} fill={brand.lime} stroke={brand.moss} strokeWidth={2} />
-        {[
-          [-36, -16],
-          [-12, -20],
-          [12, -12],
-          [-30, 12],
-          [-4, 16],
-          [18, 14],
-        ].map(([cx, cy]) => (
-          <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={7} fill={brand.moss} opacity={0.65} />
-        ))}
-        <g transform="translate(-78 -70)">
-          <rect width={132} height={26} rx={13} fill={brand.cream} stroke={brand.moss} strokeWidth={1.5} />
-          <text x={66} y={17} textAnchor="middle" fontSize={12} fontWeight={700} fill={brand.forest}>
-            Finca San Antonio
-          </text>
-        </g>
-      </g>
-
-      {/* Nuevo Amanecer */}
-      <g transform={`translate(${project.x} ${project.y})`} filter="url(#na-poi-shadow)">
-        <rect x={-46} y={-34} width={92} height={68} rx={10} fill={brand.forest} />
-        {[0, 1, 2, 3, 4].map((i) => (
-          <rect
-            key={i}
-            x={-38 + i * 16}
-            y={-24}
-            width={12}
-            height={48}
-            rx={2}
-            fill={brand.lime}
-            opacity={0.9}
-          />
-        ))}
-      </g>
-      <g transform={`translate(${project.x - 78} ${project.y + 46})`}>
-        <rect width={156} height={44} rx={12} fill={brand.forest} />
-        <text x={78} y={19} textAnchor="middle" fontSize={14} fontWeight={800} fill={brand.cream}>
-          Nuevo Amanecer
-        </text>
-        <text x={78} y={34} textAnchor="middle" fontSize={10} fill={brand.lime}>
-          80 lotes · 5 manzanas
-        </text>
-      </g>
-
-      {/* Norte y aclaración */}
-      <g transform="translate(748 52)">
-        <circle r={22} fill={brand.cream} stroke={brand.forest} strokeWidth={1.5} />
-        <path d="M0 -15 L7 6 L0 2 L-7 6 Z" fill={brand.forest} />
-        <text y={17} textAnchor="middle" fontSize={9} fontWeight={700} fill={brand.forest}>
-          N
-        </text>
-      </g>
-      <text x={16} y={506} fontSize={11} fill={brand.moss}>
-        Esquema ilustrativo, no a escala.
-      </text>
-    </svg>
+    <div
+      ref={containerRef}
+      className="isolate h-[420px] w-full md:h-[520px]"
+      role="region"
+      aria-label="Mapa de ubicación de Nuevo Amanecer junto a la Finca San Antonio, entre las estaciones Guernica y Alejandro Korn"
+    />
   );
 }

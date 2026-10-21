@@ -11,7 +11,10 @@ import {
   Ruler,
   Sunrise,
 } from "lucide-react";
-import { NuevoAmanecerPlano } from "@/components/nuevo-amanecer-plano";
+import {
+  NuevoAmanecerPlano,
+  type LotePublico,
+} from "@/components/nuevo-amanecer-plano";
 import { NuevoAmanecerPoiMap } from "@/components/nuevo-amanecer-poi-map";
 import { NuevoAmanecerSetupBanner } from "@/components/nuevo-amanecer-setup-banner";
 import { ProjectAdminVisibilityBanner } from "@/components/project-admin-visibility-banner";
@@ -28,7 +31,6 @@ import {
   nuevoAmanecerManzanas,
   nuevoAmanecerStats,
 } from "@/lib/nuevo-amanecer";
-import type { EstadoLote } from "@/lib/schema";
 import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
 import { isCurrentUserAdmin } from "@/lib/session";
 import type { Metadata } from "next";
@@ -39,7 +41,6 @@ const projectId = NUEVO_AMANECER_PROJECT_ID;
 const projectName = "Nuevo Amanecer";
 const address = "Guernica, Partido de Presidente Perón, Provincia de Buenos Aires";
 const mapsUrl = "https://maps.app.goo.gl/17EuMqSaRascdFxb8";
-const coordinates = "-34.956653,-58.397438";
 
 const { totalLotes, totalManzanas, superficieMin, superficieMax } =
   nuevoAmanecerStats;
@@ -144,11 +145,17 @@ export default async function NuevoAmanecerPage() {
     notFound();
   }
 
-  const estados: Record<string, EstadoLote> = {};
+  const lotes: Record<string, LotePublico> = {};
   const lotsResult = await getLotsByProject(projectId);
   for (const lote of lotsResult.data ?? []) {
     if (lote.manzana) {
-      estados[nuevoAmanecerLoteKey(lote.manzana, lote.number)] = lote.estado;
+      // Igual que en Stefani: el precio solo se publica si el lote está disponible.
+      const precio = Number(lote.precioBase);
+      lotes[nuevoAmanecerLoteKey(lote.manzana, lote.number)] = {
+        id: lote.id,
+        estado: lote.estado,
+        precio: lote.estado === "disponible" && precio > 0 ? precio : null,
+      };
     }
   }
 
@@ -310,28 +317,8 @@ export default async function NuevoAmanecerPage() {
             </p>
           </div>
 
-          <NuevoAmanecerPlano estados={estados} />
+          <NuevoAmanecerPlano lotes={lotes} />
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {nuevoAmanecerManzanas.map((manzana) => {
-              const sizes = [
-                ...new Set(manzana.lotes.map((lote) => lote.superficie)),
-              ].sort((a, b) => a - b);
-              return (
-                <Card key={manzana.numero} className="gap-2 py-5">
-                  <CardHeader className="px-5">
-                    <CardTitle className="text-base">
-                      Manzana {manzana.numero}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-1 px-5 text-sm text-muted-foreground">
-                    <p>{manzana.lotes.length} lotes</p>
-                    <p>{sizes.map((size) => `${size} m²`).join(" / ")}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
           <p className="text-xs text-muted-foreground">
             Superficies y medidas aproximadas según el plano del proyecto,
             sujetas a ajustes en la aprobación final.
@@ -379,19 +366,6 @@ export default async function NuevoAmanecerPage() {
                 </Button>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="aspect-video overflow-hidden rounded-2xl border bg-muted">
-            <iframe
-              title="Ubicación de Nuevo Amanecer en Google Maps"
-              src={`https://www.google.com/maps?q=${coordinates}&z=15&output=embed`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
           </div>
         </div>
       </section>

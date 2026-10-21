@@ -80,10 +80,15 @@ export async function GET(request: Request) {
       estadoCivil: lead.estadoCivil,
       cuitComprador: lead.cuitComprador,
       asignadoNombre: user.name,
+      // Incluye el lote cuando la consulta vino desde el plano público.
       projectNames: sql<string | null>`(
-        select string_agg(${project.name}, ', ' order by ${project.name})
+        select string_agg(
+          ${project.name} || coalesce(' · Mz ' || ${lot.manzana} || ' · Lote ' || ${lot.number}, ''),
+          ', ' order by ${project.name}
+        )
         from ${leadProject}
         inner join ${project} on ${project.id} = ${leadProject.projectId}
+        left join ${lot} on ${lot.id} = ${leadProject.lotId}
         where ${leadProject.leadId} = ${lead.id}
       )`,
       anticipoAmount: latestFinancing(leadFinancingPreference.anticipoAmount),
