@@ -1,6 +1,9 @@
 import { and, asc, eq, inArray, isNull, ne, or } from "drizzle-orm";
+import { z } from "zod";
+import { logAudit } from "@/lib/audit";
+import { crmTransaction, type CrmTransaction } from "@/lib/crm-transaction";
 import { db } from "@/lib/db";
-import { leadNombre } from "@/lib/reservas";
+import { flattenLoteReserva } from "@/lib/reservas";
 import { contratos, cuotas, indicesCac, lead, lot, pagos, project, reservas } from "@/lib/schema";
 import type {
   Contrato,
@@ -33,6 +36,7 @@ export type CuentaCorrienteSummary = {
   telefono: string | null;
   email: string | null;
   reservadoPor: string | null;
+  fechaFirma: string | null;
   modalidad: ModalidadContrato;
   requiereRevision: boolean;
   totalVencido: number;
@@ -57,6 +61,8 @@ export type CuentaCorrienteSummary = {
   valorIndiceActual: number | null;
   cuotaActualUsd: number | null;
   cuotaActualArs: number | null;
+  // Anticipo + pagos activos dolarizados a su fecha; null si a algún pago en ARS le falta TC.
+  totalCobradoUsd: number | null;
 };
 
 type MensajeCuentaCorrienteInput = Pick<
@@ -75,7 +81,6 @@ export type CuentaCorrienteDetail = CuentaCorrienteSummary & {
   cuotas: Cuota[];
   pagos: Pago[];
   indices: IndiceCac[];
-  totalCobradoUsd: number | null;
   totalFuturoUsd: number | null;
   anticipoCobradoUsd: number;
   tipoCambioActual: number | null;
@@ -111,6 +116,93 @@ export type CreateContratoInput = {
 };
 
 const FINAL_CUOTA_STATES: EstadoCuota[] = ["pagada", "cancelada"];
+
+// Solo la cuenta vigente de una reserva cuenta para cuotas, cobranza y validaciones.
+export const contratoVigente = eq(contratos.estado, "vigente");
+
+export function cuentaCorrienteUrl(reservaId: string) {
+  return `/crm/cuotas/${reservaId}`;
+}
+
+// Cancela (no borra) la cuenta vigente: queda como historial con sus cuotas y pagos, y la
+// reserva queda libre para corregir sus condiciones y generar una cuenta nueva.
+export async function cancelarCuentaCorriente(reservaId: string, userEmail: string) {
+  return crmTransaction(async (tx) => {
+    const [contrato] = await tx
+      .select()
+      .from(contratos)
+      .where(and(eq(contratos.reservaId, reservaId), contratoVigente))
+      .for("update");
+    if (!contrato) return null;
+    const [cancelado] = await tx
+      .update(contratos)
+      .set({ estado: "cancelada", canceladoPor: userEmail, canceladoAt: new Date() })
+      .where(eq(contratos.id, contrato.id))
+      .returning();
+    await logAudit(tx, {
+      entidad: "contrato",
+      entidadId: contrato.id,
+      usuario: userEmail,
+      antes: contrato,
+      despues: cancelado,
+    });
+    return cancelado;
+  });
+}
+
+export const CUENTA_CANCELADA_ERROR =
+  "La cuenta corriente está cancelada: sus cuotas y pagos quedan como historial y no se pueden modificar";
+
+export async function isContratoCancelado(contratoId: string, tx: CrmTransaction) {
+  const [row] = await tx
+    .select({ estado: contratos.estado })
+    .from(contratos)
+    .where(eq(contratos.id, contratoId));
+  return row?.estado === "cancelada";
+}
+
+export async function listCuentasCanceladas(reservaId: string) {
+  const rows = await db
+    .select()
+    .from(contratos)
+    .where(and(eq(contratos.reservaId, reservaId), eq(contratos.estado, "cancelada")))
+    .orderBy(asc(contratos.canceladoAt));
+  if (rows.length === 0) return [];
+  const pagoRows = await db
+    .select()
+    .from(pagos)
+    .where(inArray(pagos.contratoId, rows.map((row) => row.id)))
+    .orderBy(asc(pagos.fechaPago), asc(pagos.id));
+  return rows.map((contrato) => ({
+    contrato,
+    pagos: pagoRows.filter((pago) => pago.contratoId === contrato.id),
+  }));
+}
+
+type CreateContratoResult =
+  | { kind: "ok" | "exists"; contratoId: string }
+  | { kind: "missing-data" | "invalid-data"; campos: string[] }
+  | {
+      kind: "not-found" | "not-realizada" | "contado" | "missing-exchange-rate";
+    }
+  | { kind: "missing-base-cac"; periodo: string };
+
+// "2026-08" -> "08/2026"
+export function periodoLabel(periodo: string) {
+  const [year, month] = periodo.split("-");
+  return `${month}/${year}`;
+}
+
+export function missingBaseCacMessage(periodo: string) {
+  return `Falta el índice CAC de ${periodoLabel(periodo)} (período base). Cargalo en Cuotas › Índices y ajustes y volvé a intentar`;
+}
+
+// Mensaje para el usuario cuando la cuenta no se puede generar por datos de la reserva.
+export function camposContratoMessage(result: { kind: "missing-data" | "invalid-data"; campos: string[] }) {
+  return result.kind === "missing-data"
+    ? `Para generar la cuenta corriente faltan estos datos en la reserva: ${result.campos.join(", ")}`
+    : `Para generar la cuenta corriente hay que corregir estos datos de la reserva: ${result.campos.join("; ")}`;
+}
 
 function toNumber(value: unknown) {
   if (value === null || value === undefined || value === "") return null;
@@ -180,6 +272,22 @@ function statusForCuota(
   return amountKind === "projected" ? "proyectada" : "calculada";
 }
 
+// El estado guardado solo se recalcula cuando cambia la cuenta (pago, índice CAC, TC):
+// que pase la fecha de vencimiento no lo actualiza. Para mostrarlo, se recalcula con la fecha de hoy.
+function estadoAHoy(cuota: Cuota, pagoRows: Pago[]): EstadoCuota {
+  if (FINAL_CUOTA_STATES.includes(cuota.estado)) return cuota.estado;
+  // Una cuota proyectada que ya venció sin índice CAC pasa a no tener monto, como en computeCuotaAmount.
+  const amountKind =
+    cuota.estado === "pendiente_indice" ||
+    (cuota.estado === "proyectada" && cuota.fechaVencimiento < todayKey())
+      ? "missing"
+      : cuota.estado === "proyectada"
+        ? "projected"
+        : "real";
+  const paid = sumActivePayments(pagoRows.filter((pago) => pago.cuotaId === cuota.id));
+  return statusForCuota(cuota.fechaVencimiento, toNumber(cuota.saldo) ?? 0, paid, amountKind, cuota.estado);
+}
+
 function latestKnownCacIndex(indexRows: IndiceCac[]) {
   const sorted = [...indexRows].sort((a, b) => b.periodo.localeCompare(a.periodo));
   const latest = sorted.find((item) => {
@@ -227,14 +335,19 @@ function computeCuotaAmount(
   return { amount: null, indiceCac: null, amountKind: "missing" as const };
 }
 
-export async function recomputeContratoCuotas(contratoId: string) {
-  const [contrato] = await db.select().from(contratos).where(eq(contratos.id, contratoId));
-  if (!contrato) return;
+export async function recomputeContratoCuotas(
+  contratoId: string,
+  tx?: CrmTransaction
+): Promise<void> {
+  if (!tx) return crmTransaction((executor) => recomputeContratoCuotas(contratoId, executor));
+  const [contrato] = await tx.select().from(contratos).where(eq(contratos.id, contratoId));
+  // Una cuenta cancelada queda congelada como historial.
+  if (!contrato || contrato.estado === "cancelada") return;
 
   const [cuotaRows, pagoRows, indexRows] = await Promise.all([
-    db.select().from(cuotas).where(eq(cuotas.contratoId, contratoId)).orderBy(asc(cuotas.numero)),
-    db.select().from(pagos).where(eq(pagos.contratoId, contratoId)),
-    db.select().from(indicesCac),
+    tx.select().from(cuotas).where(eq(cuotas.contratoId, contratoId)).orderBy(asc(cuotas.numero)),
+    tx.select().from(pagos).where(eq(pagos.contratoId, contratoId)),
+    tx.select().from(indicesCac),
   ]);
   const indicesByPeriodo = new Map(
     indexRows.map((item) => [item.periodo, toNumber(item.valor) ?? 0])
@@ -245,6 +358,11 @@ export async function recomputeContratoCuotas(contratoId: string) {
     if (cuota.estado === "cancelada") continue;
     const cuotaPagos = pagoRows.filter((pago) => pago.cuotaId === cuota.id);
     const paid = sumActivePayments(cuotaPagos);
+    // Una cuota pagada (p. ej. adelantada con el monto proyectado) queda congelada: un CAC nuevo
+    // no la reabre. Solo se recalcula si los pagos dejan de cubrir lo que se cobró (pago editado/anulado).
+    if (cuota.estado === "pagada" && paid + 0.005 >= (toNumber(cuota.importeAjustado) ?? Infinity)) {
+      continue;
+    }
     const computed = computeCuotaAmount(contrato, cuota, indicesByPeriodo, latestIndex);
     const saldo =
       computed.amount === null
@@ -258,7 +376,7 @@ export async function recomputeContratoCuotas(contratoId: string) {
       cuota.estado
     );
 
-    await db
+    await tx
       .update(cuotas)
       .set({
         periodoCac:
@@ -273,50 +391,68 @@ export async function recomputeContratoCuotas(contratoId: string) {
   }
 }
 
-export async function recomputeAllPesosCacCuotas() {
-  const rows = await db
+export async function recomputeAllPesosCacCuotas(tx?: CrmTransaction): Promise<void> {
+  if (!tx) return crmTransaction((executor) => recomputeAllPesosCacCuotas(executor));
+  const rows = await tx
     .select({ id: contratos.id })
     .from(contratos)
-    .where(eq(contratos.modalidad, "pesos_cac"));
+    .where(and(eq(contratos.modalidad, "pesos_cac"), contratoVigente));
 
   for (const row of rows) {
-    await recomputeContratoCuotas(row.id);
+    await recomputeContratoCuotas(row.id, tx);
   }
 }
 
 export async function createContratoForReserva(
   reservaId: string,
   input: CreateContratoInput,
-  userEmail: string
-) {
-  const [reserva] = await db.select().from(reservas).where(eq(reservas.id, reservaId));
+  userEmail: string,
+  executor?: CrmTransaction
+): Promise<CreateContratoResult> {
+  if (!executor)
+    return crmTransaction((tx) => createContratoForReserva(reservaId, input, userEmail, tx));
+  const [reserva] = await executor.select().from(reservas).where(eq(reservas.id, reservaId));
   if (!reserva) return { kind: "not-found" as const };
   if (reserva.estado !== "realizada") return { kind: "not-realizada" as const };
 
-  const [existing] = await db
+  const [existing] = await executor
     .select({ id: contratos.id })
     .from(contratos)
-    .where(eq(contratos.reservaId, reservaId));
+    .where(and(eq(contratos.reservaId, reservaId), contratoVigente));
   if (existing) return { kind: "exists" as const, contratoId: existing.id };
+  if (reserva.formaPago === "contado") return { kind: "contado" };
 
   const cantidadCuotas = input.cantidadCuotas ?? toNumber(reserva.cantidadCuotas);
   const cuotaBaseUsd = input.cuotaBase ?? toNumber(reserva.cuotaMensual);
   const saldoInicialUsd = input.saldoInicial ?? toNumber(reserva.saldoNum);
   const fechaInicio = input.fechaInicio ?? reserva.fechaFirma ?? reserva.fechaReserva;
 
+  // Se informa cada campo con el nombre que tiene en el formulario de la reserva.
+  const faltan = [
+    !cantidadCuotas && "Cantidad de cuotas",
+    !cuotaBaseUsd && "Cuota mensual (USD)",
+    !saldoInicialUsd && "Saldo (número)",
+    !fechaInicio && "Fecha de firma (o fecha de reserva)",
+  ].filter((campo): campo is string => Boolean(campo));
   if (!cantidadCuotas || !cuotaBaseUsd || !saldoInicialUsd || !fechaInicio) {
-    const missingFields: string[] = [];
-    if (!cantidadCuotas) missingFields.push("Cantidad de cuotas: debe ser un número distinto de cero");
-    if (!cuotaBaseUsd) missingFields.push("Cuota mensual: debe ser un importe distinto de cero");
-    if (!saldoInicialUsd) missingFields.push("Saldo a financiar: debe ser un importe distinto de cero");
-    if (!fechaInicio) missingFields.push("Fecha de inicio: completá la fecha de firma o la fecha de reserva");
-    return {
-      kind: "missing-data" as const,
-      missingFields,
-      message: `No se puede crear la cuenta corriente. ${missingFields.join(". ")}.`,
-    };
+    return { kind: "missing-data" as const, campos: faltan };
   }
-  if (input.modalidad === "pesos_cac" && (!input.tipoCambioBna || input.tipoCambioBna <= 0)) {
+  const invalidos = [
+    (!Number.isInteger(cantidadCuotas) || cantidadCuotas <= 0) &&
+      `Cantidad de cuotas: "${cantidadCuotas}" (tiene que ser un número entero mayor a 0)`,
+    (!Number.isFinite(cuotaBaseUsd) || cuotaBaseUsd <= 0) &&
+      `Cuota mensual (USD): "${cuotaBaseUsd}" (tiene que ser mayor a 0)`,
+    (!Number.isFinite(saldoInicialUsd) || saldoInicialUsd <= 0) &&
+      `Saldo (número): "${saldoInicialUsd}" (tiene que ser mayor a 0)`,
+    !z.iso.date().safeParse(fechaInicio).success && `Fecha de firma: "${fechaInicio}" (fecha inválida)`,
+    !["usd_fijo", "pesos_cac"].includes(input.modalidad) &&
+      "Modalidad del contrato (elegí USD fijo o Pesos + CAC)",
+  ].filter((campo): campo is string => Boolean(campo));
+  if (invalidos.length > 0) return { kind: "invalid-data" as const, campos: invalidos };
+  if (
+    input.modalidad === "pesos_cac" &&
+    (!input.tipoCambioBna || !Number.isFinite(input.tipoCambioBna) || input.tipoCambioBna <= 0)
+  ) {
     return { kind: "missing-exchange-rate" as const };
   }
 
@@ -326,77 +462,100 @@ export async function createContratoForReserva(
     input.modalidad === "pesos_cac" ? (input.periodoBaseCac ?? periodFromDate(fechaInicio)) : null;
   let indiceBaseCac: number | null = null;
   if (input.modalidad === "pesos_cac") {
-    const [baseIndexRow] = await db
+    const [baseIndexRow] = await executor
       .select({ valor: indicesCac.valor })
       .from(indicesCac)
       .where(eq(indicesCac.periodo, periodoBaseCac!))
       .limit(1);
     indiceBaseCac = toNumber(baseIndexRow?.valor);
     if (!indiceBaseCac || indiceBaseCac <= 0) {
-      return { kind: "missing-base-cac" as const };
+      return { kind: "missing-base-cac" as const, periodo: periodoBaseCac! };
     }
   }
   const monedaBase: MonedaPago = input.modalidad === "pesos_cac" ? "ars" : "usd";
   const conversionRate = input.modalidad === "pesos_cac" ? input.tipoCambioBna! : 1;
   const cuotaBase = cuotaBaseUsd * conversionRate;
   const saldoInicial = saldoInicialUsd * conversionRate;
+  if (
+    !Number.isFinite(cuotaBase) ||
+    !Number.isFinite(saldoInicial) ||
+    Math.round(cuotaBase * 100) <= 0 ||
+    Math.round(saldoInicial * 100) <= 0
+  ) {
+    return {
+      kind: "invalid-data" as const,
+      campos: ["Cuota mensual o saldo: el importe convertido a pesos queda en 0"],
+    };
+  }
 
-  const result = await db.transaction(async (tx) => {
-    const [contrato] = await tx
-      .insert(contratos)
-      .values({
-        reservaId,
-        modalidad: input.modalidad,
-        fechaInicio,
-        fechaPrimerVencimiento,
-        cantidadCuotas,
-        diaVencimiento,
-        saldoInicial: moneyString(saldoInicial),
-        cuotaBase: moneyString(cuotaBase),
-        monedaBase,
-        tipoCambioBna:
-          input.modalidad === "pesos_cac" ? moneyString(conversionRate) : null,
-        periodoBaseCac,
-        indiceBaseCac: indiceBaseCac === null ? null : moneyString(indiceBaseCac),
-        requiereRevision: false,
-        observaciones: input.observaciones ?? null,
-        creadoPor: userEmail,
-      })
-      .returning();
-    if (!contrato) throw new Error("No se pudo crear el contrato");
-
-    await tx
-      .update(reservas)
-      .set({
-        formaPago: "financiado",
-        modalidadContrato: input.modalidad,
-        updatedAt: new Date(),
-      })
-      .where(eq(reservas.id, reservaId));
-
-    const cuotaValues = Array.from({ length: cantidadCuotas }, (_, index) => {
-      const fechaVencimiento = addMonthsOnDay(fechaPrimerVencimiento, index, diaVencimiento);
-      return {
-        contratoId: contrato.id,
-        numero: index + 1,
-        fechaVencimiento,
-        periodoCac: input.modalidad === "pesos_cac" ? cacPeriodForDueDate(fechaVencimiento) : null,
-        importeBase: moneyString(cuotaBase),
-        importeAjustado: input.modalidad === "usd_fijo" ? moneyString(cuotaBase) : null,
-        moneda: monedaBase,
-        saldo: moneyString(cuotaBase),
-        estado:
-          input.modalidad === "pesos_cac" ? ("pendiente_indice" as const) : ("pendiente" as const),
-      };
-    });
-
-    await tx.insert(cuotas).values(cuotaValues);
-    return contrato;
+  const tx = executor;
+  const [contrato] = await tx
+    .insert(contratos)
+    .values({
+      reservaId,
+      modalidad: input.modalidad,
+      fechaInicio,
+      fechaPrimerVencimiento,
+      cantidadCuotas,
+      diaVencimiento,
+      saldoInicial: moneyString(saldoInicial),
+      cuotaBase: moneyString(cuotaBase),
+      monedaBase,
+      tipoCambioBna: input.modalidad === "pesos_cac" ? moneyString(conversionRate) : null,
+      periodoBaseCac,
+      indiceBaseCac: indiceBaseCac === null ? null : moneyString(indiceBaseCac),
+      requiereRevision: false,
+      observaciones: input.observaciones ?? null,
+      creadoPor: userEmail,
+    })
+    .returning();
+  if (!contrato) throw new Error("No se pudo crear el contrato");
+  await logAudit(tx, {
+    entidad: "contrato",
+    entidadId: contrato.id,
+    usuario: userEmail,
+    antes: null,
+    despues: contrato,
   });
 
-  if (!result) throw new Error("No se pudo crear el contrato");
-  await recomputeContratoCuotas(result.id);
-  return { kind: "ok" as const, contratoId: result.id };
+  const [reservaActualizada] = await tx
+    .update(reservas)
+    .set({
+      formaPago: "financiado",
+      modalidadContrato: input.modalidad,
+      updatedAt: new Date(),
+    })
+    .where(eq(reservas.id, reservaId))
+    .returning();
+  await logAudit(tx, {
+    entidad: "reserva",
+    entidadId: reservaId,
+    usuario: userEmail,
+    antes: reserva,
+    despues: reservaActualizada,
+  });
+
+  const cuotaValues = Array.from({ length: cantidadCuotas }, (_, index) => {
+    const fechaVencimiento = addMonthsOnDay(fechaPrimerVencimiento, index, diaVencimiento);
+    return {
+      contratoId: contrato.id,
+      numero: index + 1,
+      fechaVencimiento,
+      periodoCac: input.modalidad === "pesos_cac" ? cacPeriodForDueDate(fechaVencimiento) : null,
+      importeBase: moneyString(cuotaBase),
+      importeAjustado: input.modalidad === "usd_fijo" ? moneyString(cuotaBase) : null,
+      moneda: monedaBase,
+      saldo: moneyString(cuotaBase),
+      estado:
+        input.modalidad === "pesos_cac" ? ("pendiente_indice" as const) : ("pendiente" as const),
+    };
+  });
+
+  await tx.insert(cuotas).values(cuotaValues);
+
+
+  await recomputeContratoCuotas(contrato.id, tx);
+  return { kind: "ok" as const, contratoId: contrato.id };
 }
 
 export async function getCuentaCorrienteDetailByReserva(reservaId: string) {
@@ -413,12 +572,12 @@ export async function getCuentaCorrienteDetailByReserva(reservaId: string) {
     .innerJoin(lot, eq(reservas.lotId, lot.id))
     .innerJoin(project, eq(lot.projectId, project.id))
     .leftJoin(lead, eq(reservas.leadId, lead.id))
-    .where(and(eq(contratos.reservaId, reservaId), eq(reservas.estado, "realizada")));
+    .where(and(eq(contratos.reservaId, reservaId), contratoVigente));
 
   if (!row) return null;
 
   const currentRate = await ensureCurrentBnaRate();
-  const [cuotaRows, pagoRows, indexRows] = await Promise.all([
+  const [cuotasGuardadas, pagoRows, indexRows] = await Promise.all([
     db
       .select()
       .from(cuotas)
@@ -431,8 +590,9 @@ export async function getCuentaCorrienteDetailByReserva(reservaId: string) {
       .orderBy(asc(pagos.fechaPago), asc(pagos.id)),
     db.select().from(indicesCac).orderBy(asc(indicesCac.periodo)),
   ]);
+  const cuotaRows = cuotasGuardadas.map((cuota) => ({ ...cuota, estado: estadoAHoy(cuota, pagoRows) }));
 
-  const summary = buildSummary(row, cuotaRows, currentRate);
+  const summary = buildSummary(row, cuotaRows, pagoRows, currentRate);
   const activePayments = pagoRows.filter((pago) => pago.estado === "activo");
   const fechasPagoSinTipoCambio = Array.from(
     new Set(
@@ -442,10 +602,6 @@ export async function getCuentaCorrienteDetailByReserva(reservaId: string) {
     )
   ).sort();
   const anticipoCobradoUsd = toNumber(row.reserva.anticipoNum) ?? 0;
-  const pagosCobradosUsd = activePayments.reduce((total, pago) => {
-    if (pago.moneda === "usd") return total + (toNumber(pago.monto) ?? 0);
-    return total + (toNumber(pago.montoUsd) ?? 0);
-  }, 0);
   const tipoCambioActual = toNumber(currentRate?.valor);
   const hasPendingArs = cuotaRows.some(
     (cuota) => !FINAL_CUOTA_STATES.includes(cuota.estado) && cuota.moneda === "ars"
@@ -466,8 +622,6 @@ export async function getCuentaCorrienteDetailByReserva(reservaId: string) {
     cuotas: cuotaRows,
     pagos: pagoRows,
     indices: indexRows,
-    totalCobradoUsd:
-      fechasPagoSinTipoCambio.length > 0 ? null : anticipoCobradoUsd + pagosCobradosUsd,
     totalFuturoUsd,
     anticipoCobradoUsd,
     tipoCambioActual,
@@ -521,9 +675,11 @@ export async function getCuotasDashboard(projectId?: string | null): Promise<Cuo
     .innerJoin(reservas, eq(contratos.reservaId, reservas.id))
     .innerJoin(lot, eq(reservas.lotId, lot.id))
     .where(
-      projectId
-        ? and(eq(reservas.estado, "realizada"), eq(lot.projectId, projectId))
-        : eq(reservas.estado, "realizada")
+      and(
+        eq(reservas.estado, "realizada"),
+        contratoVigente,
+        projectId ? eq(lot.projectId, projectId) : undefined
+      )
     );
   const activeInstallments = installmentRows
     .map((row) => row.cuota)
@@ -571,7 +727,7 @@ export async function getCuentasCorrientesSummaries() {
     .innerJoin(lot, eq(reservas.lotId, lot.id))
     .innerJoin(project, eq(lot.projectId, project.id))
     .leftJoin(lead, eq(reservas.leadId, lead.id))
-    .where(eq(reservas.estado, "realizada"));
+    .where(and(eq(reservas.estado, "realizada"), contratoVigente));
 
   const pendingRows = await db
     .select({
@@ -584,7 +740,7 @@ export async function getCuentasCorrientesSummaries() {
     .innerJoin(lot, eq(reservas.lotId, lot.id))
     .innerJoin(project, eq(lot.projectId, project.id))
     .leftJoin(lead, eq(reservas.leadId, lead.id))
-    .leftJoin(contratos, eq(contratos.reservaId, reservas.id))
+    .leftJoin(contratos, and(eq(contratos.reservaId, reservas.id), contratoVigente))
     .where(
       and(
         eq(reservas.estado, "realizada"),
@@ -605,16 +761,25 @@ export async function getCuentasCorrientesSummaries() {
   const currentCac = latestKnownCacIndex(indexRows);
 
   const contratoIds = rows.map((row) => row.contrato.id);
-  const cuotaRows = await db
-    .select()
-    .from(cuotas)
-    .where(inArray(cuotas.contratoId, contratoIds))
-    .orderBy(asc(cuotas.numero));
+  const [cuotaRows, pagoRows] = await Promise.all([
+    db
+      .select()
+      .from(cuotas)
+      .where(inArray(cuotas.contratoId, contratoIds))
+      .orderBy(asc(cuotas.numero)),
+    db.select().from(pagos).where(inArray(pagos.contratoId, contratoIds)),
+  ]);
   const cuotasByContrato = new Map<string, Cuota[]>();
   for (const cuota of cuotaRows) {
     const list = cuotasByContrato.get(cuota.contratoId) ?? [];
     list.push(cuota);
     cuotasByContrato.set(cuota.contratoId, list);
+  }
+  const pagosByContrato = new Map<string, Pago[]>();
+  for (const pago of pagoRows) {
+    const list = pagosByContrato.get(pago.contratoId) ?? [];
+    list.push(pago);
+    pagosByContrato.set(pago.contratoId, list);
   }
 
   return [
@@ -622,6 +787,7 @@ export async function getCuentasCorrientesSummaries() {
       buildSummary(
         row,
         cuotasByContrato.get(row.contrato.id) ?? [],
+        pagosByContrato.get(row.contrato.id) ?? [],
         currentRate,
         rateRows,
         currentCac
@@ -649,6 +815,7 @@ type SummaryRowBase = {
 
 function buildPendingSummary(row: SummaryRowBase): CuentaCorrienteSummary {
   const modalidad = row.reserva.modalidadContrato ?? "requiere_revision";
+  const comprador = flattenLoteReserva(row.lote, row.reserva, row.lead);
   return {
     contratoId: null,
     reservaId: row.reserva.id,
@@ -658,11 +825,12 @@ function buildPendingSummary(row: SummaryRowBase): CuentaCorrienteSummary {
     loteNumero: row.lote.number,
     manzana: row.lote.manzana,
     parcela: row.lote.parcela,
-    comprador: row.lead ? leadNombre(row.lead) : row.reserva.nombreComprador,
-    dniCuit: row.lead?.dniCuit ?? row.reserva.dniCuit,
-    telefono: row.lead?.phone ?? row.reserva.telefono,
-    email: row.lead?.email ?? row.reserva.emailComprador,
+    comprador: comprador.nombreComprador ?? null,
+    dniCuit: comprador.dniCuit ?? null,
+    telefono: comprador.telefono ?? null,
+    email: comprador.emailComprador ?? null,
     reservadoPor: row.reserva.reservadoPor,
+    fechaFirma: row.reserva.fechaFirma,
     modalidad,
     requiereRevision: modalidad === "requiere_revision",
     totalVencido: 0,
@@ -687,6 +855,7 @@ function buildPendingSummary(row: SummaryRowBase): CuentaCorrienteSummary {
     valorIndiceActual: null,
     cuotaActualUsd: null,
     cuotaActualArs: null,
+    totalCobradoUsd: toNumber(row.reserva.anticipoNum),
   };
 }
 
@@ -835,10 +1004,12 @@ export function buildMensajeCuentaCorriente(input: MensajeCuentaCorrienteInput) 
 function buildSummary(
   row: SummaryRowBase & { contrato: Contrato },
   cuotaRows: Cuota[],
+  pagoRows: Pago[],
   currentRate: { valor: unknown; fecha: string } | null = null,
   rateRows: TipoCambio[] = [],
   currentCac: { periodo: string; valor: number } | null = null
 ): CuentaCorrienteSummary {
+  const comprador = flattenLoteReserva(row.lote, row.reserva, row.lead);
   const today = todayKey();
   const activeCuotas = cuotaRows.filter((cuota) => !FINAL_CUOTA_STATES.includes(cuota.estado));
   const overdueCuotas = activeCuotas.filter((cuota) => cuota.fechaVencimiento < today);
@@ -872,6 +1043,16 @@ function buildSummary(
         : null
       : cuotaBaseUsd;
   const usesCac = row.contrato.modalidad === "pesos_cac";
+  const activePagos = pagoRows.filter((pago) => pago.estado === "activo");
+  const totalCobradoUsd = activePagos.some(
+    (pago) => pago.moneda === "ars" && toNumber(pago.montoUsd) === null
+  )
+    ? null
+    : activePagos.reduce(
+        (total, pago) =>
+          total + (toNumber(pago.moneda === "usd" ? pago.monto : pago.montoUsd) ?? 0),
+        toNumber(row.reserva.anticipoNum) ?? 0
+      );
 
   const summary: CuentaCorrienteSummary = {
     contratoId: row.contrato.id,
@@ -882,11 +1063,12 @@ function buildSummary(
     loteNumero: row.lote.number,
     manzana: row.lote.manzana,
     parcela: row.lote.parcela,
-    comprador: row.lead ? leadNombre(row.lead) : row.reserva.nombreComprador,
-    dniCuit: row.lead?.dniCuit ?? row.reserva.dniCuit,
-    telefono: row.lead?.phone ?? row.reserva.telefono,
-    email: row.lead?.email ?? row.reserva.emailComprador,
+    comprador: comprador.nombreComprador ?? null,
+    dniCuit: comprador.dniCuit ?? null,
+    telefono: comprador.telefono ?? null,
+    email: comprador.emailComprador ?? null,
     reservadoPor: row.reserva.reservadoPor,
+    fechaFirma: row.reserva.fechaFirma,
     modalidad: row.contrato.modalidad,
     requiereRevision: row.contrato.requiereRevision,
     totalVencido: overdueCuotas.reduce((total, cuota) => total + (toNumber(cuota.saldo) ?? 0), 0),
@@ -925,6 +1107,7 @@ function buildSummary(
     valorIndiceActual: usesCac ? (currentCac?.valor ?? null) : currentBnaValue,
     cuotaActualUsd,
     cuotaActualArs,
+    totalCobradoUsd,
   };
 
   return {

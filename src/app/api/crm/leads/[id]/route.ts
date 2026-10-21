@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiAdmin, requireApiCrm, isErrorResponse } from "@/lib/api-auth";
-import { db } from "@/lib/db";
+import { logAudit } from "@/lib/audit";
+import { crmTransaction } from "@/lib/crm-transaction";
 import { LEAD_CHANNELS, LEAD_STATUSES } from "@/lib/lead-status";
-import { lead } from "@/lib/schema";
+import { lead, reservas } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 
 const updateSchema = z
   .object({
@@ -43,38 +45,57 @@ export async function PUT(
 
     // Only admins can assign leads
     if ("asignadoA" in data && authResult.role !== "admin") {
-      return NextResponse.json({ error: "Sin permisos para asignar leads" }, { status: 403 });
+      return NextResponse.json({ error: "Solo un administrador puede asignar leads" }, { status: 403 });
     }
 
-    // Comercials can only edit their own leads
-    if (authResult.role !== "admin") {
-      const [current] = await db
-        .select({ asignadoA: lead.asignadoA })
-        .from(lead)
-        .where(eq(lead.id, leadId));
+    return await crmTransaction(async (tx) => {
+      const [current] = await tx.select().from(lead).where(eq(lead.id, leadId));
       if (!current) {
         return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
       }
-      if (current.asignadoA !== authResult.id) {
-        return NextResponse.json({ error: "Solo podés editar tus propios leads" }, { status: 403 });
+      // Comercials can only edit their own leads
+      if (authResult.role !== "admin" && current.asignadoA !== authResult.id) {
+        return NextResponse.json({ error: "Este lead no está asignado a vos: solo podés editar tus propios leads" }, { status: 403 });
       }
-    }
+      if (authResult.role !== "admin") {
+        const [realizada] = await tx
+          .select({ id: reservas.id })
+          .from(reservas)
+          .where(and(eq(reservas.leadId, leadId), eq(reservas.estado, "realizada")))
+          .limit(1);
+        if (realizada)
+          return NextResponse.json(
+            {
+              error: `Este lead tiene la reserva #${realizada.id} realizada (venta): solo un administrador puede modificarlo. Pedile el cambio a un admin`,
+            },
+            { status: 403 }
+          );
+      }
 
-    const [updated] = await db
-      .update(lead)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(lead.id, leadId))
-      .returning();
 
-    if (!updated) {
-      return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
-    }
+      const [updated] = await tx
+        .update(lead)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(lead.id, leadId))
+        .returning();
 
-    return NextResponse.json(updated);
+      if (!updated) {
+        return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
+      }
+      await logAudit(tx, {
+        entidad: "lead",
+        entidadId: leadId,
+        usuario: authResult.email,
+        antes: current,
+        despues: updated,
+      });
+
+      return NextResponse.json(updated);
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: error.issues },
+        { error: validationMessage(error.issues), details: error.issues },
         { status: 400 }
       );
     }
@@ -94,14 +115,33 @@ export async function DELETE(
 
   const { id: leadId } = await params;
 
-  const [deleted] = await db
-    .delete(lead)
-    .where(eq(lead.id, leadId))
-    .returning({ id: lead.id });
+  return crmTransaction(async (tx) => {
+    const [linked] = await tx
+      .select({ id: reservas.id })
+      .from(reservas)
+      .where(eq(reservas.leadId, leadId))
+      .limit(1);
+    if (linked)
+      return NextResponse.json(
+        {
+          error:
+            "No se puede eliminar un lead vinculado a una reserva; se debe conservar su historial",
+        },
+        { status: 409 }
+      );
+    const [deleted] = await tx.delete(lead).where(eq(lead.id, leadId)).returning();
 
-  if (!deleted) {
-    return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
-  }
+    if (!deleted) {
+      return NextResponse.json({ error: "Lead no encontrado" }, { status: 404 });
+    }
+    await logAudit(tx, {
+      entidad: "lead",
+      entidadId: leadId,
+      usuario: authResult.email,
+      antes: deleted,
+      despues: null,
+    });
 
-  return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true });
+  });
 }

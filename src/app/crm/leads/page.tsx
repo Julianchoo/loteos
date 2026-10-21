@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { use, useEffect, useState, useCallback, useRef } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCrm, withProject } from "@/components/crm/crm-context";
+import { NETWORK_ERROR, toastApiError, toastBulkErrors } from "@/components/crm/toast-api-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import {
   LEAD_STATUSES,
 } from "@/lib/lead-status";
 import type { LeadStatus } from "@/lib/lead-status";
+import type { OrigenLead } from "@/lib/schema";
 
 type LeadChannel = (typeof LEAD_CHANNELS)[number];
 
@@ -67,8 +69,18 @@ type LeadRow = {
   fechaNacimiento: string | null;
   estadoCivil: string | null;
   cuitComprador: string | null;
+  origen: OrigenLead;
+  referidoPor: string | null;
+  referidoNombre: string | null;
   createdAt: string;
 };
+
+function origenLabel(lead: LeadRow) {
+  if (lead.origen === "web") return "Formulario web";
+  // Sin referente: leads cargados antes de que se registrara quién los cargó.
+  if (lead.origen === "crm") return lead.referidoNombre ? `Cargado por ${lead.referidoNombre}` : "Carga manual";
+  return `Link de ${lead.referidoNombre ?? "usuario borrado"}`;
+}
 
 type UsuarioRow = {
   id: string;
@@ -78,13 +90,13 @@ type UsuarioRow = {
 };
 
 const statusColors: Record<LeadStatus, string> = {
-  new: "bg-blue-100 text-blue-700",
-  contacted: "bg-yellow-100 text-yellow-700",
-  interested: "bg-purple-100 text-purple-700",
-  visit_scheduled: "bg-orange-100 text-orange-700",
-  proposal_sent: "bg-indigo-100 text-indigo-700",
-  sold: "bg-green-100 text-green-700",
-  lost: "bg-muted text-muted-foreground",
+  new: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
+  contacted: "bg-amber-500/10 text-amber-800 dark:text-amber-400",
+  interested: "bg-amber-500/10 text-amber-800 dark:text-amber-400",
+  visit_scheduled: "bg-amber-500/10 text-amber-800 dark:text-amber-400",
+  proposal_sent: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
+  sold: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  lost: "bg-muted text-foreground",
 };
 
 function statusColor(status: string) {
@@ -115,14 +127,20 @@ const EMPTY_CREATE_FORM = {
   notes: "",
 };
 
-export default function LeadsPage() {
+export default function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  // Permite llegar prefiltrado, p. ej. desde la tarjeta "Leads nuevos" del dashboard.
+  const { status: statusInicial } = use(searchParams);
   const { data: session } = useSession();
   const { isAdmin, projectId } = useCrm();
   const canEditLead = (lead: LeadRow) => isAdmin || lead.asignadoA === session?.user?.id;
 
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterEstado, setFilterEstado] = useState<string>("all");
+  const [filterEstado, setFilterEstado] = useState<string>(statusInicial ?? "all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkEstado, setBulkEstado] = useState<LeadStatus | "">("");
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -187,7 +205,7 @@ export default function LeadsPage() {
     });
     if (!res.ok) {
       setLeads(prev);
-      toast.error("No se pudo actualizar el estado");
+      toastApiError(await res.json().catch(() => null), "No se pudo actualizar el estado del lead");
     }
   };
 
@@ -210,7 +228,7 @@ export default function LeadsPage() {
     });
     if (!res.ok) {
       setLeads(prev);
-      toast.error("No se pudo asignar el lead");
+      toastApiError(await res.json().catch(() => null), "No se pudo asignar el lead");
     }
   };
 
@@ -263,10 +281,14 @@ export default function LeadsPage() {
           })
         )
       );
-      const failed = results.filter((r) => !r.ok).length;
-      if (failed > 0) {
-        setLeads(prev);
-        toast.error(`${failed} actualizacion(es) fallaron`);
+      const failed = results
+        .map((res, i) => ({ res, lead: leads.find((l) => l.id === ids[i]) }))
+        .filter(({ res }) => !res.ok)
+        .map(({ res, lead }) => ({ res, label: lead ? leadNombre(lead) : "Lead" }));
+      if (failed.length > 0) {
+        // Algunos pudieron guardarse: recargar muestra el estado real en vez de revertir todo.
+        await toastBulkErrors(failed, ids.length, "leads");
+        fetchLeads();
       } else {
         toast.success(`${ids.length} lead(s) actualizados`);
         setSelected(new Set());
@@ -274,7 +296,7 @@ export default function LeadsPage() {
       }
     } catch {
       setLeads(prev);
-      toast.error("Error al actualizar");
+      toast.error(NETWORK_ERROR);
     } finally {
       setBulkLoading(false);
     }
@@ -358,14 +380,22 @@ export default function LeadsPage() {
       toast.success("Lead actualizado");
       setEditLead(null);
     } else {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      toast.error(data?.error ?? "Error al actualizar el lead");
+      toastApiError(await res.json().catch(() => null), "No se pudo actualizar el lead");
     }
     setEditSaving(false);
   }
 
   async function handleCreateSave() {
-    if (!canCreate) return;
+    const faltantes = [
+      !createForm.firstName.trim() && "nombre",
+      !createForm.lastName.trim() && "apellido",
+      !createForm.phone.trim() && "teléfono",
+      !createForm.email.trim() && "email",
+    ].filter(Boolean);
+    if (faltantes.length > 0) {
+      toast.error(`Completá ${faltantes.join(", ")} para crear el lead`);
+      return;
+    }
     setCreateSaving(true);
     const res = await fetch("/api/crm/leads", {
       method: "POST",
@@ -392,7 +422,7 @@ export default function LeadsPage() {
       setCreateForm(EMPTY_CREATE_FORM);
       fetchLeads();
     } else {
-      toast.error("Error al crear el lead");
+      toastApiError(await res.json().catch(() => null), "No se pudo crear el lead");
     }
     setCreateSaving(false);
   }
@@ -421,7 +451,7 @@ export default function LeadsPage() {
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       toast.error(data?.error ?? "No se pudo borrar el lead");
     } catch {
-      toast.error("No se pudo borrar el lead");
+      toast.error(NETWORK_ERROR);
     } finally {
       setDeletingId(null);
     }
@@ -429,13 +459,7 @@ export default function LeadsPage() {
 
   const allSelected = leads.length > 0 && selected.size === leads.length;
   const someSelected = selected.size > 0 && selected.size < leads.length;
-  const colCount = 11;
-  const canCreate = Boolean(
-    createForm.firstName.trim() &&
-      createForm.lastName.trim() &&
-      createForm.phone.trim() &&
-      createForm.email.trim()
-  );
+  const colCount = 12;
 
   useEffect(() => {
     if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected;
@@ -444,7 +468,7 @@ export default function LeadsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Leads</h1>
+        <h1 className="font-serif text-3xl font-normal text-foreground">Leads</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Consultas del sitio web y leads cargados por el equipo comercial
           {!loading && ` · ${leads.length} en total`}
@@ -471,7 +495,7 @@ export default function LeadsPage() {
         </Select>
       </div>
 
-      <div className="rounded-lg border bg-background overflow-x-auto">
+      <div className="rounded-lg border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -485,16 +509,17 @@ export default function LeadsPage() {
                   className="size-4 cursor-pointer accent-primary"
                 />
               </TableHead>
+              <TableHead className="w-24">Acciones</TableHead>
+              <TableHead>Estado</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Teléfono</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Canal / fuente</TableHead>
-              <TableHead>Proyecto</TableHead>
+              <TableHead>Proyecto / lote</TableHead>
               <TableHead>Mensaje</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead>Origen</TableHead>
               <TableHead>Asignado a</TableHead>
               <TableHead>Fecha</TableHead>
-              <TableHead className="w-24">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -512,7 +537,7 @@ export default function LeadsPage() {
                   <TableRow
                     key={lead.id}
                     data-state={selected.has(lead.id) ? "selected" : undefined}
-                    className={selected.has(lead.id) ? "bg-blue-50" : undefined}
+                    className={selected.has(lead.id) ? "bg-muted" : undefined}
                   >
                     <TableCell>
                       <input
@@ -523,26 +548,30 @@ export default function LeadsPage() {
                         className="size-4 cursor-pointer accent-primary"
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{leadNombre(lead)}</TableCell>
-                    <TableCell className="text-sm">{lead.phone ?? "—"}</TableCell>
-                    <TableCell className="text-sm">{lead.email}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">
-                      {LEAD_CHANNEL_LABELS[lead.contactChannel as LeadChannel] ?? lead.contactChannel}
-                      {lead.marketingSource && (
-                        <span className="block text-xs text-muted-foreground">{lead.marketingSource}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {lead.projectNames ?? "—"}
-                      {lead.calculatedCuota && (
-                        <span className="block text-xs text-muted-foreground whitespace-nowrap">
-                          Cuota USD {lead.calculatedCuota}
-                          {lead.plazoMonths ? ` · ${lead.plazoMonths}m` : ""}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                      {lead.initialMessage ?? "—"}
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {canEditLead(lead) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(lead)}
+                            aria-label={`Editar ${leadNombre(lead)}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteLead(lead)}
+                            disabled={deletingId === lead.id}
+                            aria-label={`Borrar ${leadNombre(lead)}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {canEditLead(lead) ? (
@@ -573,6 +602,28 @@ export default function LeadsPage() {
                         </span>
                       )}
                     </TableCell>
+                    <TableCell className="font-medium">{leadNombre(lead)}</TableCell>
+                    <TableCell className="text-sm">{lead.phone ?? "—"}</TableCell>
+                    <TableCell className="text-sm">{lead.email}</TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {LEAD_CHANNEL_LABELS[lead.contactChannel as LeadChannel] ?? lead.contactChannel}
+                      {lead.marketingSource && (
+                        <span className="block text-xs text-muted-foreground">{lead.marketingSource}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {lead.projectNames ?? "—"}
+                      {lead.calculatedCuota && (
+                        <span className="block text-xs text-muted-foreground whitespace-nowrap">
+                          Cuota USD {lead.calculatedCuota}
+                          {lead.plazoMonths ? ` · ${lead.plazoMonths}m` : ""}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                      {lead.initialMessage ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">{origenLabel(lead)}</TableCell>
                     <TableCell>
                       {isAdmin ? (
                         <Select
@@ -600,34 +651,18 @@ export default function LeadsPage() {
                           {lead.asignadoNombre ?? "—"}
                         </span>
                       )}
+                      {lead.asignadoA && (
+                        <p className="mt-0.5 whitespace-nowrap text-xs text-muted-foreground">
+                          {lead.asignadoA !== lead.referidoPor
+                            ? "Asignación manual"
+                            : lead.origen === "link_comercial"
+                              ? "Automática por link"
+                              : "Automática: lo cargó"}
+                        </p>
+                      )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(lead.createdAt).toLocaleDateString("es-AR")}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {canEditLead(lead) && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(lead)}
-                            aria-label={`Editar ${leadNombre(lead)}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {isAdmin && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteLead(lead)}
-                            disabled={deletingId === lead.id}
-                            aria-label={`Borrar ${leadNombre(lead)}`}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        )}
-                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -716,7 +751,7 @@ export default function LeadsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-            <Button onClick={handleCreateSave} disabled={createSaving || !canCreate}>
+            <Button onClick={handleCreateSave} disabled={createSaving}>
               {createSaving ? "Creando..." : "Crear"}
             </Button>
           </DialogFooter>
@@ -843,7 +878,7 @@ export default function LeadsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border bg-background px-5 py-3 shadow-xl">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border bg-card px-5 py-3 shadow-xl">
           <span className="text-sm font-medium text-foreground">
             {selected.size} seleccionado{selected.size !== 1 ? "s" : ""}
           </span>

@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, ArrowUpDown, CalendarDays, ChevronDown, CreditCard, Download, FileText, Filter, List, Lock, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, CalendarDays, ChevronDown, CreditCard, Download, Filter, List, Search, X } from "lucide-react";
 import { toast } from "sonner";
-import { BoletoDialog } from "@/components/crm/boleto-dialog";
+import { CambiarEstadoReserva } from "@/components/crm/cambiar-estado-reserva";
 import { useCrm, withProject } from "@/components/crm/crm-context";
-import { ReservaDialog } from "@/components/crm/reserva-dialog";
+import { NETWORK_ERROR } from "@/components/crm/toast-api-error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,41 +43,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useSession } from "@/lib/auth-client";
-import type { EstadoLote, EstadoReserva, ModalidadContrato, LoteConReserva } from "@/lib/schema";
-
-type ReservaRow = Omit<LoteConReserva, "id" | "estado" | "createdAt" | "updatedAt"> & {
-  id: string;
-  lotId: string;
-  leadId: string | null;
-  estado: EstadoReserva;
-  nombreComprador: string | null;
-  dniCuit: string | null;
-  telefono: string | null;
-  emailComprador: string | null;
-  reservadoPor: string | null;
-  fechaReserva: string | null;
-  fechaVencimiento: string | null;
-  fechaFirma: string | null;
-  formaPago: string | null;
-  modalidadContrato: ModalidadContrato | null;
-  precioTotalNum: string | null;
-  observaciones: string | null;
-  cantidadCuotas: string | null;
-  cuotaMensual: string | null;
-  createdAt: string;
-  updatedAt: string;
-  loteNumero: string;
-  manzana: string | null;
-  parcela: string | null;
-  loteEstado: EstadoLote;
-};
+import {
+  estadoColors,
+  estadoLabels,
+  formatDate,
+  formatPaymentMode,
+  isVigente,
+  normalizeDateKey,
+  sortByCreatedDesc,
+  type ReservaRow,
+} from "@/lib/reservas-ui";
+import type { EstadoReserva } from "@/lib/schema";
 
 type UsuarioRow = {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "comercial";
+  role: "admin" | "comercial" | "socio";
 };
 
 type CalendarEvent = {
@@ -97,6 +79,9 @@ type ReservaFilters = {
   fechaVencimientoHasta: string;
   fechaFirmaDesde: string;
   fechaFirmaHasta: string;
+  manzana: string;
+  parcela: string;
+  comprador: string;
 };
 
 type SortKey =
@@ -122,29 +107,10 @@ const defaultFilters: ReservaFilters = {
   fechaVencimientoHasta: "",
   fechaFirmaDesde: "",
   fechaFirmaHasta: "",
+  manzana: "",
+  parcela: "",
+  comprador: "",
 };
-
-const estadoLabels: Record<EstadoReserva, string> = {
-  activa: "Activa",
-  cancelada: "Cancelada",
-  vencida: "Vencida",
-  realizada: "Realizada",
-};
-
-const estadoColors: Record<EstadoReserva, string> = {
-  activa: "bg-green-100 text-green-700",
-  cancelada: "bg-muted text-muted-foreground",
-  vencida: "bg-amber-100 text-amber-700",
-  realizada: "bg-blue-100 text-blue-700",
-};
-
-const modalidadContratoLabels: Record<ModalidadContrato, string> = {
-  usd_fijo: "Financiado USD",
-  pesos_cac: "Financiado CAC",
-  requiere_revision: "Requiere revision",
-};
-
-const financedPaymentValues = new Set(["cuotas", "financiado"]);
 
 const monthNames = [
   "enero",
@@ -162,35 +128,6 @@ const monthNames = [
 ];
 
 const weekdayNames = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
-
-function formatDate(value: string | null) {
-  const dateKey = normalizeDateKey(value);
-  if (!dateKey) return "-";
-  const [year, month, day] = dateKey.split("-");
-  if (!year || !month || !day) return value;
-  return `${day}/${month}/${year}`;
-}
-
-function hasInstallments(reserva: Pick<ReservaRow, "cantidadCuotas" | "cuotaMensual">) {
-  return Boolean(reserva.cantidadCuotas?.trim() || reserva.cuotaMensual?.trim());
-}
-
-function formatPaymentMode(
-  reserva: Pick<ReservaRow, "formaPago" | "modalidadContrato" | "cantidadCuotas" | "cuotaMensual">
-) {
-  if (reserva.modalidadContrato) return modalidadContratoLabels[reserva.modalidadContrato];
-
-  const formaPago = reserva.formaPago?.trim().toLowerCase();
-  if (formaPago === "contado") return "Contado";
-  if (formaPago && formaPago !== "-" && financedPaymentValues.has(formaPago)) return "Requiere revision";
-  if (hasInstallments(reserva)) return "Requiere revision";
-  return "-";
-}
-function normalizeDateKey(value: string | null) {
-  if (!value) return null;
-  const datePart = value.slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
-}
 
 function getMonthKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -246,13 +183,22 @@ function toggleValue<T extends string>(values: T[], value: T) {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
 }
 
-export default function ReservasPage() {
-  const { data: session } = useSession();
+export default function ReservasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string }>;
+}) {
+  // Permite llegar prefiltrado desde las tarjetas de Insights (?estado=realizada).
+  const { estado: estadoInicial } = use(searchParams);
+  const filtrosIniciales =
+    estadoInicial && estadoInicial in estadoLabels
+      ? { ...defaultFilters, estado: [estadoInicial as EstadoReserva] }
+      : defaultFilters;
   const { isAdmin, projectId } = useCrm();
   const [reservas, setReservas] = useState<ReservaRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<ReservaFilters>(defaultFilters);
-  const [draftFilters, setDraftFilters] = useState<ReservaFilters>(defaultFilters);
+  const [filters, setFilters] = useState<ReservaFilters>(filtrosIniciales);
+  const [draftFilters, setDraftFilters] = useState<ReservaFilters>(filtrosIniciales);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"lista" | "calendario">("lista");
@@ -277,6 +223,9 @@ export default function ReservasPage() {
     }
     if (filters.fechaFirmaDesde) params.set("fechaFirmaDesde", filters.fechaFirmaDesde);
     if (filters.fechaFirmaHasta) params.set("fechaFirmaHasta", filters.fechaFirmaHasta);
+    if (filters.manzana.trim()) params.set("manzana", filters.manzana.trim());
+    if (filters.parcela.trim()) params.set("parcela", filters.parcela.trim());
+    if (filters.comprador.trim()) params.set("comprador", filters.comprador.trim());
     if (search.trim()) params.set("search", search.trim());
     return params;
   }, [filters, search, projectId]);
@@ -302,14 +251,14 @@ export default function ReservasPage() {
     fetch("/api/crm/usuarios")
       .then((res) => (res.ok ? res.json() : []))
       .then((data: UsuarioRow[]) => {
-        setUsuarios(data.filter((usuario) => usuario.role === "comercial"));
+        setUsuarios(data.filter((usuario) => usuario.role === "comercial" || usuario.role === "socio"));
       })
       .catch(() => setUsuarios([]));
   }, [isAdmin]);
 
   const events = useMemo(() => buildEvents(reservas), [reservas]);
   const sortedReservas = useMemo(() => {
-    if (!sort) return reservas;
+    if (!sort) return sortByCreatedDesc(reservas);
 
     return [...reservas].sort((a, b) => {
       let result = 0;
@@ -397,6 +346,15 @@ export default function ReservasPage() {
     if (filters.fechaFirmaHasta) {
       items.push({ key: "fechaFirmaHasta", label: `Firma hasta ${formatDate(filters.fechaFirmaHasta)}` });
     }
+    if (filters.manzana.trim()) {
+      items.push({ key: "manzana", label: `Manzana: ${filters.manzana.trim()}` });
+    }
+    if (filters.parcela.trim()) {
+      items.push({ key: "parcela", label: `Parcela: ${filters.parcela.trim()}` });
+    }
+    if (filters.comprador.trim()) {
+      items.push({ key: "comprador", label: `Comprador: ${filters.comprador.trim()}` });
+    }
     return items;
   }, [filters, usuarios]);
 
@@ -406,26 +364,16 @@ export default function ReservasPage() {
     setMonthKey(getMonthKey(next));
   }
 
-  async function handleEstadoChange(reserva: ReservaRow, estado: EstadoReserva) {
-    if (reserva.estado === estado) return;
-    if (!isAdmin && estado === "realizada") {
-      toast.error("Solo un administrador puede marcar una reserva como realizada");
-      return;
-    }
-    if (!isAdmin && reserva.estado === "realizada") {
-      toast.error("Solo un administrador puede editar una reserva realizada");
-      return;
-    }
-    if (!canEditReserva(reserva)) {
-      toast.error("Solo el comercial que tomo la reserva o un administrador puede modificarla");
+  async function handleComercialChange(reserva: ReservaRow, reservadoPor: string) {
+    if (reserva.reservadoPor === reservadoPor) return;
+    if (!isAdmin) {
+      toast.error("Solo un administrador puede reasignar reservas");
       return;
     }
     const esVendida = reserva.estado === "realizada" || reserva.loteEstado === "vendido";
     if (
       esVendida &&
-      !window.confirm(
-        "OJO! Estas por cambiar el estado de un lote o reserva ya vendido. Continuar?"
-      )
+      !window.confirm("OJO! Estas por cambiar el comercial de una reserva ya vendida. Continuar?")
     ) {
       return;
     }
@@ -435,51 +383,9 @@ export default function ReservasPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          estado,
+          reservadoPor,
           ...(esVendida ? { confirmarEdicionVendida: true } : {}),
         }),
-      });
-
-      if (res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          cuentaCorriente?: { status?: string; message?: string };
-        } | null;
-        if (data?.cuentaCorriente?.status === "ok") {
-          toast.success("Reserva actualizada. Cuenta corriente creada.");
-        } else if (data?.cuentaCorriente?.message) {
-          toast.warning(`Reserva actualizada. ${data.cuentaCorriente.message}.`);
-        } else {
-          toast.success("Reserva actualizada");
-        }
-        await fetchReservas();
-        return;
-      }
-
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (res.status === 409) {
-        toast.error(data?.error ?? "Este lote ya tiene una reserva vigente");
-      } else {
-        toast.error(data?.error ?? "No se pudo actualizar la reserva");
-      }
-    } catch {
-      toast.error("No se pudo actualizar la reserva");
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  async function handleComercialChange(reserva: ReservaRow, reservadoPor: string) {
-    if (reserva.reservadoPor === reservadoPor) return;
-    if (!isAdmin) {
-      toast.error("Solo un administrador puede reasignar reservas");
-      return;
-    }
-    setUpdatingId(reserva.id);
-    try {
-      const res = await fetch(`/api/crm/reservas/${reserva.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reservadoPor }),
       });
 
       if (res.ok) {
@@ -491,7 +397,7 @@ export default function ReservasPage() {
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
       toast.error(data?.error ?? "No se pudo reasignar la reserva");
     } catch {
-      toast.error("No se pudo reasignar la reserva");
+      toast.error(NETWORK_ERROR);
     } finally {
       setUpdatingId(null);
     }
@@ -503,7 +409,8 @@ export default function ReservasPage() {
       const params = buildFilterParams();
       const res = await fetch(`/api/crm/reservas/export?${params}`);
       if (!res.ok) {
-        toast.error("No se pudo generar el Excel");
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(data?.error ?? "No se pudo generar el Excel. Recargá la página y volvé a intentar");
         return;
       }
 
@@ -517,7 +424,7 @@ export default function ReservasPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch {
-      toast.error("No se pudo generar el Excel");
+      toast.error(NETWORK_ERROR);
     } finally {
       setExportingExcel(false);
     }
@@ -566,7 +473,7 @@ export default function ReservasPage() {
         variant="ghost"
         size="sm"
         onClick={() => toggleSort(sortKey)}
-        className="-ml-3 h-8 px-3 text-inherit hover:bg-muted hover:text-foreground"
+        className="-ml-3 h-8 px-3 text-inherit hover:bg-muted/50 hover:text-foreground"
       >
         {children}
         <Icon className="ml-1 h-3.5 w-3.5" />
@@ -574,27 +481,11 @@ export default function ReservasPage() {
     );
   }
 
-  function canEditReserva(reserva: ReservaRow) {
-    if (isAdmin) return true;
-    if (reserva.estado === "realizada") return false;
-    return reserva.reservadoPor === session?.user?.email;
-  }
-
-  function parcelaFromReserva(reserva: ReservaRow): LoteConReserva {
-    return {
-      ...reserva,
-      id: reserva.lotId,
-      number: reserva.loteNumero,
-      estado: reserva.loteEstado,
-      reservaId: reserva.id,
-    } as unknown as LoteConReserva;
-  }
-
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Reservas</h1>
+          <h1 className="font-serif text-3xl font-normal text-foreground">Reservas</h1>
           <p className="mt-1 text-sm text-muted-foreground">Reservas por lote y estado</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -608,7 +499,7 @@ export default function ReservasPage() {
             <Download className="mr-1 h-4 w-4" />
             {exportingExcel ? "Exportando..." : "Exportar Excel"}
           </Button>
-          <div className="inline-flex rounded-md border bg-background p-1">
+          <div className="inline-flex rounded-md border bg-card p-1">
             <Button
               type="button"
               variant={view === "lista" ? "default" : "ghost"}
@@ -742,6 +633,40 @@ export default function ReservasPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="manzana-filter">Manzana</Label>
+                    <Input
+                      id="manzana-filter"
+                      value={draftFilters.manzana}
+                      onChange={(e) =>
+                        setDraftFilters((current) => ({ ...current, manzana: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="parcela-filter">Parcela</Label>
+                    <Input
+                      id="parcela-filter"
+                      value={draftFilters.parcela}
+                      onChange={(e) =>
+                        setDraftFilters((current) => ({ ...current, parcela: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="comprador-filter">Comprador</Label>
+                  <Input
+                    id="comprador-filter"
+                    value={draftFilters.comprador}
+                    onChange={(e) =>
+                      setDraftFilters((current) => ({ ...current, comprador: e.target.value }))
+                    }
+                  />
+                </div>
+
                 <Separator />
 
                 <div className="grid gap-3">
@@ -864,18 +789,19 @@ export default function ReservasPage() {
       </div>
 
       {view === "lista" ? (
-        <div className="overflow-hidden rounded-lg border border-border bg-background shadow-sm">
+        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           <Table className="min-w-[1180px]">
-            <TableHeader className="bg-muted/40 [&_th]:h-11 [&_th]:px-3 [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-normal [&_th]:text-muted-foreground">
+            <TableHeader className="bg-muted [&_th]:h-11 [&_th]:px-3 [&_th]:text-xs [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-normal [&_th]:text-muted-foreground">
               <TableRow className="hover:bg-transparent">
+                <TableHead className="w-36" />
+                <TableHead>
+                  <SortHeader sortKey="estado">Estado</SortHeader>
+                </TableHead>
                 <TableHead>
                   <SortHeader sortKey="loteNumero">Lote</SortHeader>
                 </TableHead>
                 <TableHead>
                   <SortHeader sortKey="nombreComprador">Comprador</SortHeader>
-                </TableHead>
-                <TableHead>
-                  <SortHeader sortKey="estado">Estado</SortHeader>
                 </TableHead>
                 <TableHead>
                   <SortHeader sortKey="fechaReserva">Fecha reserva</SortHeader>
@@ -895,10 +821,9 @@ export default function ReservasPage() {
                 <TableHead>
                   <SortHeader sortKey="reservadoPor">Reservado por</SortHeader>
                 </TableHead>
-                <TableHead className="w-36" />
               </TableRow>
             </TableHeader>
-            <TableBody className="[&_tr]:bg-background [&_tr:hover]:bg-muted/40 [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-foreground">
+            <TableBody className="[&_tr]:bg-card [&_tr:hover]:bg-muted [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-foreground">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => (
                     <TableRow key={i}>
@@ -910,17 +835,53 @@ export default function ReservasPage() {
                     </TableRow>
                   ))
                 : sortedReservas.map((reserva) => (
-                    <TableRow key={reserva.id}>
-                      <TableCell className="font-mono text-sm">
-                        {reserva.loteNumero}
-                        <span className="ml-2 font-sans text-xs text-muted-foreground">
-                          Mz {reserva.manzana ?? "-"} / Parc. {reserva.parcela ?? "-"}
-                        </span>
-                        {!projectId && reserva.projectName && (
-                          <span className="block font-sans text-xs text-muted-foreground">
-                            {reserva.projectName}
+                    <TableRow
+                      key={reserva.id}
+                      className={isVigente(reserva.estado) ? undefined : "opacity-60"}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/crm/reservas/${reserva.id}`}>Ver</Link>
+                          </Button>
+                          {isAdmin && (
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={`/crm/cuotas/${reserva.id}`}>
+                                <CreditCard className="mr-1 h-4 w-4" />
+                                Cuenta
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin ? (
+                          <CambiarEstadoReserva reserva={reserva} onChanged={fetchReservas} />
+                        ) : (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${estadoColors[reserva.estado]}`}
+                          >
+                            {estadoLabels[reserva.estado]}
                           </span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <Link
+                          href={`/crm/lotes/${reserva.lotId}`}
+                          className="whitespace-nowrap font-medium hover:underline"
+                          title="Ver lote"
+                        >
+                          Lote {reserva.loteNumero} · Mz {reserva.manzana ?? "-"}
+                        </Link>
+                        <div className="text-xs text-muted-foreground">
+                          {[
+                            reserva.parcela && `Parc. ${reserva.parcela}`,
+                            !projectId && reserva.projectName,
+                            `Reserva #${reserva.id.slice(0, 8)}`,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-medium text-foreground">
@@ -929,41 +890,6 @@ export default function ReservasPage() {
                         <div className="text-xs text-muted-foreground">
                           {reserva.dniCuit ?? reserva.emailComprador ?? reserva.telefono ?? "-"}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {canEditReserva(reserva) ? (
-                          <Select
-                            value={reserva.estado}
-                            onValueChange={(value) =>
-                              handleEstadoChange(reserva, value as EstadoReserva)
-                            }
-                            disabled={updatingId === reserva.id}
-                          >
-                            <SelectTrigger className="h-7 w-32 border-0 bg-transparent p-0 shadow-none focus:ring-0">
-                              <span
-                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${estadoColors[reserva.estado]}`}
-                              >
-                                {estadoLabels[reserva.estado]}
-                              </span>
-                            </SelectTrigger>
-                            <SelectContent position="popper">
-                              {(Object.keys(estadoLabels) as EstadoReserva[]).map((estado) => (
-                                <SelectItem key={estado} value={estado}>
-                                  {estadoLabels[estado]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="inline-flex items-center gap-1">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${estadoColors[reserva.estado]}`}
-                            >
-                              {estadoLabels[reserva.estado]}
-                            </span>
-                            <Lock className="h-3 w-3 text-amber-600" />
-                          </span>
-                        )}
                       </TableCell>
                       <TableCell>{formatDate(reserva.fechaReserva)}</TableCell>
                       <TableCell>{formatDate(reserva.fechaVencimiento)}</TableCell>
@@ -994,51 +920,6 @@ export default function ReservasPage() {
                           reserva.reservadoPor ?? "-"
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-end gap-1">
-                          <ReservaDialog
-                            parcelaId={reserva.lotId}
-                            disabled={!canEditReserva(reserva)}
-                            trigger={
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                disabled={!canEditReserva(reserva)}
-                              >
-                                <FileText className="mr-1 h-4 w-4" />
-                                Reserva
-                              </Button>
-                            }
-                          />
-                          <BoletoDialog
-                            parcela={parcelaFromReserva(reserva)}
-                            disabled={!canEditReserva(reserva)}
-                            trigger={
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                disabled={!canEditReserva(reserva)}
-                              >
-                                <FileText className="mr-1 h-4 w-4" />
-                                Boleto
-                              </Button>
-                            }
-                          />
-                          <Button asChild variant="ghost" size="sm">
-                            <Link href={`/crm/lotes/${reserva.lotId}`}>Ver</Link>
-                          </Button>
-                          {isAdmin && (
-                            <Button asChild variant="ghost" size="sm">
-                              <Link href={`/crm/cuotas/${reserva.id}`}>
-                                <CreditCard className="mr-1 h-4 w-4" />
-                                Cuenta
-                              </Link>
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
                     </TableRow>
                   ))}
             </TableBody>
@@ -1049,7 +930,7 @@ export default function ReservasPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border bg-background px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
             <Button type="button" variant="outline" size="sm" onClick={() => moveMonth(-1)}>
               Anterior
             </Button>
@@ -1059,8 +940,8 @@ export default function ReservasPage() {
             </Button>
           </div>
 
-          <div className="overflow-hidden rounded-lg border bg-background">
-            <div className="grid grid-cols-7 border-b bg-muted/40">
+          <div className="overflow-hidden rounded-lg border bg-card">
+            <div className="grid grid-cols-7 border-b bg-muted">
               {weekdayNames.map((day) => (
                 <div key={day} className="px-2 py-2 text-xs font-medium text-muted-foreground">
                   {day}
@@ -1082,7 +963,7 @@ export default function ReservasPage() {
                       {dayEvents.slice(0, 3).map((event) => (
                         <Link
                           key={event.key}
-                          href={`/crm/lotes/${event.reserva.lotId}`}
+                          href={`/crm/reservas/${event.reserva.id}`}
                           className={`block truncate rounded px-1.5 py-1 text-xs ${estadoColors[event.reserva.estado]}`}
                           title={event.label}
                         >
@@ -1100,7 +981,7 @@ export default function ReservasPage() {
           </div>
 
           {!loading && events.length === 0 && (
-            <p className="rounded-lg border bg-background px-4 py-6 text-center text-sm text-muted-foreground">
+            <p className="rounded-lg border bg-card px-4 py-6 text-center text-sm text-muted-foreground">
               No hay reservas con fecha de firma en este filtro
             </p>
           )}

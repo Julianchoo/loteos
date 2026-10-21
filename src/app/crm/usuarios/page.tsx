@@ -53,7 +53,7 @@ const createSchema = z.object({
   name: z.string().min(2, "Ingresá el nombre"),
   email: z.string().email("Email inválido"),
   password: z.string().min(8, "Mínimo 8 caracteres"),
-  role: z.enum(["admin", "comercial"]),
+  role: z.enum(["admin", "comercial", "socio"]),
 });
 
 type CreateFormValues = z.infer<typeof createSchema>;
@@ -61,7 +61,7 @@ type CreateFormValues = z.infer<typeof createSchema>;
 const editSchema = z.object({
   name: z.string().min(2, "Ingresá el nombre"),
   email: z.string().email("Email inválido"),
-  role: z.enum(["admin", "comercial"]),
+  role: z.enum(["admin", "comercial", "socio"]),
 });
 
 type EditFormValues = z.infer<typeof editSchema>;
@@ -121,7 +121,7 @@ export default function UsuariosPage() {
     editForm.reset({
       name: u.name,
       email: u.email,
-      role: u.role as "admin" | "comercial",
+      role: u.role as EditFormValues["role"],
     });
     setEditOpen(true);
   }
@@ -175,14 +175,14 @@ export default function UsuariosPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Usuarios</h1>
+          <h1 className="font-serif text-3xl font-normal text-foreground">Usuarios</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Gestión de usuarios del sistema
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-green-700 hover:bg-green-800 text-white gap-2">
+            <Button className="gap-2">
               <PlusCircle className="h-4 w-4" />
               Nuevo usuario
             </Button>
@@ -263,6 +263,7 @@ export default function UsuariosPage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="comercial">Comercial</SelectItem>
+                          <SelectItem value="socio">Socio</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
@@ -272,7 +273,7 @@ export default function UsuariosPage() {
                 />
                 <Button
                   type="submit"
-                  className="w-full bg-green-700 hover:bg-green-800 text-white"
+                  className="w-full"
                   disabled={form.formState.isSubmitting}
                 >
                   {form.formState.isSubmitting ? "Creando..." : "Crear usuario"}
@@ -283,7 +284,7 @@ export default function UsuariosPage() {
         </Dialog>
       </div>
 
-      <div className="rounded-lg border bg-background overflow-x-auto">
+      <div className="rounded-lg border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -313,14 +314,14 @@ export default function UsuariosPage() {
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           u.role === "admin"
-                            ? "bg-purple-100 text-purple-700"
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-sky-500/10 text-sky-700 dark:text-sky-400"
+                            : "bg-muted text-foreground"
                         }`}
                       >
                         {u.role}
                       </span>
                       {u.mustChangePassword && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-800 dark:text-amber-400">
                           debe cambiar contraseña
                         </span>
                       )}
@@ -409,6 +410,7 @@ export default function UsuariosPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="comercial">Comercial</SelectItem>
+                        <SelectItem value="socio">Socio</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -418,7 +420,7 @@ export default function UsuariosPage() {
               />
               <Button
                 type="submit"
-                className="w-full bg-green-700 hover:bg-green-800 text-white"
+                className="w-full"
                 disabled={editForm.formState.isSubmitting}
               >
                 {editForm.formState.isSubmitting ? "Guardando..." : "Guardar cambios"}

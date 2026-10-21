@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { isCrmRole } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import {
   calculateInstallment,
@@ -11,7 +13,7 @@ import {
   PLAZO_MAX_PUBLICO,
   TASA_PUBLICA,
 } from "@/lib/financiacion";
-import { lead, leadFinancingPreference, leadProject, lot } from "@/lib/schema";
+import { lead, leadFinancingPreference, leadProject, lot, user } from "@/lib/schema";
 
 interface CreateLeadData {
   firstName: string;
@@ -179,6 +181,8 @@ const lotLeadSchema = z.object({
   message: z.string().trim().max(1000).optional(),
   anticipo: z.number().positive().optional(),
   plazo: z.number().int().min(1).max(PLAZO_MAX_PUBLICO).optional(),
+  // Id del comercial que compartió el link del plano (?ref=...).
+  ref: z.string().max(100).optional(),
 });
 
 /**
@@ -223,21 +227,40 @@ export async function createLotLead(input: z.input<typeof lotLeadSchema>) {
       };
     }
 
+    // Un ref que no es un usuario del CRM se ignora: el lead entra como web, sin asignar.
+    const [referente] = data.ref
+      ? await db.select({ id: user.id, role: user.role }).from(user).where(eq(user.id, data.ref))
+      : [];
+    const comercial = referente && isCrmRole(referente.role) ? referente.id : null;
+
     const leadId = randomUUID();
     const loteLabel = `Manzana ${lote.manzana ?? "-"} · Lote ${lote.number}`;
 
     await db.transaction(async (tx) => {
-      await tx.insert(lead).values({
-        id: leadId,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone || null,
-        contactChannel: "web_form_project",
-        status: "new",
-        initialMessage: data.message
-          ? `${loteLabel}\n\n${data.message}`
-          : `Consulta por ${loteLabel}`,
+      const [created] = await tx
+        .insert(lead)
+        .values({
+          id: leadId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone || null,
+          contactChannel: "web_form_project",
+          status: "new",
+          initialMessage: data.message
+            ? `${loteLabel}\n\n${data.message}`
+            : `Consulta por ${loteLabel}`,
+          origen: comercial ? "link_comercial" : "web",
+          referidoPor: comercial,
+          asignadoA: comercial,
+        })
+        .returning();
+      await logAudit(tx, {
+        entidad: "lead",
+        entidadId: leadId,
+        usuario: "web",
+        antes: null,
+        despues: created,
       });
       await tx.insert(leadProject).values({
         id: randomUUID(),

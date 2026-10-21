@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { LEAD_CHANNELS, LEAD_STATUSES } from "@/lib/lead-status";
 import { lead, leadFinancingPreference, leadProject, lot, project, reservas, user } from "@/lib/schema";
-import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { validationMessage } from "@/lib/validation-message";
 
 const createLeadSchema = z.object({
   firstName: z.string().trim().min(1),
@@ -22,6 +24,8 @@ const createLeadSchema = z.object({
   cuitComprador: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
+
+const referente = alias(user, "referente");
 
 export async function GET(request: Request) {
   const authResult = await requireApiCrm();
@@ -80,6 +84,9 @@ export async function GET(request: Request) {
       estadoCivil: lead.estadoCivil,
       cuitComprador: lead.cuitComprador,
       asignadoNombre: user.name,
+      origen: lead.origen,
+      referidoPor: lead.referidoPor,
+      referidoNombre: referente.name,
       // Incluye el lote cuando la consulta vino desde el plano público.
       projectNames: sql<string | null>`(
         select string_agg(
@@ -100,6 +107,7 @@ export async function GET(request: Request) {
     })
     .from(lead)
     .leftJoin(user, eq(lead.asignadoA, user.id))
+    .leftJoin(referente, eq(lead.referidoPor, referente.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(lead.createdAt));
 
@@ -113,7 +121,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = createLeadSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+    return NextResponse.json({ error: validationMessage(parsed.error.issues) }, { status: 400 });
   }
 
   const data = parsed.data;
@@ -136,8 +144,19 @@ export async function POST(request: Request) {
       notes: data.notes ?? null,
       asignadoA: authResult.id,
       status: "new",
+      origen: "crm",
+      referidoPor: authResult.id,
     })
     .returning();
+  if (created) {
+    await logAudit(db, {
+      entidad: "lead",
+      entidadId: created.id,
+      usuario: authResult.email,
+      antes: null,
+      despues: created,
+    });
+  }
 
   return NextResponse.json(created, { status: 201 });
 }

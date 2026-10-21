@@ -1,0 +1,105 @@
+import type { EstadoLote, EstadoReserva, LoteConReserva, ModalidadContrato } from "@/lib/schema";
+
+// Fila de GET /api/crm/reservas (ver getFilteredReservas). createdAt es del lote;
+// la fecha de creacion de la reserva viene en reservaCreatedAt.
+export type ReservaRow = Omit<LoteConReserva, "id" | "estado" | "createdAt" | "updatedAt"> & {
+  id: string;
+  lotId: string;
+  leadId: string | null;
+  estado: EstadoReserva;
+  nombreComprador: string | null;
+  dniCuit: string | null;
+  telefono: string | null;
+  emailComprador: string | null;
+  reservadoPor: string | null;
+  fechaReserva: string | null;
+  fechaVencimiento: string | null;
+  fechaFirma: string | null;
+  formaPago: string | null;
+  modalidadContrato: ModalidadContrato | null;
+  precioTotalNum: string | null;
+  observaciones: string | null;
+  cantidadCuotas: string | null;
+  cuotaMensual: string | null;
+  createdAt: string;
+  updatedAt: string;
+  reservaCreatedAt: string;
+  loteNumero: string;
+  manzana: string | null;
+  parcela: string | null;
+  loteEstado: EstadoLote;
+};
+
+export const estadoLabels: Record<EstadoReserva, string> = {
+  activa: "Activa",
+  cancelada: "Cancelada",
+  vencida: "Vencida",
+  realizada: "Realizada",
+};
+
+export const estadoColors: Record<EstadoReserva, string> = {
+  activa: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  cancelada: "bg-muted text-foreground",
+  vencida: "bg-amber-500/10 text-amber-800 dark:text-amber-400",
+  realizada: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
+};
+
+const modalidadContratoLabels: Record<ModalidadContrato, string> = {
+  usd_fijo: "Financiado USD",
+  pesos_cac: "Financiado CAC",
+  requiere_revision: "Requiere revision",
+};
+
+const financedPaymentValues = new Set(["cuotas", "financiado"]);
+
+// Activa o realizada: la reserva que ocupa el lote. Solo puede haber una por lote.
+export function isVigente(estado: EstadoReserva | null | undefined) {
+  return estado === "activa" || estado === "realizada";
+}
+
+export function normalizeDateKey(value: string | null) {
+  if (!value) return null;
+  const datePart = value.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(datePart) ? datePart : null;
+}
+
+export function formatDate(value: string | null) {
+  const dateKey = normalizeDateKey(value);
+  if (!dateKey) return "-";
+  const [year, month, day] = dateKey.split("-");
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+}
+
+type PaymentData = Partial<
+  Pick<ReservaRow, "formaPago" | "modalidadContrato" | "cantidadCuotas" | "cuotaMensual">
+>;
+
+function hasInstallments(reserva: PaymentData) {
+  return Boolean(reserva.cantidadCuotas?.trim() || reserva.cuotaMensual?.trim());
+}
+
+export function formatPaymentMode(reserva: PaymentData) {
+  if (reserva.modalidadContrato) return modalidadContratoLabels[reserva.modalidadContrato];
+
+  const formaPago = reserva.formaPago?.trim().toLowerCase();
+  if (formaPago === "contado") return "Contado";
+  if (formaPago && formaPago !== "-" && financedPaymentValues.has(formaPago)) return "Requiere revision";
+  if (hasInstallments(reserva)) return "Requiere revision";
+  return "-";
+}
+
+// Los dialogos de Reserva y Boleto esperan un lote con su reserva aplanada.
+export function loteFromReserva(reserva: ReservaRow): LoteConReserva {
+  return {
+    ...reserva,
+    id: reserva.lotId,
+    estado: reserva.loteEstado,
+    reservaId: reserva.id,
+    reservaEstado: reserva.estado,
+  } as unknown as LoteConReserva;
+}
+
+export function sortByCreatedDesc(rows: ReservaRow[]) {
+  return [...rows].sort((a, b) => b.reservaCreatedAt.localeCompare(a.reservaCreatedAt));
+}

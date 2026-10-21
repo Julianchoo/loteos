@@ -11,6 +11,7 @@ import {
   Ruler,
   Sunrise,
 } from "lucide-react";
+import { CompartirPlanoButton } from "@/components/compartir-plano-button";
 import {
   NuevoAmanecerPlano,
   type LotePublico,
@@ -32,7 +33,7 @@ import {
   nuevoAmanecerStats,
 } from "@/lib/nuevo-amanecer";
 import { sharedOpenGraphImage, sharedTwitterImage, siteUrl } from "@/lib/seo";
-import { isCurrentUserAdmin } from "@/lib/session";
+import { getCurrentCrmRole } from "@/lib/session";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -123,8 +124,14 @@ function HeroPlanoPattern() {
   );
 }
 
-export default async function NuevoAmanecerPage() {
-  const isAdmin = await isCurrentUserAdmin();
+export default async function NuevoAmanecerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string }>;
+}) {
+  const { ref } = await searchParams;
+  const crmRole = await getCurrentCrmRole();
+  const isAdmin = crmRole === "admin";
   let maxFinancingMonths: number | null = null;
   let projectVisibility: boolean | null = null;
 
@@ -153,7 +160,8 @@ export default async function NuevoAmanecerPage() {
       const precio = Number(lote.precioBase);
       lotes[nuevoAmanecerLoteKey(lote.manzana, lote.number)] = {
         id: lote.id,
-        estado: lote.estado,
+        // El público no ve si un lote está reservado o vendido: todo lo que no está a la venta es "no disponible".
+        estado: isAdmin || lote.estado === "disponible" ? lote.estado : "no_disponible",
         precio: lote.estado === "disponible" && precio > 0 ? precio : null,
       };
     }
@@ -317,7 +325,17 @@ export default async function NuevoAmanecerPage() {
             </p>
           </div>
 
-          <NuevoAmanecerPlano lotes={lotes} />
+          {crmRole && (
+            <div className="flex justify-end">
+              <CompartirPlanoButton
+                path="/proyectos/nuevo-amanecer"
+                title="Nuevo Amanecer · Plano de lotes"
+                variant="outline"
+                size="sm"
+              />
+            </div>
+          )}
+          <NuevoAmanecerPlano lotes={lotes} detallado={isAdmin} refId={ref} />
 
           <p className="text-xs text-muted-foreground">
             Superficies y medidas aproximadas según el plano del proyecto,

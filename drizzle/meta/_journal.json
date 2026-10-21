@@ -64,6 +64,13 @@
       "when": 1792586067821,
       "tag": "0008_far_tempest",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792587094134,
+      "tag": "0009_square_galactus",
+      "breakpoints": true
     }
   ]
 }

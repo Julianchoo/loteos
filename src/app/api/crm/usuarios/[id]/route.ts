@@ -4,12 +4,13 @@ import { z } from "zod";
 import { requireApiAdmin, isErrorResponse } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { user } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 
 const updateUserSchema = z
   .object({
     name: z.string().min(2).max(100).optional(),
     email: z.string().email().optional(),
-    role: z.enum(["admin", "comercial"]).optional(),
+    role: z.enum(["admin", "comercial", "socio"]).optional(),
   })
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
     message: "Debe enviar al menos un campo para actualizar",
@@ -62,7 +63,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: error.issues },
+        { error: validationMessage(error.issues), details: error.issues },
         { status: 400 }
       );
     }

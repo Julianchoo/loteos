@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
 
 export type CrmProject = { id: string; name: string; isVisible: boolean };
 
-export type CrmRole = "admin" | "comercial";
+export type CrmRole = "admin" | "comercial" | "socio";
 
 type CrmContextValue = {
   /** Role of the logged-in CRM user, resolved on the server from the DB. */
@@ -72,6 +73,24 @@ export function useCrm() {
   const value = useContext(CrmContext);
   if (!value) throw new Error("useCrm must be used inside CrmProvider");
   return value;
+}
+
+/**
+ * For server-rendered CRM pages (Insights): mirrors the selected project into `?projectId=`
+ * so the page re-renders with it.
+ */
+export function ProjectSearchParamSync({ current }: { current: string }) {
+  const { projects, projectId } = useCrm();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Wait for the stored selection to load before touching the URL.
+    if (projects.length === 0 || projectId === current) return;
+    router.replace(projectId ? `${pathname}?projectId=${encodeURIComponent(projectId)}` : pathname);
+  }, [projects.length, projectId, current, pathname, router]);
+
+  return null;
 }
 
 /** Appends `projectId` to a CRM API query string when a project is selected. */

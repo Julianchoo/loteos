@@ -1,37 +1,60 @@
 import { NextResponse } from "next/server";
-import { and, eq, ne, or } from "drizzle-orm";
+import { and, eq, inArray, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
-import { createContratoForReserva } from "@/lib/cuenta-corriente";
+import { logAudit } from "@/lib/audit";
+import { crmTransaction } from "@/lib/crm-transaction";
+import {
+  camposContratoMessage,
+  contratoVigente,
+  createContratoForReserva,
+  cuentaCorrienteUrl,
+  missingBaseCacMessage,
+} from "@/lib/cuenta-corriente";
 import { db } from "@/lib/db";
 import { estadoLoteValues } from "@/lib/lotes";
-import { lot, project, reservas, user } from "@/lib/schema";
+import { compradorSnapshot } from "@/lib/reservas";
+import { contratos, lead as leadTable, lot, project, reservas, user } from "@/lib/schema";
 import type { EstadoLote } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 
 const updateSchema = z
   .object({
     estado: z.enum(["activa", "cancelada", "vencida", "realizada"]).optional(),
     reservadoPor: z.string().email().optional(),
     confirmarEdicionVendida: z.boolean().optional(),
+    confirmarCambioEstado: z.boolean().optional(),
   })
   .refine((data) => data.estado || data.reservadoPor, {
     message: "Debe indicar un cambio",
   })
   .strict();
 
-function loteEstadoForReserva(estado: z.infer<typeof updateSchema>["estado"]): EstadoLote {
+type EstadoReservaValue = NonNullable<z.infer<typeof updateSchema>["estado"]>;
+
+// Activa o realizada: la reserva que ocupa el lote. Solo puede haber una por lote.
+function isVigente(estado: EstadoReservaValue) {
+  return estado === "activa" || estado === "realizada";
+}
+
+// El estado del lote lo define su reserva vigente: activa -> reservado,
+// realizada -> vendido, sin reserva vigente -> disponible.
+function loteEstadoForReserva(estado: EstadoReservaValue): EstadoLote {
   if (estado === "activa") return "reservado";
   if (estado === "realizada") return "vendido";
   return "disponible";
 }
 
-function cuentaCorrienteMessage(kind: string) {
-  if (kind === "ok") return "Cuenta corriente creada";
-  if (kind === "exists") return "La reserva ya tenia cuenta corriente";
-  if (kind === "missing-data") return "Faltan datos para generar la cuenta corriente";
-  if (kind === "missing-exchange-rate") {
-    return "Falta tipo de cambio BNA para generar la cuenta Pesos + CAC";
+function cuentaCorrienteMessage(result: Awaited<ReturnType<typeof createContratoForReserva>>) {
+  if (result.kind === "ok") return "Cuenta corriente creada";
+  if (result.kind === "exists") return "La reserva ya tenia cuenta corriente";
+  if (result.kind === "missing-data" || result.kind === "invalid-data") {
+    return `${camposContratoMessage(result)}. Completalos en la reserva y generá la cuenta desde su cuenta corriente`;
   }
+  if (result.kind === "missing-exchange-rate") {
+    return "La cuenta Pesos + CAC necesita el tipo de cambio BNA: generala desde su cuenta corriente";
+  }
+  if (result.kind === "missing-base-cac") return missingBaseCacMessage(result.periodo);
   return "No se genero cuenta corriente";
 }
 
@@ -107,7 +130,7 @@ export async function PATCH(
     const body = await request.json();
     const data = updateSchema.parse(body);
 
-    const result = await db.transaction(async (tx) => {
+    const result = await crmTransaction(async (tx) => {
       const [current] = await tx
         .select({ reserva: reservas, lote: lot })
         .from(reservas)
@@ -117,45 +140,59 @@ export async function PATCH(
       if (!current) return { kind: "not-found" as const };
 
       const { reserva, lote } = current;
-      const isSoldOrRealizada =
-        lote.estado === "vendido" || reserva.estado === "realizada";
+      await tx
+        .select({ id: lot.id })
+        .from(lot)
+        .where(eq(lot.id, reserva.lotId))
+        .for("update");
+      const cambiaEstado = Boolean(data.estado && data.estado !== reserva.estado);
+      const nextEstado = data.estado ?? reserva.estado;
 
+      // Cambiar el estado o el comercial de una reserva es solo de administradores, salvo
+      // que el comercial cancele su propia reserva activa.
+      // El comercial edita los datos de su reserva activa desde el lote (PUT lotes).
+      const comercialCancelaPropia =
+        data.estado === "cancelada" &&
+        !data.reservadoPor &&
+        reserva.estado === "activa" &&
+        reserva.reservadoPor === authResult.email;
+      if (authResult.role !== "admin" && !comercialCancelaPropia) {
+        return { kind: "forbidden" as const };
+      }
+
+      // Una venta con cuenta corriente vigente no se deshace por atrás: primero se cancela la cuenta.
+      if (cambiaEstado && reserva.estado === "realizada") {
+        const [contrato] = await tx
+          .select({ id: contratos.id })
+          .from(contratos)
+          .where(and(eq(contratos.reservaId, reserva.id), contratoVigente));
+        if (contrato) return { kind: "cuenta-vigente" as const };
+      }
+
+      // Todo cambio de estado que toque una reserva vigente (desde o hacia activa/realizada)
+      // mueve el estado del lote, asi que exige confirmacion explicita.
       if (
-        isSoldOrRealizada &&
-        (authResult.role !== "admin" || data.confirmarEdicionVendida !== true)
+        cambiaEstado &&
+        (isVigente(reserva.estado) || isVigente(nextEstado)) &&
+        data.confirmarCambioEstado !== true
       ) {
+        return { kind: "estado-confirmation-required" as const };
+      }
+
+      const isSoldOrRealizada = lote.estado === "vendido" || reserva.estado === "realizada";
+      if (data.reservadoPor && isSoldOrRealizada && data.confirmarEdicionVendida !== true) {
         return { kind: "sold-confirmation-required" as const };
-      }
-
-      if (
-        authResult.role !== "admin" &&
-        (reserva.estado === "realizada" || data.estado === "realizada")
-      ) {
-        return { kind: "admin-only-realizada" as const };
-      }
-
-      if (
-        authResult.role !== "admin" &&
-        reserva.reservadoPor !== authResult.email
-      ) {
-        return { kind: "forbidden" as const };
-      }
-
-      if (data.reservadoPor && authResult.role !== "admin") {
-        return { kind: "forbidden" as const };
       }
 
       if (data.reservadoPor) {
         const [targetUser] = await tx
           .select({ id: user.id })
           .from(user)
-          .where(and(eq(user.email, data.reservadoPor), eq(user.role, "comercial")))
+          .where(and(eq(user.email, data.reservadoPor), inArray(user.role, ["comercial", "socio"])))
           .limit(1);
 
         if (!targetUser) return { kind: "invalid-comercial" as const };
       }
-
-      const nextEstado = data.estado ?? reserva.estado;
 
       if (data.estado === "realizada" && !reserva.formaPago) {
         return { kind: "missing-forma-pago" as const };
@@ -169,27 +206,43 @@ export async function PATCH(
         return { kind: "missing-modalidad-contrato" as const };
       }
 
-      if (nextEstado === "activa") {
-        const [otherActive] = await tx
-          .select({ id: reservas.id })
+      if (cambiaEstado && isVigente(nextEstado)) {
+        // Un lote no se puede vender ni reservar dos veces: ninguna otra reserva del
+        // lote puede estar activa o realizada. Se bloquea la fila del lote para que dos
+        // pedidos simultaneos no pasen ambos este control.
+        await tx
+          .select({ id: lot.id })
+          .from(lot)
+          .where(eq(lot.id, reserva.lotId))
+          .for("update");
+
+        const [otherVigente] = await tx
+          .select({ id: reservas.id, estado: reservas.estado })
           .from(reservas)
           .where(
             and(
               eq(reservas.lotId, reserva.lotId),
-              // Una realizada tambien ocupa el lote: activa + realizada dejaria
-              // dos reservas vigentes y currentReservaJoin() elegiria una al azar.
               or(eq(reservas.estado, "activa"), eq(reservas.estado, "realizada")),
               ne(reservas.id, reserva.id)
             )
           )
           .limit(1);
 
-        if (otherActive) return { kind: "active-conflict" as const };
+        if (otherVigente) return { kind: "active-conflict" as const, other: otherVigente };
+
+        if (!isVigente(reserva.estado) && lote.estado === "no_disponible") {
+          return { kind: "lote-no-disponible" as const };
+        }
       }
 
+      const [lead] =
+        reserva.leadId && nextEstado === "realizada"
+          ? await tx.select().from(leadTable).where(eq(leadTable.id, reserva.leadId))
+          : [];
       await tx
         .update(reservas)
         .set({
+          ...(cambiaEstado && nextEstado === "realizada" && lead ? compradorSnapshot(lead) : {}),
           ...(data.estado ? { estado: data.estado } : {}),
           ...(data.reservadoPor ? { reservadoPor: data.reservadoPor } : {}),
           modificadoPor: authResult.email,
@@ -197,17 +250,34 @@ export async function PATCH(
         })
         .where(eq(reservas.id, reserva.id));
 
-      const shouldSyncLote =
-        nextEstado === "activa" ||
-        nextEstado === "realizada" ||
-        (Boolean(data.estado) && reserva.estado === "activa");
-
-      if (shouldSyncLote) {
+      // Si la reserva era o pasa a ser la vigente, el lote sigue su estado. Pasar entre
+      // cancelada y vencida no toca el lote (puede tener otra reserva vigente).
+      if (cambiaEstado && (isVigente(reserva.estado) || isVigente(nextEstado))) {
         await tx
           .update(lot)
           .set(estadoLoteValues(loteEstadoForReserva(nextEstado)))
           .where(eq(lot.id, reserva.lotId));
       }
+
+      const [after] = await tx
+        .select({ reserva: reservas, lote: lot })
+        .from(reservas)
+        .innerJoin(lot, eq(reservas.lotId, lot.id))
+        .where(eq(reservas.id, reserva.id));
+      await logAudit(tx, {
+        entidad: "reserva",
+        entidadId: reserva.id,
+        usuario: authResult.email,
+        antes: reserva,
+        despues: after?.reserva,
+      });
+      await logAudit(tx, {
+        entidad: "lote",
+        entidadId: lote.id,
+        usuario: authResult.email,
+        antes: lote,
+        despues: after?.lote,
+      });
 
       const [updated] = await tx
         .select({
@@ -241,7 +311,19 @@ export async function PATCH(
         .innerJoin(project, eq(lot.projectId, project.id))
         .where(eq(reservas.id, reserva.id));
 
-      return { kind: "ok" as const, data: updated };
+      const cuentaResult =
+        data.estado === "realizada" &&
+        updated &&
+        updated.formaPago !== "contado" &&
+        (updated.modalidadContrato === "usd_fijo" || updated.modalidadContrato === "pesos_cac")
+          ? await createContratoForReserva(
+              reservaId,
+              { modalidad: updated.modalidadContrato },
+              authResult.email,
+              tx
+            )
+          : null;
+      return { kind: "ok" as const, data: updated, cuentaResult };
     });
 
     if (result.kind === "not-found") {
@@ -249,37 +331,67 @@ export async function PATCH(
     }
     if (result.kind === "forbidden") {
       return NextResponse.json(
-        { error: "Solo el comercial que tomó la reserva o un administrador puede modificarla" },
+        {
+          error:
+            "Solo un administrador puede cambiar el estado o el comercial de una reserva (un comercial solo puede cancelar sus propias reservas activas). Pedile el cambio a un admin",
+        },
+        { status: 403 }
+      );
+    }
+    if (result.kind === "cuenta-vigente") {
+      return NextResponse.json(
+        {
+          error:
+            "Esta reserva tiene cuenta corriente. Para cambiarle el estado, primero cancelá la cuenta corriente (queda guardada como historial).",
+          cuentaCorrienteUrl: cuentaCorrienteUrl(reservaId),
+        },
+        { status: 409 }
+      );
+    }
+    if (result.kind === "estado-confirmation-required") {
+      return NextResponse.json(
+        { error: "OJO! Este cambio mueve el estado del lote. Confirmalo para continuar" },
         { status: 403 }
       );
     }
     if (result.kind === "sold-confirmation-required") {
       return NextResponse.json(
-        { error: "OJO! Estás por cambiar datos de un lote o reserva ya vendido" },
-        { status: 403 }
-      );
-    }
-    if (result.kind === "admin-only-realizada") {
-      return NextResponse.json(
-        { error: "Solo un administrador puede marcar o editar una reserva realizada" },
+        {
+          error:
+            "Esta reserva o su lote ya están vendidos. Para modificarla, tocá \"Editar vendida\" en la ficha de la reserva, confirmá y volvé a intentar",
+        },
         { status: 403 }
       );
     }
     if (result.kind === "active-conflict") {
       return NextResponse.json(
-        { error: "Este lote ya tiene una reserva vigente (activa o realizada)" },
+        {
+          error: `Este lote ya tiene la reserva #${result.other.id} ${result.other.estado}. Un lote no puede tener dos reservas vigentes: cancelá esa antes de reactivar esta`,
+        },
+        { status: 409 }
+      );
+    }
+    if (result.kind === "lote-no-disponible") {
+      return NextResponse.json(
+        { error: "El lote está marcado como no disponible. Pasalo a disponible antes de reactivar la reserva" },
         { status: 409 }
       );
     }
     if (result.kind === "missing-forma-pago") {
       return NextResponse.json(
-        { error: "Elegí el tipo de pago antes de marcar la reserva como realizada" },
+        {
+          error:
+            "Elegí el tipo de pago (contado o financiado) en la ficha de la reserva antes de marcarla como realizada",
+        },
         { status: 400 }
       );
     }
     if (result.kind === "missing-modalidad-contrato") {
       return NextResponse.json(
-        { error: "Elegí USD fijo o Pesos + CAC antes de marcar la reserva como realizada" },
+        {
+          error:
+            "Elegí la modalidad de las cuotas (USD fijo o Pesos + CAC) en la ficha de la reserva antes de marcarla como realizada",
+        },
         { status: 400 }
       );
     }
@@ -304,18 +416,12 @@ export async function PATCH(
       (updatedReserva.modalidadContrato === "usd_fijo" ||
         updatedReserva.modalidadContrato === "pesos_cac")
     ) {
-      const cuentaResult = await createContratoForReserva(
-        reservaId,
-        { modalidad: updatedReserva.modalidadContrato },
-        authResult.email
-      );
+      const cuentaResult = result.cuentaResult!;
       return NextResponse.json({
         ...updatedReserva,
         cuentaCorriente: {
           status: cuentaResult.kind,
-          message: cuentaResult.kind === "missing-data"
-            ? cuentaResult.message
-            : cuentaCorrienteMessage(cuentaResult.kind),
+          message: cuentaCorrienteMessage(cuentaResult),
           contratoId:
             "contratoId" in cuentaResult ? cuentaResult.contratoId : null,
         },
@@ -326,7 +432,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos invalidos", details: error.issues },
+        { error: validationMessage(error.issues), details: error.issues },
         { status: 400 }
       );
     }

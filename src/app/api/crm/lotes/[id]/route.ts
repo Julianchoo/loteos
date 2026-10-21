@@ -2,17 +2,22 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit";
+import { crmTransaction } from "@/lib/crm-transaction";
+import { contratoVigente, cuentaCorrienteUrl } from "@/lib/cuenta-corriente";
 import { db } from "@/lib/db";
-import { getMinimumAnticipoUsd } from "@/lib/financiacion";
+import { getMinimumAnticipoUsd, MIN_ANTICIPO_PCT } from "@/lib/financiacion";
 import { estadoLoteValues, legacyLotPrice, legacyLotSize } from "@/lib/lotes";
 import {
   currentReservaJoin,
   flattenLoteReserva,
   hasReservaData,
   pickReservaData,
+  compradorSnapshot,
 } from "@/lib/reservas";
-import { lead, lot, project, reservas } from "@/lib/schema";
+import { contratos, lead, lot, project, reservas } from "@/lib/schema";
 import type { EstadoLote } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 
 const COMERCIAL_FIELDS = [
   "estado",
@@ -51,7 +56,9 @@ const COMERCIAL_FIELDS = [
 
 const updateSchema = z
   .object({
-    estado: z.enum(["disponible", "no_disponible", "reservado", "vendido"]).optional(),
+    // A mano solo se alterna disponible <-> no disponible. "Reservado" y "vendido"
+    // salen de la reserva vigente (crearla, realizarla) via PATCH /reservas/[id].
+    estado: z.enum(["disponible", "no_disponible"]).optional(),
     leadId: z.string().min(1).nullable().optional(),
     nombreCoComprador: z.string().nullable().optional(),
     dniCoComprador: z.string().nullable().optional(),
@@ -179,14 +186,6 @@ function hasAnyField(data: Record<string, unknown>, fields: readonly string[]) {
   return fields.some((field) => field in data);
 }
 
-function isReservaCreation(
-  data: { estado?: string | undefined },
-  activeReserva: unknown,
-  shouldTouchReserva: boolean
-) {
-  return !activeReserva && (data.estado === "reservado" || shouldTouchReserva);
-}
-
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -216,7 +215,15 @@ export async function PUT(
       }
     }
 
-    const result = await db.transaction(async (tx) => {
+    const result = await crmTransaction(async (tx) => {
+      // Bloquea el lote: PATCH /reservas/[id] hace lo mismo, asi que crear o reactivar
+      // reservas del mismo lote no corren en paralelo y no pueden quedar dos vigentes.
+      await tx
+        .select({ id: lot.id })
+        .from(lot)
+        .where(eq(lot.id, lotId))
+        .for("update");
+
       const [currentRow] = await tx
         .select({ lote: lot, reserva: reservas, lead })
         .from(lot)
@@ -230,8 +237,7 @@ export async function PUT(
       const requestedFormaPago = data.formaPago ?? activeReserva?.formaPago;
       const requestedAnticipo = numericValue(data.anticipoNum);
       const currentAnticipo = numericValue(activeReserva?.anticipoNum);
-      const changesAnticipo =
-        "anticipoNum" in data && requestedAnticipo !== currentAnticipo;
+      const changesAnticipo = "anticipoNum" in data && requestedAnticipo !== currentAnticipo;
       const shouldValidateAnticipo =
         requestedFormaPago !== "contado" &&
         "anticipoNum" in data &&
@@ -270,12 +276,11 @@ export async function PUT(
         authResult.role !== "admin" &&
         activeReserva.reservadoPor !== authResult.email;
 
-      if (isReservedByOther) return { kind: "forbidden" as const };
+      if (isReservedByOther) {
+        return { kind: "forbidden" as const, reservadoPor: activeReserva.reservadoPor };
+      }
 
-      const touchesCommercialParcelaFields = hasAnyField(
-        allowedData,
-        PARCELA_COMERCIAL_FIELDS
-      );
+      const touchesCommercialParcelaFields = hasAnyField(allowedData, PARCELA_COMERCIAL_FIELDS);
       const canComercialEditParcelaFields =
         authResult.role === "admin" ||
         current.estado === "disponible" ||
@@ -286,11 +291,10 @@ export async function PUT(
         touchesCommercialParcelaFields &&
         !canComercialEditParcelaFields
       ) {
-        return { kind: "forbidden" as const };
+        return { kind: "forbidden" as const, reservadoPor: null };
       }
 
       const parcelaData: Record<string, unknown> = {};
-      if ("estado" in allowedData) parcelaData.estado = allowedData.estado;
       if (authResult.role === "admin") {
         for (const field of PARCELA_ADMIN_FIELDS) {
           if (field in allowedData) parcelaData[field] = allowedData[field];
@@ -304,7 +308,7 @@ export async function PUT(
         parcelaData.valorM2 = calculateValorM2(
           "precioBase" in allowedData
             ? allowedData.precioBase
-            : current.precioBase ?? current.precioEtapa1,
+            : (current.precioBase ?? current.precioEtapa1),
           "superficieM2" in parcelaData ? parcelaData.superficieM2 : current.superficieM2
         );
       }
@@ -314,10 +318,68 @@ export async function PUT(
         ? hasReservaData(reservaData)
         : hasReservaValue(reservaData);
       const requestedLeadId =
-        "leadId" in reservaData ? (reservaData.leadId as string | null) : activeReserva?.leadId ?? null;
-      const needsLead = isReservaCreation(data, activeReserva, shouldTouchReserva);
+        "leadId" in reservaData
+          ? (reservaData.leadId as string | null)
+          : (activeReserva?.leadId ?? null);
+      const createsReserva = !activeReserva && shouldTouchReserva;
+      if (
+        activeReserva?.leadId &&
+        "leadId" in reservaData &&
+        (!requestedLeadId ||
+          (activeReserva.estado === "realizada" && requestedLeadId !== activeReserva.leadId))
+      ) {
+        return { kind: "protected-lead" as const };
+      }
+      if (activeReserva) {
+        const [contrato] = await tx
+          .select({ id: contratos.id })
+          .from(contratos)
+          .where(and(eq(contratos.reservaId, activeReserva.id), contratoVigente));
+        const protectedFields = [
+          "formaPago",
+          "modalidadContrato",
+          "fechaFirma",
+          "fechaReserva",
+          "precioTotalNum",
+          "precioTotalPalabras",
+          "anticipoNum",
+          "anticipoPalabras",
+          "saldoNum",
+          "saldoPalabras",
+          "cantidadCuotas",
+          "cuotaMensual",
+          "cuotaMensualPalabras",
+        ] as const;
+        if (
+          contrato &&
+          protectedFields.some(
+            (field) => field in reservaData && reservaData[field] !== activeReserva[field]
+          )
+        ) {
+          return { kind: "protected-contract" as const, reservaId: activeReserva.id };
+        }
+      }
 
-      if (needsLead && !requestedLeadId) {
+      if (allowedData.estado !== undefined) {
+        // Para liberar un lote reservado o vendido hay que cancelar su reserva.
+        if (activeReserva) {
+          return { kind: "estado-con-reserva" as const, reservaId: activeReserva.id };
+        }
+        if (shouldTouchReserva) return { kind: "estado-y-reserva" as const };
+        // Liberar un lote no disponible es decisión de un administrador.
+        if (
+          authResult.role !== "admin" &&
+          allowedData.estado === "disponible" &&
+          current.estado !== "disponible"
+        ) {
+          return { kind: "admin-only-disponible" as const };
+        }
+      }
+      if (createsReserva && current.estado === "no_disponible") {
+        return { kind: "lote-no-disponible" as const };
+      }
+
+      if (createsReserva && !requestedLeadId) {
         return { kind: "missing-lead" as const };
       }
 
@@ -327,40 +389,26 @@ export async function PUT(
           leadConditions.push(eq(lead.asignadoA, authResult.id));
         }
         const [selectedLead] = await tx
-          .select({ id: lead.id })
+          .select()
           .from(lead)
           .where(and(...leadConditions));
 
         if (!selectedLead) return { kind: "invalid-lead" as const };
+        if (createsReserva || requestedLeadId !== activeReserva?.leadId)
+          Object.assign(reservaData, compradorSnapshot(selectedLead));
       }
 
-      if (data.estado && data.estado !== "reservado") {
-        parcelaData.estado = data.estado;
-        if (activeReserva) {
-          await tx
-            .update(reservas)
-            .set({
-              estado: "cancelada",
-              modificadoPor: authResult.email,
-              updatedAt: new Date(),
-            })
-            .where(eq(reservas.id, activeReserva.id));
-        }
-      } else if (data.estado === "reservado" || shouldTouchReserva) {
-        // Pedir "reservado" sobre una reserva realizada deshace la venta;
-        // sin estado explicito, editar datos no baja el lote de vendido.
-        const revierteVenta =
-          data.estado === "reservado" && activeReserva?.estado === "realizada";
-        parcelaData.estado =
-          activeReserva?.estado === "realizada" && !revierteVenta
-            ? "vendido"
-            : "reservado";
+      if (allowedData.estado !== undefined) {
+        parcelaData.estado = allowedData.estado;
+      } else if (shouldTouchReserva) {
+        // Editar datos no cambia el estado de la reserva; el lote queda alineado con ella
+        // (activa -> reservado, realizada -> vendido, nueva -> reservado).
+        parcelaData.estado = activeReserva?.estado === "realizada" ? "vendido" : "reservado";
         if (activeReserva) {
           await tx
             .update(reservas)
             .set({
               ...reservaData,
-              ...(revierteVenta ? { estado: "activa" as const } : {}),
               modificadoPor: authResult.email,
               updatedAt: new Date(),
             })
@@ -399,6 +447,24 @@ export async function PUT(
         .where(eq(lot.id, lotId));
       if (!updatedRow) return { kind: "not-found" as const };
 
+      await logAudit(tx, {
+        entidad: "lote",
+        entidadId: lotId,
+        usuario: authResult.email,
+        antes: current,
+        despues: updatedRow.lote,
+      });
+      const reservaId = updatedRow.reserva?.id ?? activeReserva?.id;
+      if (reservaId) {
+        await logAudit(tx, {
+          entidad: "reserva",
+          entidadId: reservaId,
+          usuario: authResult.email,
+          antes: activeReserva,
+          despues: updatedRow.reserva,
+        });
+      }
+
       return {
         kind: "ok" as const,
         data: flattenLoteReserva(
@@ -413,47 +479,111 @@ export async function PUT(
     if (result.kind === "not-found") {
       return NextResponse.json({ error: "Lote no encontrado" }, { status: 404 });
     }
+    if (result.kind === "protected-lead") {
+      return NextResponse.json(
+        {
+          error:
+            "El comprador de esta reserva no se puede quitar ni cambiar. Si es otro comprador, cancelá la reserva y creá una nueva",
+        },
+        { status: 409 }
+      );
+    }
+    if (result.kind === "protected-contract") {
+      return NextResponse.json(
+        {
+          error:
+            "Esta reserva tiene cuenta corriente. Para cambiar precio, anticipo, cuotas, forma de pago o fechas, primero cancelá la cuenta corriente (queda guardada como historial) y después generá una nueva.",
+          cuentaCorrienteUrl: cuentaCorrienteUrl(result.reservaId),
+        },
+        { status: 409 }
+      );
+    }
     if (result.kind === "forbidden") {
       return NextResponse.json(
-        { error: "Este lote fue reservado por otro comercial" },
+        {
+          error: result.reservadoPor
+            ? `Este lote lo reservó ${result.reservadoPor}. Pedile a un administrador que lo modifique o lo reasigne`
+            : "Solo podés modificar lotes disponibles o reservados por vos. Pedile el cambio a un administrador",
+        },
         { status: 403 }
       );
     }
     if (result.kind === "sold-confirmation-required") {
       return NextResponse.json(
-        { error: "OJO! Estás por cambiar datos de un lote o reserva ya vendido" },
+        {
+          error:
+            "Este lote o reserva ya está vendido. Para modificarlo, tocá \"Editar vendido\" en la ficha, confirmá y volvé a guardar",
+        },
         { status: 403 }
       );
     }
     if (result.kind === "admin-only-realizada") {
       return NextResponse.json(
-        { error: "Solo un administrador puede editar una reserva realizada o su lote" },
+        {
+          error:
+            "La reserva ya está realizada: solo un administrador puede editarla a ella o a su lote. Pedile el cambio a un admin",
+        },
         { status: 403 }
+      );
+    }
+    if (result.kind === "estado-con-reserva") {
+      return NextResponse.json(
+        {
+          error: `El lote tiene la reserva #${result.reservaId} vigente. Para liberarlo, cancelá esa reserva`,
+        },
+        { status: 409 }
+      );
+    }
+    if (result.kind === "estado-y-reserva") {
+      return NextResponse.json(
+        {
+          error:
+            "No se puede cambiar el estado del lote y cargar una reserva en el mismo guardado: guardá primero el estado y después la reserva",
+        },
+        { status: 400 }
+      );
+    }
+    if (result.kind === "admin-only-disponible") {
+      return NextResponse.json(
+        { error: "Solo un administrador puede pasar un lote a disponible. Pedile el cambio a un admin" },
+        { status: 403 }
+      );
+    }
+    if (result.kind === "lote-no-disponible") {
+      return NextResponse.json(
+        { error: "El lote está marcado como no disponible. Pasalo a disponible antes de reservarlo" },
+        { status: 409 }
       );
     }
     if (result.kind === "missing-lead") {
       return NextResponse.json(
-        { error: "Seleccioná un lead antes de reservar el lote" },
+        { error: "Seleccioná el lead comprador antes de reservar el lote" },
         { status: 400 }
       );
     }
     if (result.kind === "invalid-lead") {
       return NextResponse.json(
-        { error: "El lead seleccionado no existe o no tenés permiso para usarlo" },
+        {
+          error:
+            "El lead seleccionado no existe o no está asignado a vos. Elegí uno de tus leads o pedile a un admin que te lo asigne",
+        },
         { status: 403 }
       );
     }
 
     if (result.kind === "missing-list-price") {
       return NextResponse.json(
-        { error: "El lote no tiene un precio de lista para validar el anticipo" },
+        {
+          error:
+            "El lote no tiene precio de lista, así que no se puede validar el anticipo. Un administrador tiene que cargarle el precio antes de reservarlo",
+        },
         { status: 400 }
       );
     }
     if (result.kind === "invalid-anticipo") {
       return NextResponse.json(
         {
-          error: `El anticipo no puede ser menor a USD ${result.minimumAnticipo}`,
+          error: `El anticipo mínimo para este lote es USD ${result.minimumAnticipo} (${MIN_ANTICIPO_PCT}% del precio de lista)`,
         },
         { status: 400 }
       );
@@ -463,10 +593,11 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos invalidos", details: error.issues },
+        { error: validationMessage(error.issues), details: error.issues },
         { status: 400 }
       );
     }
+    console.error("PUT /api/crm/lotes/[id]", error);
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

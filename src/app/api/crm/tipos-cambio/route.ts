@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isErrorResponse, requireApiAdmin } from "@/lib/api-auth";
 import { listTiposCambioBna, saveTipoCambioBna } from "@/lib/tipos-cambio";
+import { validationMessage } from "@/lib/validation-message";
 
 const inputSchema = z.object({
-  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  valor: z.number().positive(),
+  fecha: z.iso.date(),
+  valor: z
+    .number()
+    .positive()
+    .refine(
+      (value) => Math.round(value * 100) > 0,
+      "La cotización debe ser positiva al redondear a centavos"
+    ),
   fuente: z.string().nullable().optional(),
+  confirmarImpacto: z.string().optional(),
 });
 
 export async function GET() {
@@ -23,7 +31,7 @@ export async function POST(request: Request) {
   const parsed = inputSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Fecha o cotizacion invalida", details: parsed.error.issues },
+      { error: validationMessage(parsed.error.issues), details: parsed.error.issues },
       { status: 400 }
     );
   }
@@ -33,6 +41,16 @@ export async function POST(request: Request) {
     valor: parsed.data.valor,
     fuente: parsed.data.fuente ?? null,
     creadoPor: authResult.email,
+    confirmarImpacto: parsed.data.confirmarImpacto,
   });
-  return NextResponse.json(row, { status: 201 });
+  if (row.kind === "confirmation-required")
+    return NextResponse.json(
+      {
+        error: "Esta cotización afecta importes existentes. Confirmá el cambio para continuar.",
+        impact: row.impact,
+        confirmarImpacto: row.confirmation,
+      },
+      { status: 409 }
+    );
+  return NextResponse.json(row.row, { status: 201 });
 }

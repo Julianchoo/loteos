@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
 import { db } from "@/lib/db";
+import { parseMoney } from "@/lib/money";
 import { amountToSpanishWords } from "@/lib/number-words";
-import { activeReservaJoin, flattenLoteReserva } from "@/lib/reservas";
-import { lead, lot, reservas } from "@/lib/schema";
+import { currentReservaJoin, flattenLoteReserva } from "@/lib/reservas";
+import { contratos, lead, lot, reservas } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 const Docxtemplater = require("docxtemplater");  
 const PizZip = require("pizzip");  
 
@@ -71,38 +73,6 @@ function formatUsd(value: string | number | null | undefined): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
-}
-
-function parseMoney(value: string | number | null | undefined): number | null {
-  if (value === null || value === undefined || value === "") return null;
-  const text = String(value).trim().replace(/\s+/g, "");
-  const cleaned = text.replace(/[^\d.,-]/g, "");
-  if (!cleaned || cleaned === "-") return null;
-
-  const lastDot = cleaned.lastIndexOf(".");
-  const lastComma = cleaned.lastIndexOf(",");
-  let normalized = cleaned;
-
-  if (lastDot !== -1 && lastComma !== -1) {
-    const decimalSeparator = lastDot > lastComma ? "." : ",";
-    const thousandsSeparator = decimalSeparator === "." ? "," : ".";
-    normalized = cleaned
-      .replace(new RegExp(`\\${thousandsSeparator}`, "g"), "")
-      .replace(decimalSeparator, ".");
-  } else {
-    const separator = lastDot !== -1 ? "." : lastComma !== -1 ? "," : "";
-    if (separator) {
-      const parts = cleaned.split(separator);
-      const lastPart = parts[parts.length - 1] ?? "";
-      normalized = lastPart.length === 3
-        ? parts.join("")
-        : cleaned.replace(separator, ".");
-    }
-  }
-
-  const parsed = Number(normalized);
-
-  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function formatArs(value: number | null): string {
@@ -185,7 +155,7 @@ export async function POST(
   const parsed = boletoSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Datos inválidos", details: parsed.error.issues },
+      { error: validationMessage(parsed.error.issues), details: parsed.error.issues },
       { status: 400 }
     );
   }
@@ -195,32 +165,85 @@ export async function POST(
   const [row] = await db
     .select({ lote: lot, reserva: reservas, lead })
     .from(lot)
-    .leftJoin(reservas, activeReservaJoin())
+    .leftJoin(reservas, currentReservaJoin())
     .leftJoin(lead, eq(reservas.leadId, lead.id))
     .where(eq(lot.id, lotId));
 
   if (!row) {
     return NextResponse.json({ error: "Lote no encontrado" }, { status: 404 });
   }
+  // Una reserva realizada (venta) solo la toca un admin: el boleto guarda la modalidad del contrato.
   const canGenerateBoleto =
     authResult.role === "admin" ||
-    row.lote.estado === "disponible" ||
-    row.reserva?.reservadoPor === authResult.email;
+    (row.reserva?.estado !== "realizada" &&
+      (row.lote.estado === "disponible" || row.reserva?.reservadoPor === authResult.email));
   if (!canGenerateBoleto) {
     return NextResponse.json(
-      { error: "No tenés permiso para generar el boleto de este lote" },
+      {
+        error:
+          row.reserva?.estado === "realizada"
+            ? "La reserva ya está realizada: solo un administrador puede generar su boleto"
+            : `Este lote lo reservó ${row.reserva?.reservadoPor ?? "otro comercial"}: solo esa persona o un administrador pueden generar el boleto`,
+      },
       { status: 403 }
     );
   }
 
   const parcela = flattenLoteReserva(row.lote, row.reserva, row.lead);
   const loteNumero = parcela.parcela || parcela.number;
-  const modalidadContrato =
-    form.tipoPago === "financiado"
-      ? form.monedaBoleto === "usd"
-        ? "usd_fijo"
-        : "pesos_cac"
-      : null;
+  if (row.reserva) {
+    const [contrato] = await db
+      .select()
+      .from(contratos)
+      .where(and(eq(contratos.reservaId, row.reserva.id), eq(contratos.estado, "vigente")));
+    if (contrato) {
+      const economicFields = [
+        "precioTotalNum",
+        "anticipoNum",
+        "saldoNum",
+        "cuotaMensual",
+        "cantidadCuotas",
+      ] as const;
+      const economicLabels: Record<(typeof economicFields)[number], string> = {
+        precioTotalNum: "precio total",
+        anticipoNum: "anticipo",
+        saldoNum: "saldo",
+        cuotaMensual: "cuota mensual",
+        cantidadCuotas: "cantidad de cuotas",
+      };
+      const modalidad = form.monedaBoleto === "usd" ? "usd_fijo" : "pesos_cac";
+      const diferencias = [
+        form.tipoPago !== "financiado" && "tipo de pago (la cuenta corriente es financiada)",
+        modalidad !== contrato.modalidad &&
+          `moneda (la cuenta corriente es ${contrato.modalidad === "usd_fijo" ? "USD fijo" : "Pesos + CAC"})`,
+        ...economicFields
+          .filter((field) => form[field] && parseMoney(form[field]) !== parseMoney(row.reserva![field]))
+          .map((field) => `${economicLabels[field]} (reserva: ${row.reserva![field]}, boleto: ${form[field]})`),
+        contrato.modalidad === "pesos_cac" &&
+          form.tipoCambioBna &&
+          parseMoney(form.tipoCambioBna) !== Number(contrato.tipoCambioBna) &&
+          `tipo de cambio BNA (cuenta corriente: ${contrato.tipoCambioBna})`,
+      ].filter(Boolean);
+      if (diferencias.length > 0) {
+        return NextResponse.json(
+          {
+            error: `El boleto no coincide con la reserva y su cuenta corriente en: ${diferencias.join("; ")}. Corregilo o, si cambiaron las condiciones, cancelá la cuenta corriente y generá una nueva`,
+          },
+          { status: 409 }
+        );
+      }
+      form.precioTotalNum = row.reserva.precioTotalNum ?? "";
+      form.anticipoNum = row.reserva.anticipoNum ?? "";
+      form.saldoNum = row.reserva.saldoNum ?? "";
+      form.cuotaMensual = row.reserva.cuotaMensual ?? "";
+      form.cantidadCuotas = String(contrato.cantidadCuotas);
+      form.tipoCambioBna = contrato.tipoCambioBna ?? "";
+      form.precioTotalPalabras = amountToSpanishWords(form.precioTotalNum) ?? "";
+      form.anticipoPalabras = amountToSpanishWords(form.anticipoNum) ?? "";
+      form.saldoPalabras = amountToSpanishWords(form.saldoNum) ?? "";
+      form.cuotaMensualPalabras = amountToSpanishWords(form.cuotaMensual) ?? "";
+    }
+  }
   const numeroCuotaEntrega = form.numeroCuotaEntrega.trim();
   const entregaCuota = form.entregaCuota && Boolean(numeroCuotaEntrega);
   const saldoNum = form.saldoNum || formatUsd(parcela.saldoUsd);
@@ -234,7 +257,7 @@ export async function POST(
   if (usePesosCac) {
     if (tipoCambioBna === null || tipoCambioBna <= 0) {
       return NextResponse.json(
-        { error: "Ingresá el tipo de cambio vendedor BNA" },
+        { error: "Ingresá el tipo de cambio BNA vendedor para generar un boleto en Pesos + CAC" },
         { status: 400 }
       );
     }
@@ -326,12 +349,6 @@ export async function POST(
       ? "boleto-template-cuotas-usd.docx"
       : "boleto-template-cuotas.docx";
   const templatePath = path.join(process.cwd(), "src", "templates", templateName);
-  if (row.reserva && modalidadContrato) {
-    await db
-      .update(reservas)
-      .set({ modalidadContrato, updatedAt: new Date() })
-      .where(eq(reservas.id, row.reserva.id));
-  }
 
   let templateBuf: Buffer;
   try {

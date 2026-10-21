@@ -4,8 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import {
+  BarChart3,
   CalendarDays,
   CreditCard,
+  Globe,
+  History,
   LayoutDashboard,
   LogOut,
   MapPin,
@@ -37,10 +40,14 @@ function NavLinks({ role, onClose }: { role: CrmRole; onClose?: () => void }) {
     ? [
         ...baseNavItems,
         { href: "/crm/cuotas", icon: CreditCard, label: "Cuotas" },
+        { href: "/crm/insights", icon: BarChart3, label: "Insights" },
         { href: "/crm/usuarios", icon: UserCog, label: "Usuarios" },
+        { href: "/crm/auditoria", icon: History, label: "Auditoría" },
         { href: "/admin", icon: Settings, label: "Admin del sitio" },
       ]
-    : baseNavItems;
+    : role === "socio"
+      ? [...baseNavItems, { href: "/crm/insights", icon: BarChart3, label: "Insights" }]
+      : baseNavItems;
 
   return (
     <nav className="flex-1 space-y-1 px-3">
@@ -91,6 +98,17 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </div>
 
       <div className="border-t p-4 space-y-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-foreground"
+        >
+          <Link href="/" {...(onClose ? { onClick: onClose } : {})}>
+            <Globe className="h-4 w-4 mr-2" />
+            Ver sitio público
+          </Link>
+        </Button>
         <BnaExchangeRateIndicator
           enabled
           className="flex flex-col rounded-lg border bg-muted/40 px-3 py-2"
@@ -100,7 +118,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
             {session?.user?.name}
           </p>
           <p className="text-xs text-sidebar-foreground/70 truncate">{session?.user?.email}</p>
-          <span className="mt-1 inline-block text-xs bg-green-100 text-primary px-2 py-0.5 rounded-full capitalize">
+          <span className="mt-1 inline-block text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
             {role}
           </span>
         </div>

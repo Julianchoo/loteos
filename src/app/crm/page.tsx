@@ -1,11 +1,15 @@
-import { asc, eq, sql } from "drizzle-orm";
-import { MapPin, Users, CheckCircle, Clock } from "lucide-react";
+import { and, asc, eq, notInArray, sql } from "drizzle-orm";
 import { StatsCard } from "@/components/crm/stats-card";
 import { db } from "@/lib/db";
 import { LEAD_STATUS_LABELS } from "@/lib/lead-status";
 import { lead, lot, project } from "@/lib/schema";
+import { requireCrmUser } from "@/lib/session";
+import { tones, type Tone } from "@/lib/tones";
+import { cn } from "@/lib/utils";
 
-async function getStats() {
+// Admin ve todos los leads; el comercial, solo los asignados a él ("Mis leads").
+async function getStats(userId: string | null) {
+  const misLeads = userId ? eq(lead.asignadoA, userId) : undefined;
   const [
     totalParcelas,
     disponibles,
@@ -20,8 +24,15 @@ async function getStats() {
     db.select({ count: sql<number>`count(*)` }).from(lot).where(eq(lot.estado, "disponible")),
     db.select({ count: sql<number>`count(*)` }).from(lot).where(eq(lot.estado, "reservado")),
     db.select({ count: sql<number>`count(*)` }).from(lot).where(eq(lot.estado, "vendido")),
-    db.select({ count: sql<number>`count(*)` }).from(lead),
-    db.select({ count: sql<number>`count(*)` }).from(lead).where(eq(lead.status, "new")),
+    db.select({ count: sql<number>`count(*)` }).from(lead).where(misLeads),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(lead)
+      .where(
+        userId
+          ? and(misLeads, notInArray(lead.status, ["sold", "lost"]))
+          : eq(lead.status, "new")
+      ),
     db.select({
       id: lead.id,
       firstName: lead.firstName,
@@ -32,6 +43,7 @@ async function getStats() {
       createdAt: lead.createdAt,
     })
       .from(lead)
+      .where(misLeads)
       .orderBy(sql`${lead.createdAt} desc`)
       .limit(5),
     db
@@ -61,53 +73,52 @@ async function getStats() {
   };
 }
 
-const statusBadge: Record<string, { bg: string; text: string }> = {
-  new: { bg: "bg-blue-100", text: "text-blue-700" },
-  contacted: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  interested: { bg: "bg-purple-100", text: "text-purple-700" },
-  visit_scheduled: { bg: "bg-orange-100", text: "text-orange-700" },
-  proposal_sent: { bg: "bg-indigo-100", text: "text-indigo-700" },
-  sold: { bg: "bg-green-100", text: "text-green-700" },
-  lost: { bg: "bg-gray-100", text: "text-muted-foreground" },
+const statusTone: Record<string, Tone> = {
+  new: "info",
+  contacted: "warning",
+  interested: "warning",
+  visit_scheduled: "warning",
+  proposal_sent: "info",
+  sold: "positive",
+  lost: "neutral",
 };
 
 export default async function CrmDashboard() {
-  const stats = await getStats();
+  const { session, role } = await requireCrmUser();
+  const esAdmin = role === "admin";
+  const stats = await getStats(esAdmin ? null : session.user.id);
 
   return (
     <div className="space-y-8">
       <div className="border-b pb-6">
-        <h1 className="font-display text-3xl font-light text-foreground">Dashboard</h1>
+        <h1 className="font-serif text-3xl font-normal text-foreground">Dashboard</h1>
         <p className="font-body text-sm text-muted-foreground mt-1">Resumen general de los proyectos</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatsCard
+          href="/crm/lotes?estado=disponible"
           title="Lotes disponibles"
           value={stats.disponibles}
           description={`de ${stats.totalParcelas} totales`}
-          icon={MapPin}
-          accent="green"
         />
-        <StatsCard
-          title="Reservados"
-          value={stats.reservadas}
-          icon={Clock}
-          accent="amber"
-        />
-        <StatsCard
-          title="Vendidos"
-          value={stats.vendidas}
-          icon={CheckCircle}
-          accent="blue"
-        />
-        <StatsCard
-          title="Leads nuevos"
-          value={stats.leadsNuevos}
-          description={`de ${stats.totalLeads} totales`}
-          icon={Users}
-          accent="red"
-        />
+        <StatsCard href="/crm/lotes?estado=reservado" title="Reservados" value={stats.reservadas} />
+        <StatsCard href="/crm/lotes?estado=vendido" title="Vendidos" value={stats.vendidas} />
+        {esAdmin ? (
+          <StatsCard
+            href="/crm/leads?status=new"
+            title="Leads nuevos"
+            value={stats.leadsNuevos}
+            description={`de ${stats.totalLeads} totales`}
+          />
+        ) : (
+          <StatsCard
+            href="/crm/leads"
+            title="Mis leads"
+            value={stats.leadsNuevos}
+            description={`activos de ${stats.totalLeads} asignados`}
+          />
+        )}
       </div>
 
       {stats.porProyecto.length > 0 && (
@@ -145,26 +156,30 @@ export default async function CrmDashboard() {
       {/* Recent leads */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
-          <h2 className="font-body text-sm font-semibold text-foreground">Últimos leads recibidos</h2>
+          <h2 className="text-base font-medium text-foreground">
+            {esAdmin ? "Últimos leads recibidos" : "Mis últimos leads"}
+          </h2>
         </div>
         {stats.recentLeads.length === 0 ? (
-          <p className="font-body text-sm text-muted-foreground py-10 text-center">No hay leads aún.</p>
+          <p className="text-sm text-muted-foreground py-10 text-center">
+            {esAdmin ? "No hay leads aún." : "Todavía no tenés leads asignados."}
+          </p>
         ) : (
           <ul className="divide-y divide-border">
             {stats.recentLeads.map((item) => {
-              const badge = statusBadge[item.status] ?? { bg: "bg-gray-100", text: "text-muted-foreground" };
+              const tone = statusTone[item.status] ?? "neutral";
               const label = LEAD_STATUS_LABELS[item.status as keyof typeof LEAD_STATUS_LABELS] ?? item.status;
               return (
                 <li key={item.id} className="flex items-center justify-between px-6 py-4 hover:bg-muted/50 transition-colors">
                   <div className="min-w-0">
-                    <p className="font-body text-sm font-semibold text-foreground truncate">
+                    <p className="text-sm font-semibold text-foreground truncate">
                       {item.firstName} {item.lastName}
                     </p>
-                    <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {[item.email, item.phone].filter(Boolean).join(" · ")}
                     </p>
                   </div>
-                  <span className={`ml-4 flex-shrink-0 text-xs px-2.5 py-1 rounded-full font-medium font-body ${badge.bg} ${badge.text}`}>
+                  <span className={cn("ml-4 flex-shrink-0 rounded-full px-2.5 py-1 text-xs font-medium", tones[tone])}>
                     {label}
                   </span>
                 </li>

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
+import { isCrmRole } from "@/lib/api-auth";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { user } from "@/lib/schema";
@@ -45,7 +46,7 @@ export async function requireAdmin() {
     .where(eq(user.id, session.user.id))
     .limit(1);
 
-  if (dbUser?.role === "comercial") {
+  if (dbUser?.role === "comercial" || dbUser?.role === "socio") {
     redirect("/crm");
   }
 
@@ -57,7 +58,7 @@ export async function requireAdmin() {
 }
 
 /**
- * Requires a CRM user (admin or comercial).
+ * Requires a CRM user (admin, comercial or socio).
  * Users flagged with mustChangePassword are sent to /cambiar-password first.
  *
  * @returns The session plus the user's DB role
@@ -71,7 +72,7 @@ export async function requireCrmUser() {
     .where(eq(user.id, session.user.id))
     .limit(1);
 
-  if (!dbUser || (dbUser.role !== "admin" && dbUser.role !== "comercial")) {
+  if (!dbUser || !isCrmRole(dbUser.role)) {
     redirect("/");
   }
 
@@ -79,7 +80,7 @@ export async function requireCrmUser() {
     redirect("/cambiar-password");
   }
 
-  return { session, role: dbUser.role as "admin" | "comercial" };
+  return { session, role: dbUser.role };
 }
 
 /**
@@ -90,6 +91,20 @@ export async function requireCrmUser() {
  */
 export async function getOptionalSession() {
   return await auth.api.getSession({ headers: await headers() });
+}
+
+/** Rol de CRM del usuario logueado (admin, comercial o socio), o null si no es del CRM. */
+export async function getCurrentCrmRole() {
+  const session = await getOptionalSession();
+  if (!session) return null;
+
+  const [dbUser] = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+
+  return dbUser && isCrmRole(dbUser.role) ? dbUser.role : null;
 }
 
 export async function isCurrentUserAdmin() {

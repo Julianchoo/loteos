@@ -10,6 +10,7 @@ import {
   numeric,
   integer,
   date,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // IMPORTANT! ID fields should ALWAYS use UUID types, EXCEPT the BetterAuth tables.
@@ -52,6 +53,13 @@ export const monedaPagoEnum = pgEnum("moneda_pago", ["usd", "ars"]);
 
 export const estadoPagoEnum = pgEnum("estado_pago", ["activo", "anulado"]);
 
+// Una cuenta corriente cancelada no se borra: queda como historial (con sus cuotas y pagos)
+// y la reserva puede tener una nueva vigente.
+export const estadoContratoEnum = pgEnum("estado_contrato", ["vigente", "cancelada"]);
+
+// Cómo entró el lead: formulario web, link compartido por un comercial o carga manual en el CRM.
+export const origenLeadEnum = pgEnum("origen_lead", ["web", "link_comercial", "crm"]);
+export type OrigenLead = (typeof origenLeadEnum.enumValues)[number];
 
 export const user = pgTable(
   "user",
@@ -61,7 +69,7 @@ export const user = pgTable(
     email: text("email").notNull().unique(),
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
-    role: text("role").default("user").notNull(), // "user" | "admin" | "comercial"
+    role: text("role").default("user").notNull(), // "user" | "admin" | "comercial" | "socio"
     mustChangePassword: boolean("must_change_password").default(false).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -266,6 +274,10 @@ export const lead = pgTable(
     estadoCivil: text("estado_civil"),
     cuitComprador: text("cuit_comprador"),
 
+    origen: origenLeadEnum("origen").default("web").notNull(),
+    // Quién originó el lead: el dueño del link del plano o quien lo cargó en el CRM.
+    referidoPor: text("referido_por").references(() => user.id, { onDelete: "set null" }),
+
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
@@ -453,6 +465,9 @@ export const contratos = pgTable(
     requiereRevision: boolean("requiere_revision").default(false).notNull(),
     observaciones: text("observaciones"),
     creadoPor: text("creado_por"),
+    estado: estadoContratoEnum("estado").default("vigente").notNull(),
+    canceladoPor: text("cancelado_por"),
+    canceladoAt: timestamp("cancelado_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -460,7 +475,10 @@ export const contratos = pgTable(
       .notNull(),
   },
   (table) => [
-    uniqueIndex("contratos_reserva_idx").on(table.reservaId),
+    uniqueIndex("contratos_reserva_vigente_idx")
+      .on(table.reservaId)
+      .where(sql`${table.estado} = 'vigente'`),
+    index("contratos_reserva_idx").on(table.reservaId),
     index("contratos_modalidad_idx").on(table.modalidad),
   ]
 );
@@ -565,6 +583,29 @@ export const indicesCac = pgTable(
   (table) => [uniqueIndex("indices_cac_periodo_idx").on(table.periodo)]
 );
 
+// Historial de cambios de lotes, reservas y leads: quién cambió qué y cuándo.
+export type AuditCambios = Record<string, { antes: unknown; despues: unknown }>;
+// "contrato" es la cuenta corriente.
+export type AuditEntidad = "lote" | "reserva" | "lead" | "contrato" | "cuota" | "pago";
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    entidad: text("entidad").$type<AuditEntidad>().notNull(),
+    entidadId: text("entidad_id").notNull(),
+    accion: text("accion").$type<"crear" | "editar" | "eliminar">().notNull(),
+    // Email del usuario; "web" para los leads de los formularios públicos.
+    usuario: text("usuario").notNull(),
+    cambios: jsonb("cambios").$type<AuditCambios>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("audit_log_entidad_idx").on(table.entidad, table.entidadId),
+    index("audit_log_created_idx").on(table.createdAt),
+  ]
+);
+
 // ─── CRM Types ────────────────────────────────────────────────────────────────
 
 export type User = typeof user.$inferSelect;
@@ -577,6 +618,7 @@ export type Cuota = typeof cuotas.$inferSelect;
 export type Pago = typeof pagos.$inferSelect;
 export type TipoCambio = typeof tiposCambio.$inferSelect;
 export type IndiceCac = typeof indicesCac.$inferSelect;
+export type AuditLog = typeof auditLog.$inferSelect;
 export type EstadoLote = (typeof estadoLoteEnum.enumValues)[number];
 export type EstadoReserva = (typeof estadoReservaEnum.enumValues)[number];
 export type ModalidadContrato = (typeof modalidadContratoEnum.enumValues)[number];

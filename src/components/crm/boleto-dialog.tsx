@@ -6,6 +6,7 @@ import { FileText, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { NETWORK_ERROR } from "@/components/crm/toast-api-error";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -34,6 +35,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { amountToSpanishWords } from "@/lib/number-words";
 import type { LoteConReserva } from "@/lib/schema";
+import { FIELD_LABELS } from "@/lib/validation-message";
 
 const MESES = [
   "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -315,7 +317,7 @@ export function BoletoDialog({
       toast.success("Boleto generado y descargado");
       setOpen(false);
     } catch {
-      toast.error("Error de red al generar el boleto");
+      toast.error(NETWORK_ERROR);
     }
   }
 
@@ -339,7 +341,7 @@ export function BoletoDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-2">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => toast.error(`Completá: ${Object.keys(errors).map((key) => FIELD_LABELS[key] ?? key).join(", ")}`))} className="space-y-6 pt-2">
 
             {/* ── Apoderado vendedora ── */}
             <section>
@@ -765,7 +767,7 @@ export function BoletoDialog({
               <Button
                 type="submit"
                 disabled={form.formState.isSubmitting}
-                className="bg-green-700 hover:bg-green-800 text-white gap-2"
+                className="gap-2"
               >
                 {form.formState.isSubmitting ? (
                   <>

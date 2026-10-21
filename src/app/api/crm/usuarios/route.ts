@@ -6,6 +6,7 @@ import { requireApiAdmin, isErrorResponse } from "@/lib/api-auth";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { user } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 
 export async function GET() {
   const authResult = await requireApiAdmin();
@@ -21,7 +22,7 @@ export async function GET() {
       createdAt: user.createdAt,
     })
     .from(user)
-    .where(inArray(user.role, ["admin", "comercial"]))
+    .where(inArray(user.role, ["admin", "comercial", "socio"]))
     .orderBy(user.createdAt);
 
   return NextResponse.json(users);
@@ -31,7 +32,7 @@ const createUserSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(["admin", "comercial"]),
+  role: z.enum(["admin", "comercial", "socio"]),
 });
 
 export async function POST(request: Request) {
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Datos inválidos", details: error.issues },
+        { error: validationMessage(error.issues), details: error.issues },
         { status: 400 }
       );
     }

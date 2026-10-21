@@ -58,9 +58,13 @@ export type LotePublico = {
 interface NuevoAmanecerPlanoProps {
   /** Lotes de la base por "manzana-numero"; los lotes sin dato se muestran disponibles. */
   lotes?: Record<string, LotePublico>;
+  /** Admin: ve reservado y vendido. El público solo ve disponible / no disponible. */
+  detallado?: boolean;
+  /** Comercial que compartió el link del plano (?ref=). */
+  refId?: string | undefined;
 }
 
-export function NuevoAmanecerPlano({ lotes = {} }: NuevoAmanecerPlanoProps) {
+export function NuevoAmanecerPlano({ lotes = {}, detallado = false, refId }: NuevoAmanecerPlanoProps) {
   const [selected, setSelected] = useState<NuevoAmanecerLote | null>(null);
   const [hovered, setHovered] = useState<NuevoAmanecerLote | null>(null);
   const [consulta, setConsulta] = useState<LoteConsulta | null>(null);
@@ -283,8 +287,12 @@ export function NuevoAmanecerPlano({ lotes = {} }: NuevoAmanecerPlanoProps) {
           {[
             { color: brand.lime, label: "Lotes de 602 a 607 m²" },
             { color: brand.limeDeep, label: "Lotes de 844 a 910 m²" },
-            { color: brand.reserved, label: "Reservado" },
-            { color: brand.sold, label: "Vendido" },
+            ...(detallado
+              ? [
+                  { color: brand.reserved, label: "Reservado" },
+                  { color: brand.sold, label: "Vendido" },
+                ]
+              : [{ color: brand.sold, label: "No disponible" }]),
           ].map((item) => (
             <span key={item.label} className="inline-flex items-center gap-2">
               <span
@@ -334,6 +342,7 @@ export function NuevoAmanecerPlano({ lotes = {} }: NuevoAmanecerPlanoProps) {
 
       <LoteConsultaDialog
         lote={consulta}
+        refId={refId}
         onOpenChange={(open) => {
           if (!open) setConsulta(null);
         }}

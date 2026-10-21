@@ -5,9 +5,11 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireApiCrm, isErrorResponse } from "@/lib/api-auth";
 import { db } from "@/lib/db";
+import { formatMoneyAr } from "@/lib/money";
 import { amountToSpanishWords } from "@/lib/number-words";
-import { activeReservaJoin, flattenLoteReserva } from "@/lib/reservas";
+import { currentReservaJoin, flattenLoteReserva } from "@/lib/reservas";
 import { lead, lot, reservas } from "@/lib/schema";
+import { validationMessage } from "@/lib/validation-message";
 const Docxtemplater = require("docxtemplater");  
 const PizZip = require("pizzip");  
 
@@ -39,16 +41,6 @@ const reservaSchema = z.object({
   honorariosNum: z.string().optional().default("450"),
 });
 
-function formatMoney(value: string | number | null | undefined): string {
-  if (!value) return "";
-  const numeric = Number(String(value).replace(/\./g, "").replace(",", "."));
-  if (!Number.isFinite(numeric)) return String(value);
-  return numeric.toLocaleString("es-AR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-}
-
 function wordsOrAmount(words: string, amount: string) {
   return words || amountToSpanishWords(amount) || "";
 }
@@ -76,7 +68,7 @@ export async function POST(
   const parsed = reservaSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "Datos invalidos", details: parsed.error.issues },
+      { error: validationMessage(parsed.error.issues), details: parsed.error.issues },
       { status: 400 }
     );
   }
@@ -84,7 +76,7 @@ export async function POST(
   const [row] = await db
     .select({ lote: lot, reserva: reservas, lead })
     .from(lot)
-    .leftJoin(reservas, activeReservaJoin())
+    .leftJoin(reservas, currentReservaJoin())
     .leftJoin(lead, eq(reservas.leadId, lead.id))
     .where(eq(lot.id, lotId));
 
@@ -93,8 +85,14 @@ export async function POST(
   }
   if (!row.reserva) {
     return NextResponse.json(
-      { error: "El lote no tiene una reserva activa" },
+      { error: "El lote no tiene una reserva vigente: cargá y guardá la reserva antes de generar el documento" },
       { status: 400 }
+    );
+  }
+  if (row.reserva.estado === "realizada" && authResult.role !== "admin") {
+    return NextResponse.json(
+      { error: "Solo un administrador puede generar documentos de una reserva realizada" },
+      { status: 403 }
     );
   }
 
@@ -104,7 +102,9 @@ export async function POST(
     row.reserva.reservadoPor !== authResult.email;
   if (isReservedByOther) {
     return NextResponse.json(
-      { error: "Este lote fue reservado por otro comercial" },
+      {
+        error: `Este lote lo reservó ${row.reserva.reservadoPor ?? "otro comercial"}: solo esa persona o un administrador pueden generar la reserva`,
+      },
       { status: 403 }
     );
   }
@@ -112,11 +112,11 @@ export async function POST(
   const form = parsed.data;
   const parcela = flattenLoteReserva(row.lote, row.reserva, row.lead);
   const loteNumero = parcela.parcela || parcela.number;
-  const anticipoNum = form.anticipoNum || formatMoney(parcela.anticipoNum);
-  const reservaNum = form.reservaNum || formatMoney(parcela.reservaNum) || "500";
-  const precioTotalNum = form.precioTotalNum || formatMoney(parcela.precioTotalNum);
-  const saldoNum = form.saldoNum || formatMoney(parcela.saldoNum);
-  const cuotaMensual = form.cuotaMensual || formatMoney(parcela.cuotaMensual);
+  const anticipoNum = form.anticipoNum || formatMoneyAr(parcela.anticipoNum);
+  const reservaNum = form.reservaNum || formatMoneyAr(parcela.reservaNum) || "500";
+  const precioTotalNum = form.precioTotalNum || formatMoneyAr(parcela.precioTotalNum);
+  const saldoNum = form.saldoNum || formatMoneyAr(parcela.saldoNum);
+  const cuotaMensual = form.cuotaMensual || formatMoneyAr(parcela.cuotaMensual);
 
   const reservaPalabras = wordsOrAmount(form.reservaPalabras, reservaNum);
   const data: Record<string, string> = {
@@ -149,14 +149,6 @@ export async function POST(
     honorariosNum: form.honorariosNum || "450",
   };
 
-  await db
-    .update(reservas)
-    .set({
-      reservaPalabras,
-      reservaNum,
-      updatedAt: new Date(),
-    })
-    .where(eq(reservas.id, row.reserva.id));
 
   const templatePath = path.join(
     process.cwd(),

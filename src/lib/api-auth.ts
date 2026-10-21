@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { user } from "@/lib/schema";
 
-export const CRM_ROLES = ["admin", "comercial"] as const;
+// socio: acceso de comercial más Insights.
+export const CRM_ROLES = ["admin", "comercial", "socio"] as const;
 export type CrmRole = (typeof CRM_ROLES)[number];
 
 export type AuthUser = {
@@ -41,7 +42,7 @@ export async function getAuthenticatedUser(): Promise<AuthUser | null> {
   };
 }
 
-/** CRM API guard: admin or comercial. */
+/** CRM API guard: admin, comercial or socio. */
 export async function requireApiCrm(): Promise<AuthUser | NextResponse> {
   const authUser = await getAuthenticatedUser();
   if (!authUser) {

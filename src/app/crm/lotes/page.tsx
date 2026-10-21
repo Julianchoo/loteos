@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { use, useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ChevronDown, Lock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { CalculadoraCuota } from "@/components/calculadora-cuota";
 import { useCrm, withProject } from "@/components/crm/crm-context";
 import { NuevoLoteDialog } from "@/components/crm/nuevo-lote-dialog";
+import { NETWORK_ERROR, toastBulkErrors } from "@/components/crm/toast-api-error";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,19 +34,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
-import {
-  ANTICIPO_STEP_USD,
-  calculateInstallment,
-  getMinimumAnticipoUsd,
-  roundCurrency,
-} from "@/lib/financiacion";
 import type { EstadoLote, LoteConReserva } from "@/lib/schema";
 
 const estadoColors: Record<EstadoLote, string> = {
-  disponible: "bg-green-100 text-green-700",
-  reservado: "bg-yellow-100 text-yellow-700",
+  disponible: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  reservado: "bg-amber-500/10 text-amber-800 dark:text-amber-400",
   vendido: "bg-muted text-muted-foreground",
-  no_disponible: "bg-red-100 text-red-700",
+  no_disponible: "bg-destructive/10 text-destructive",
 };
 
 const isSoldLote = (lote: LoteConReserva) =>
@@ -59,6 +55,10 @@ const estadoLabels: Record<EstadoLote, string> = {
   vendido: "Vendido",
   no_disponible: "No disponible",
 };
+
+// A mano solo se alterna disponible <-> no disponible. Reservado y vendido salen de la
+// reserva vigente del lote (crearla, realizarla, cancelarla).
+const ESTADOS_MANUALES: EstadoLote[] = ["disponible", "no_disponible"];
 
 const SUPERFICIE_RANGES = [
   { label: "Hasta 300 m²", min: undefined, max: 300 },
@@ -162,13 +162,6 @@ const DEFAULT_COLS: Record<ColKey, boolean> = {
 
 const STORAGE_KEY = "lotes-visible-cols";
 
-function formatUsd(value: number): string {
-  return `USD ${value.toLocaleString("es-AR", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 function formatMoneyString(value: string | null | undefined): string {
   if (!value) return "—";
   return `USD ${Number(value).toLocaleString("es-AR")}`;
@@ -191,11 +184,6 @@ function roundToHundreds(value: number): number {
   return Math.round(value / 100) * 100;
 }
 
-function formatDeliveryInstallment(value: number): string {
-  if (value === 0) return "Con el anticipo";
-  return `Despues de cuota ${value}`;
-}
-
 function toggleValue(values: string[], value: string) {
   return values.includes(value)
     ? values.filter((item) => item !== value)
@@ -214,14 +202,20 @@ function loadVisibleCols(): Record<ColKey, boolean> {
   }
 }
 
-export default function LotesPage() {
+export default function LotesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ estado?: string }>;
+}) {
+  // Permite llegar prefiltrado desde las tarjetas del dashboard.
+  const { estado: estadoInicial } = use(searchParams);
   const { data: session } = useSession();
   const { isAdmin, projectId } = useCrm();
   const [lotes, setLotes] = useState<LoteConReserva[]>([]);
   const [loading, setLoading] = useState(true);
   const [manzanas, setManzanas] = useState<string[]>([]);
   const [search, setSearch] = useState("");
-  const [filterEstado, setFilterEstado] = useState<string>("disponible");
+  const [filterEstado, setFilterEstado] = useState<string>(estadoInicial ?? "disponible");
   const [filterManzanas, setFilterManzanas] = useState<string[]>([]);
   const [filterSuperficie, setFilterSuperficie] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -230,12 +224,6 @@ export default function LotesPage() {
   const [bulkPriceValue, setBulkPriceValue] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Record<ColKey, boolean>>(DEFAULT_COLS);
-  const [calculator, setCalculator] = useState({
-    precio: 15000,
-    anticipo: 4500,
-    tasa: 1,
-    plazo: 48,
-  });
 
   // Load persisted columns on mount
   useEffect(() => {
@@ -294,7 +282,11 @@ export default function LotesPage() {
   const handleEstadoChange = async (id: string, estado: EstadoLote) => {
     const lote = lotes.find((l) => l.id === id);
     if (lote && !canEditLote(lote)) {
-      toast.error("Este lote está vendido o bloqueado");
+      toast.error(bloqueoMessage(lote));
+      return;
+    }
+    if (lote?.reservaId) {
+      toast.error(`El lote tiene una reserva vigente. Para liberarlo, cancelá esa reserva`);
       return;
     }
     const esVendido = Boolean(lote && isSoldLote(lote));
@@ -321,7 +313,7 @@ export default function LotesPage() {
   const handleCheckbox = (id: string, index: number, shiftKey: boolean) => {
     const target = lotes.find((lote) => lote.id === id);
     if (target && !canEditLote(target)) {
-      toast.error("Este lote está vendido o bloqueado");
+      toast.error(bloqueoMessage(target));
       return;
     }
     setSelected((prev) => {
@@ -357,6 +349,13 @@ export default function LotesPage() {
 
   const handleBulkUpdate = async () => {
     if (!bulkEstado || selected.size === 0) return;
+    const conReserva = lotes.filter((l) => selected.has(l.id) && l.reservaId).length;
+    if (conReserva > 0) {
+      toast.error(
+        `${conReserva} lote(s) seleccionados tienen una reserva vigente. Cancelá la reserva para liberarlos`
+      );
+      return;
+    }
     const vendidos = new Set(
       lotes.filter((l) => selected.has(l.id) && isSoldLote(l)).map((l) => l.id)
     );
@@ -382,10 +381,17 @@ export default function LotesPage() {
           })
         )
       );
-      const failed = results.filter((r) => !r.ok).length;
-      if (failed > 0) {
-        setLotes(prev);
-        toast.error(`${failed} actualizacion(es) fallaron`);
+      const failed = results
+        .map((res, i) => ({ res, lote: lotes.find((l) => l.id === ids[i]) }))
+        .filter(({ res }) => !res.ok)
+        .map(({ res, lote }) => ({
+          res,
+          label: lote ? `Mz ${lote.manzana} Lote ${lote.number}` : "Lote",
+        }));
+      if (failed.length > 0) {
+        // Algunos pudieron guardarse: recargar muestra el estado real en vez de revertir todo.
+        await toastBulkErrors(failed, ids.length, "lotes");
+        fetchLotes();
       } else {
         toast.success(`${ids.length} lote(s) actualizados`);
         setSelected(new Set());
@@ -394,7 +400,7 @@ export default function LotesPage() {
       }
     } catch {
       setLotes(prev);
-      toast.error("Error al actualizar");
+      toast.error(NETWORK_ERROR);
     } finally {
       setBulkLoading(false);
     }
@@ -405,7 +411,11 @@ export default function LotesPage() {
 
     const value = Number(bulkPriceValue);
     if (!Number.isFinite(value) || value < 0 || (bulkPriceMode === "increase" && value === 0)) {
-      toast.error("Ingresá un valor válido");
+      toast.error(
+        bulkPriceMode === "increase"
+          ? "Ingresá un porcentaje de aumento mayor a 0"
+          : "Ingresá un precio en USD (0 o más)"
+      );
       return;
     }
 
@@ -427,7 +437,9 @@ export default function LotesPage() {
       .filter((update): update is { id: string; precioBase: string } => update !== null);
 
     if (updates.length === 0) {
-      toast.error("No hay lotes con precio base para actualizar");
+      toast.error(
+        "Ninguno de los lotes seleccionados tiene precio base: para aumentar por % primero hay que cargarles un precio"
+      );
       return;
     }
 
@@ -457,10 +469,17 @@ export default function LotesPage() {
           })
         )
       );
-      const failed = results.filter((r) => !r.ok).length;
-      if (failed > 0) {
-        setLotes(prev);
-        toast.error(`${failed} actualizacion(es) de precio fallaron`);
+      const failed = results
+        .map((res, i) => ({ res, lote: lotes.find((l) => l.id === updates[i]?.id) }))
+        .filter(({ res }) => !res.ok)
+        .map(({ res, lote }) => ({
+          res,
+          label: lote ? `Mz ${lote.manzana} Lote ${lote.number}` : "Lote",
+        }));
+      if (failed.length > 0) {
+        // Algunos pudieron guardarse: recargar muestra el estado real en vez de revertir todo.
+        await toastBulkErrors(failed, updates.length, "precios");
+        fetchLotes();
       } else {
         const skipped = selectedLotes.length - updates.length;
         toast.success(
@@ -471,7 +490,7 @@ export default function LotesPage() {
       }
     } catch {
       setLotes(prev);
-      toast.error("Error al actualizar precios");
+      toast.error(NETWORK_ERROR);
     } finally {
       setBulkLoading(false);
     }
@@ -531,58 +550,6 @@ export default function LotesPage() {
   const activeOptionalCols = OPTIONAL_COLS.filter((c) => visibleCols[c.key]);
   const showProject = !projectId;
 
-  const minimumAnticipo = getMinimumAnticipoUsd(calculator.precio);
-
-  const calculatorResult = useMemo(() => {
-    const saldo = Math.max(calculator.precio - calculator.anticipo, 0);
-    const plazo = Math.max(calculator.plazo, 1);
-    const cuotaMensual = calculateInstallment(saldo, calculator.tasa, plazo);
-    const totalFinanciado = roundCurrency(cuotaMensual * plazo);
-    const precioTotalNominal = roundCurrency(calculator.anticipo + totalFinanciado);
-    const umbralEntrega = precioTotalNominal * 0.5;
-    const cuotaEntrega = calculator.anticipo >= umbralEntrega
-      ? 0
-      : Math.ceil((umbralEntrega - calculator.anticipo) / cuotaMensual);
-
-    return {
-      cuotaMensual,
-      totalFinanciado,
-      precioTotalNominal,
-      cuotaEntrega: Math.min(cuotaEntrega, plazo),
-    };
-  }, [calculator]);
-
-  function updateCalculatorValue(
-    key: keyof typeof calculator,
-    value: number,
-    enforceAnticipoMinimum = true
-  ) {
-    setCalculator((current) => {
-      const next = { ...current, [key]: Math.max(value, key === "plazo" ? 1 : 0) };
-      if (key === "precio" && next.anticipo > value) {
-        next.anticipo = value;
-      }
-      if (key === "precio") {
-        next.anticipo = Math.max(
-          next.anticipo,
-          getMinimumAnticipoUsd(value)
-        );
-      }
-      if (key === "anticipo") {
-        next.anticipo = Math.min(
-          Math.max(
-            value,
-            enforceAnticipoMinimum
-              ? getMinimumAnticipoUsd(current.precio)
-              : 0
-          ),
-          current.precio
-        );
-      }
-      return next;
-    });
-  }
-
   function canEditLote(lote: LoteConReserva) {
     if (isSoldLote(lote)) return isAdmin;
 
@@ -593,11 +560,17 @@ export default function LotesPage() {
     );
   }
 
+  function bloqueoMessage(lote: LoteConReserva) {
+    return isSoldLote(lote)
+      ? `Mz ${lote.manzana} Lote ${lote.number} está vendido: solo un administrador puede cambiarlo`
+      : `Mz ${lote.manzana} Lote ${lote.number} lo reservó ${lote.reservadoPor ?? "otro comercial"}. Pedile a un administrador que lo modifique`;
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Lotes</h1>
+          <h1 className="font-serif text-3xl font-normal text-foreground">Lotes</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Gestión de lotes por proyecto
           </p>
@@ -614,107 +587,7 @@ export default function LotesPage() {
             Cuota mensual: saldo x (1 + tasa mensual x plazo) / plazo.
           </p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-4">
-          {[
-            {
-              key: "precio" as const,
-              label: "Precio",
-              min: 0,
-              max: 100000,
-              step: 500,
-              suffix: "USD",
-            },
-            {
-              key: "anticipo" as const,
-              label: "Anticipo",
-              min: minimumAnticipo,
-              max: calculator.precio,
-              step: ANTICIPO_STEP_USD,
-              suffix: "USD",
-            },
-            {
-              key: "tasa" as const,
-              label: "Tasa mensual",
-              min: 0,
-              max: 5,
-              step: 0.1,
-              suffix: "%",
-            },
-            {
-              key: "plazo" as const,
-              label: "Plazo",
-              min: 1,
-              max: 120,
-              step: 1,
-              suffix: "meses",
-            },
-          ].map((item) => (
-            <label key={item.key} className="space-y-2">
-              <span className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium text-foreground">{item.label}</span>
-                <span className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min={item.min}
-                    max={item.max}
-                    step={item.key === "anticipo" ? "any" : item.step}
-                    value={calculator[item.key]}
-                    onChange={(e) => {
-                      updateCalculatorValue(
-                        item.key,
-                        Number(e.target.value),
-                        item.key !== "anticipo"
-                      );
-                    }}
-                    aria-invalid={
-                      item.key === "anticipo" &&
-                      calculator.anticipo < minimumAnticipo
-                    }
-                    className={`h-8 w-28 text-right ${
-                      item.key === "anticipo" &&
-                      calculator.anticipo < minimumAnticipo
-                        ? "border-red-500 focus-visible:ring-red-500"
-                        : ""
-                    }`}
-                  />
-                  <span className="w-10 text-left text-muted-foreground">
-                    {item.suffix}
-                  </span>
-                </span>
-              </span>
-              <input
-                type="range"
-                min={item.min}
-                max={item.max}
-                step={item.step}
-                value={Math.min(calculator[item.key], item.max)}
-                onChange={(e) => {
-                  updateCalculatorValue(item.key, Number(e.target.value));
-                }}
-                className="w-full accent-primary"
-              />
-              {item.key === "anticipo" &&
-                calculator.anticipo < minimumAnticipo && (
-                  <p className="text-xs font-medium text-red-600" role="alert">
-                    Mínimo: {formatUsd(minimumAnticipo)}
-                  </p>
-                )}
-            </label>
-          ))}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-4">
-          {[
-            ["Cuota mensual", formatUsd(calculatorResult.cuotaMensual)],
-            ["Plazo total financiado", formatUsd(calculatorResult.totalFinanciado)],
-            ["Precio total nominal", formatUsd(calculatorResult.precioTotalNominal)],
-            ["Cuota de entrega", formatDeliveryInstallment(calculatorResult.cuotaEntrega)],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-md border bg-muted/40 px-3 py-2">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className="text-lg font-semibold text-foreground">{value}</p>
-            </div>
-          ))}
-        </div>
+        <CalculadoraCuota />
       </div>
 
       {/* Filters */}
@@ -870,6 +743,8 @@ export default function LotesPage() {
                   className="size-4 cursor-pointer accent-primary"
                 />
               </TableHead>
+              <TableHead className="w-16" />
+              <TableHead>Estado</TableHead>
               {showProject && <TableHead>Proyecto</TableHead>}
               <TableHead className="w-12">N°</TableHead>
               <TableHead>Circ.</TableHead>
@@ -881,11 +756,9 @@ export default function LotesPage() {
               <TableHead>Frente</TableHead>
               <TableHead>Fondo</TableHead>
               <TableHead>Precio base</TableHead>
-              <TableHead>Estado</TableHead>
               {activeOptionalCols.map((col) => (
                 <TableHead key={col.key}>{col.label}</TableHead>
               ))}
-              <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -918,6 +791,59 @@ export default function LotesPage() {
                         className="size-4 cursor-pointer accent-primary"
                       />
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size={isAdmin ? "icon" : "sm"}
+                        title={isAdmin ? "Editar lote" : "Ver lote"}
+                      >
+                        <Link href={`/crm/lotes/${lote.id}`}>
+                          {isAdmin ? (
+                            <Pencil className="h-4 w-4" />
+                          ) : (
+                            "Ver"
+                          )}
+                        </Link>
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={lote.estado}
+                        disabled={isLoteLocked || Boolean(lote.reservaId)}
+                        onValueChange={(v) =>
+                          handleEstadoChange(lote.id, v as EstadoLote)
+                        }
+                      >
+                        <SelectTrigger className="h-7 w-36 text-xs border-0 p-0 shadow-none focus:ring-0">
+                          <span className="flex items-center gap-1">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${estadoColors[lote.estado]}`}
+                            >
+                              {estadoLabels[lote.estado]}
+                            </span>
+                            {(isLoteLocked || Boolean(lote.reservaId)) && (
+                                <Lock className="h-3 w-3 text-amber-700 dark:text-amber-400" />
+                              )}
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          {ESTADOS_MANUALES.map((e) => (
+                            <SelectItem
+                              key={e}
+                              value={e}
+                              disabled={
+                                e === "disponible" &&
+                                lote.estado !== "disponible" &&
+                                !isAdmin
+                              }
+                            >
+                              {estadoLabels[e]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
                     {showProject && (
                       <TableCell className="whitespace-nowrap text-sm">
                         {lote.projectName}
@@ -943,58 +869,11 @@ export default function LotesPage() {
                     <TableCell>
                       {formatMoneyString(lote.precioBase)}
                     </TableCell>
-                    <TableCell>
-                      <Select
-                        value={lote.estado}
-                        disabled={isLoteLocked}
-                        onValueChange={(v) =>
-                          handleEstadoChange(lote.id, v as EstadoLote)
-                        }
-                      >
-                        <SelectTrigger className="h-7 w-36 text-xs border-0 p-0 shadow-none focus:ring-0">
-                          <span className="flex items-center gap-1">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${estadoColors[lote.estado]}`}
-                            >
-                              {estadoLabels[lote.estado]}
-                            </span>
-                            {isLoteLocked && (
-                                <Lock className="h-3 w-3 text-amber-600" />
-                              )}
-                          </span>
-                        </SelectTrigger>
-                        <SelectContent position="popper">
-                          {(Object.keys(estadoLabels) as EstadoLote[]).map(
-                            (e) => (
-                              <SelectItem key={e} value={e}>
-                                {estadoLabels[e]}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
                     {activeOptionalCols.map((col) => (
                       <TableCell key={col.key} className="text-sm text-muted-foreground max-w-[200px] truncate">
                         {getCellValue(lote, col.key)}
                       </TableCell>
                     ))}
-                    <TableCell>
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size={isAdmin ? "icon" : "sm"}
-                        title={isAdmin ? "Editar lote" : "Ver lote"}
-                      >
-                        <Link href={`/crm/lotes/${lote.id}`}>
-                          {isAdmin ? (
-                            <Pencil className="h-4 w-4" />
-                          ) : (
-                            "Ver"
-                          )}
-                        </Link>
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 )})}
           </TableBody>
@@ -1020,8 +899,12 @@ export default function LotesPage() {
               <SelectValue placeholder="Cambiar estado..." />
             </SelectTrigger>
             <SelectContent>
-              {(Object.keys(estadoLabels) as EstadoLote[]).map((e) => (
-                <SelectItem key={e} value={e}>
+              {ESTADOS_MANUALES.map((e) => (
+                <SelectItem
+                  key={e}
+                  value={e}
+                  disabled={e === "disponible" && !isAdmin}
+                >
                   {estadoLabels[e]}
                 </SelectItem>
               ))}

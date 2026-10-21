@@ -32,22 +32,25 @@ const emptyForm = { firstName: "", lastName: "", email: "", phone: "", message: 
 
 export function LoteConsultaDialog({
   lote,
+  refId,
   onOpenChange,
 }: {
   lote: LoteConsulta | null;
+  /** Comercial que compartió el link del plano (?ref=); el lead se le asigna. */
+  refId?: string | undefined;
   onOpenChange: (open: boolean) => void;
 }) {
   return (
     <Dialog open={!!lote} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
         {/* key: al cambiar de lote se reinician la simulación y el formulario. */}
-        {lote && <Contenido key={lote.id} lote={lote} />}
+        {lote && <Contenido key={lote.id} lote={lote} refId={refId} />}
       </DialogContent>
     </Dialog>
   );
 }
 
-function Contenido({ lote }: { lote: LoteConsulta }) {
+function Contenido({ lote, refId }: { lote: LoteConsulta; refId?: string | undefined }) {
   const [simulacion, setSimulacion] = useState<Simulacion | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [enviando, setEnviando] = useState(false);
@@ -64,6 +67,7 @@ function Contenido({ lote }: { lote: LoteConsulta }) {
       const sim = lote.precio ? simulacion : null;
       const result = await createLotLead({
         lotId: lote.id,
+        ref: refId,
         ...form,
         anticipo: sim?.anticipo,
         plazo: sim?.plazo,
@@ -121,7 +125,7 @@ function Contenido({ lote }: { lote: LoteConsulta }) {
       {lote.precio ? (
         <div className="space-y-2 border-t pt-4">
           <p className="text-sm font-semibold text-foreground">Simulá tu cuota</p>
-          <CalculadoraCuota precio={lote.precio} onSimulacion={setSimulacion} />
+          <CalculadoraCuota precio={lote.precio} publico onSimulacion={setSimulacion} />
         </div>
       ) : (
         <p className="border-t pt-4 text-sm text-muted-foreground">
