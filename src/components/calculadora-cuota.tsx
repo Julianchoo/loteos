@@ -278,7 +278,7 @@ export function CalculadoraCuota({
             <p className="text-lg font-semibold text-foreground">{value}</p>
             {i === 0 && (
               <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">
-                No es una cuota fija: se pesifica al firmar y la cuota en pesos se ajusta mes a mes por CAC.
+                No es una cuota fija: se pesifica el día de la firma y de ahí se ajusta mes a mes por CAC.
               </p>
             )}
           </div>
